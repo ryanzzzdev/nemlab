@@ -1,2 +1,2 @@
 rootProject.name = "nemlab"
-include("core")
+include("core", "infrastructure", "api", "worker")

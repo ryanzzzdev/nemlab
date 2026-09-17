@@ -27,7 +27,7 @@ Checked 2026-09-17 against primary sources:
 - [Gradle releases](https://gradle.org/releases/): 9.7.1 is the current stable release shown.
 - [Temurin support](https://adoptium.net/support/): Java 25 is LTS, with availability planned through at least September 2031; Java 24 reached end of support in September 2025. Distribution maintenance schedules differ.
 
-NEM-009 subsequently verified a clean Java 25 core build with Gradle 9.7.1 and locked JUnit 6.1.3 dependencies, including an offline rerun. The checksum-pinned wrapper is checked in as a working-tree change. NEM-010 subsequently verified ojAlgo 57.3.0 on Java 25. Boot applications have not been executed yet.
+NEM-009 subsequently verified a clean Java 25 core build with Gradle 9.7.1 and locked JUnit 6.1.3 dependencies, including an offline rerun. The checksum-pinned wrapper is checked in as a working-tree change. NEM-010 subsequently verified ojAlgo 57.3.0 on Java 25. NEM-011 subsequently verified Boot 4.1.1 application contexts and packaged API/worker startup; hosted CI remains unexecuted.
 
 ## Minimal engine build and follow-up
 
@@ -39,7 +39,7 @@ Java 24 matches the original request but has a shorter maintenance life. Java 21
 
 ## Acceptance source
 
-Java 25: explicit user instruction above. Specific build/version choices: agent selection under the instruction to proceed. Core build validation is complete in NEM-009; Boot application/CI validation remains implementation work.
+Java 25: explicit user instruction above. Specific build/version choices: agent selection under the instruction to proceed. Core build validation is complete in NEM-009; Boot application validation is complete in NEM-011; hosted CI execution remains pending a remote repository and push.
 
 ## References
 

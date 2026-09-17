@@ -1,1 +1,22 @@
-plugins { id "base" }
+plugins {
+    id 'base'
+    id 'org.springframework.boot' version '4.1.1' apply false
+}
+
+// Enforce the intended project dependency direction as modules grow.
+tasks.register('verifyModuleBoundaries') {
+    doLast {
+        def allowed = [core: [], infrastructure: ['core'], api: ['core', 'infrastructure'], worker: ['core', 'infrastructure']]
+        subprojects.each { module ->
+            module.configurations.each { config ->
+                config.dependencies.withType(ProjectDependency).each { dependency ->
+                    def target = dependency.path.tokenize(':').last()
+                    if (!allowed[module.name].contains(target)) {
+                        throw new GradleException("Forbidden dependency: ${module.name} -> ${target}")
+                    }
+                }
+            }
+        }
+    }
+}
+check.dependsOn verifyModuleBoundaries

@@ -1,22 +1,22 @@
 # NEMLab architecture
 
 Updated: 2026-09-17  
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; API, worker, persistence and frontend remain planned.
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; persistence and frontend remain planned.
 
 ## Agreed boundaries
 
 One backend repository and one frontend repository. The backend uses Java and Spring Boot, with separately runnable API and worker applications. Admin may become a second application in the frontend repository. See [repository decision](decisions/002-repositories-and-applications.md).
 
-Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. The Java 25 core build/tests pass with the pinned wrapper and locked JUnit 6.1.3 dependencies. ojAlgo 57.3.0 also passes the bounded engine evaluation. Boot applications remain unverified. See [runtime decision](decisions/004-java-runtime.md).
+Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. The Java 25 core build/tests pass with the pinned wrapper and locked JUnit 6.1.3 dependencies. ojAlgo 57.3.0 also passes the bounded engine evaluation. Boot 4.1.1 API/worker contexts and executable-jar startup checks now pass; see [foundation evidence](evidence/foundation/findings.md). See [runtime decision](decisions/004-java-runtime.md).
 
-## Proposed structure
+## Module structure and planned frontend
 
 ```text
 nemlab/                         Backend project, already created
   core/                         Domain models and feature services
-  infrastructure/               Persistence, OE integration, durable jobs
+  infrastructure/               Adapter boundary; persistence/OE/jobs not implemented
   api/                          Spring Boot HTTP entry point
-  worker/                       Spring Boot scheduler/job entry point
+  worker/                       Non-web Boot entry point; scheduling/jobs not implemented
   docs/                         Canonical project documentation
 
 nemlab-ui/                      Confirmed frontend folder; application not created
@@ -43,7 +43,7 @@ The API validates requests, reads stored series/results, and persists jobs. Sche
 
 ## Proposed technology choices
 
-These carry forward planning recommendations; [decision 005](decisions/005-infrastructure-and-frontend.md) remains Proposed. Verify supported versions, licences, and compatibility when scaffolding.
+Spring MVC and Actuator are implemented in the API shell; the worker uses the non-web Boot starter. Other entries carry forward planning recommendations; [decision 005](decisions/005-infrastructure-and-frontend.md) remains Proposed. Verify supported versions, licences, and compatibility when scaffolding.
 
 | Area | Proposed choice | Purpose |
 | --- | --- | --- |

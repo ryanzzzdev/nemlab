@@ -2,7 +2,7 @@
 
 Updated: 2026-09-17
 
-Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-011 into focused shared-foundation tasks before implementation; the bounded M2 engine gate is complete. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-012 into focused database, ingestion and coverage tasks. NEM-011 has established the runnable backend foundation; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -28,6 +28,9 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-018 — Deliver GridReplay catalogue and replay](#nem-018)
 - [NEM-019 — Assess and optionally deliver Admin UI](#nem-019)
 - [NEM-020 — Prepare and verify the initial public release](#nem-020)
+- [NEM-021 — Backend modules and Boot entry points](#nem-021)
+- [NEM-022 — Packaged startup and local setup](#nem-022)
+- [NEM-023 — CI and module dependency checks](#nem-023)
 
 <a id="nem-001"></a>
 
@@ -301,7 +304,7 @@ Selected pinned MIT-licensed ojAlgo 57.3.0 on Java 25 for the exact ordered-wind
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-006](#nem-006), [NEM-010](#nem-010)
 - References: [Specification / decision](architecture.md)
 
@@ -317,7 +320,14 @@ Refine into implementation tasks for Git setup, module boundaries, API/worker en
 
 ### Completion evidence
 
-Git setup completed early at the user’s request on 2026-09-17: backend repository initialised on main, with documentation and OE evidence prepared for the initial commit. Application modules, build and CI remain outstanding; this package is not Done.
+Git setup was completed earlier. [NEM-021](#nem-021), [NEM-022](#nem-022) and [NEM-023](#nem-023) now deliver separate Boot applications, locked builds, startup checks and a prepared CI workflow. [Foundation findings](evidence/foundation/findings.md): 49 passing tests; API/worker packaged smoke checks; clean source-only copy builds offline; forbidden dependency probe rejected. Hosted CI has not run. Changes are uncommitted.
+
+
+### Implementation breakdown
+
+- [NEM-021](#nem-021): module boundaries and independently runnable applications.
+- [NEM-022](#nem-022): executable-jar startup checks and local setup.
+- [NEM-023](#nem-023): reproducible CI checks and module dependency enforcement.
 
 <a id="nem-012"></a>
 
@@ -543,3 +553,72 @@ Refine deployment, quotas, identity, monitoring, recovery, coverage and release 
 ### Completion evidence
 
 Not started; no implementation or verification evidence yet.
+
+<a id="nem-021"></a>
+
+## NEM-021 — Create backend modules and Boot entry points
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-010](#nem-010)
+- References: [NEM-011](#nem-011), [architecture](architecture.md)
+
+### Outcome
+
+Create backend modules and Boot entry points.
+
+### Done when
+
+API and worker build as separate executable jars on Java 25 / Boot 4.1.1; infrastructure depends on core; core remains free of Spring; application contexts start without OE/database credentials.
+
+### Completion evidence
+
+Created infrastructure/api/worker modules on Java 25 and Boot 4.1.1. Both executable jars build; application context tests pass without database/OE credentials; core remains Spring-free. See [foundation findings](evidence/foundation/findings.md).
+
+<a id="nem-022"></a>
+
+## NEM-022 — Verify packaged application startup and local setup
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-021](#nem-021)
+- References: [NEM-011](#nem-011), [architecture](architecture.md)
+
+### Outcome
+
+Verify packaged application startup and local setup.
+
+### Done when
+
+Start each packaged jar, verify API health and worker liveness, shut down only owned processes, and document reproducible commands and current limitations.
+
+### Completion evidence
+
+Packaged startup script verifies API health on a random loopback port and non-HTTP worker liveness, then cleans up its children. Checks pass in the working directory and a clean source-only copy. [README](../../README.md) documents build/run/check commands and current limits.
+
+<a id="nem-023"></a>
+
+## NEM-023 — Add repeatable CI and module dependency checks
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-022](#nem-022)
+- References: [NEM-011](#nem-011), [architecture](architecture.md)
+
+### Outcome
+
+Add repeatable CI and module dependency checks.
+
+### Done when
+
+A checked-in CI workflow runs the locked build/tests and packaged smoke checks; module direction is enforced; verify the commands locally and distinguish that from an unexecuted hosted CI run.
+
+### Completion evidence
+
+Added pinned GitHub Actions workflow and Gradle project-dependency enforcement. Local and clean-copy builds pass 49 tests and packaged smoke checks. Injecting core -> api is rejected. Hosted CI remains unexecuted; local verification is recorded in [findings](evidence/foundation/findings.md).
