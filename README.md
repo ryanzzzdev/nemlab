@@ -21,6 +21,20 @@ This is the backend project and the home of shared project documentation. The pl
 
 ## Development setup
 
-This folder currently contains documentation only. The backend Git repository is initialised. Build files, application modules, database setup, and run commands will be added during implementation. No OE credentials are needed to read the plan. Future credentials belong in local configuration or a secret store, never in committed documents or samples.
+The backend repository contains a plain Java battery-engine `core` module. API/worker applications, database and frontend are future work.
+
+Use JDK 25 (verified locally with OpenJDK 25.0.4+7). The checked-in Gradle 9.7.1 wrapper verifies its distribution checksum; JUnit 6.1.3 and transitive test dependencies are locked. No globally installed Gradle or OE credentials are required.
+
+```sh
+# Point JAVA_HOME at your JDK 25 installation. On this workstation:
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+./gradlew clean build
+```
+
+The first run downloads Gradle and test dependencies. Once cached, `./gradlew clean build --offline` runs without network access. Tests include synthetic reference cases and saved OE price fixtures. Open `core/build/reports/tests/test/index.html` for the generated report.
+
+The entry point is `au.nemlab.batterylab.BatterySimulation.run`, accepting an explicit battery, ordered windows, costs and complete price day. `FixedSchedule.plan` accepts only physical inputs and windows; `DispatchValidator` independently checks the resulting trajectory. Results include immutable inputs, unrounded dispatch/accounting and model/strategy versions. This is a library, not yet a runnable web application. See the [engine contract](docs/project/features/battery-model-contract.md) for units, input rules and limits.
+
+Local OE credentials remain in ignored configuration; never commit them. Display formatting, persistence and hindsight optimisation are outside this core increment.
 
 Read [AGENTS.md](AGENTS.md) before working on this project.

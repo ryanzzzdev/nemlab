@@ -4,7 +4,7 @@ Updated: 2026-09-17
 
 The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
-M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. Next: [NEM-009](backlog.md#nem-009), using the accepted Java 25 baseline and specified battery contract, then [NEM-010](backlog.md#nem-010). No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
+M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. Next: [NEM-010](backlog.md#nem-010), using the tested Java 25 fixed-schedule core. M2 remains in progress until solver correctness and performance are established. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
 
 | Milestone | Outcome | Status | Depends on |
 | --- | --- | --- | --- |

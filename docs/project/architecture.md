@@ -1,13 +1,13 @@
 # NEMLab architecture
 
 Updated: 2026-09-17  
-Status: Initial design; nothing described below is implemented yet.
+Status: Plain Java core and fixed-schedule validation implemented; API, worker, persistence and frontend remain planned.
 
 ## Agreed boundaries
 
 One backend repository and one frontend repository. The backend uses Java and Spring Boot, with separately runnable API and worker applications. Admin may become a second application in the frontend repository. See [repository decision](decisions/002-repositories-and-applications.md).
 
-Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. Documented compatibility is checked; the project build and solver remain unverified. See [runtime decision](decisions/004-java-runtime.md).
+Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. The Java 25 core build/tests pass with the pinned wrapper and locked JUnit 6.1.3 dependencies. Boot applications and solver compatibility remain unverified. See [runtime decision](decisions/004-java-runtime.md).
 
 ## Proposed structure
 
@@ -19,7 +19,7 @@ nemlab/                         Backend project, already created
   worker/                       Spring Boot scheduler/job entry point
   docs/                         Canonical project documentation
 
-nemlab-ui/                      Proposed frontend name; not created
+nemlab-ui/                      Confirmed frontend folder; application not created
   apps/web/                     Public application
   apps/admin/                   Optional later UI
   packages/api-client/          Generated API types/client

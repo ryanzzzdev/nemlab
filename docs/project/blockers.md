@@ -29,7 +29,7 @@ These records distinguish future decision gates from work that is blocked now. N
 - Impact: M2 engine build and M3 scaffolding.
 - Affected tasks: [NEM-007](backlog.md#nem-007), [NEM-009](backlog.md#nem-009), [NEM-011](backlog.md#nem-011).
 - Evidence: User explicitly accepted Java 25 on 2026-09-17. Installed Java 25 reports 25.0.4+7; official Boot/Gradle documentation supports the selected baseline.
-- Resolution: 2026-09-17 — [Decision 004](decisions/004-java-runtime.md) records pins and minimal build scope. Actual project build validation remains NEM-009; solver compatibility remains NEM-010.
+- Resolution: 2026-09-17 — [Decision 004](decisions/004-java-runtime.md) records pins and minimal build scope. NEM-009 subsequently verified the Java 25 core build/tests; solver compatibility remains NEM-010.
 
 <a id="blk-003"></a>
 
@@ -57,7 +57,7 @@ These records distinguish future decision gates from work that is blocked now. N
 - Affected tasks: [NEM-008](backlog.md#nem-008), [NEM-009](backlog.md#nem-009), [NEM-010](backlog.md#nem-010), [NEM-016](backlog.md#nem-016).
 - Evidence / attempts: The [M2 contract](features/battery-model-contract.md) now specifies schedule allocation, terminal feasibility, illustrative defaults and numerical tolerances. Solver choice, measured numerical behaviour and runtime remain open.
 - Blocking scope: Resolve policy before baseline implementation and solver evidence before optimality claims.
-- Next action / owner: Implement and independently test the contract in NEM-009, then measure a candidate solver on exact fixtures and full days in NEM-010. Refine final public presets/limits before launch.
+- Next action / owner: NEM-009 fixed-schedule tests pass. Next measure a candidate solver on exact fixtures and full days in NEM-010. Refine final public presets/limits before launch.
 - Resolution: Not yet resolved.
 
 <a id="blk-005"></a>

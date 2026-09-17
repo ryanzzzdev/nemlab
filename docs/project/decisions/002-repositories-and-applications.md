@@ -9,7 +9,7 @@ NEMLab lives in its own workspace and needs a shared backend for multiple featur
 
 ## Decision
 
-Use one Java/Spring Boot backend repository with API and worker applications, plus one frontend repository. House an eventual Admin app in that frontend repository. The backend project folder is nemlab; the frontend folder name remains proposed.
+Use one Java/Spring Boot backend repository with API and worker applications, plus one frontend repository. House an eventual Admin app in that frontend repository. The backend project folder is `nemlab`; the frontend project folder is `nemlab-ui`.
 
 ## Alternatives
 

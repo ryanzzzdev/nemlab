@@ -1,7 +1,7 @@
 # Battery engine contract v1
 
 Date: 2026-09-17  
-Status: Selected engineering baseline for M2 under delegated planning; not implemented. Demo preset values are illustrative, not industry recommendations or a final launch UI decision.
+Status: M2 fixed schedule, input validation, physical validation and accounting implemented and tested in core. Hindsight remains unimplemented. Demo preset values are illustrative, not industry recommendations or a final launch UI decision.
 
 This is the executable specification for [BatteryLab](batterylab.md), refining the earlier [mathematical proposal](../../summaries/battery-arbitrage-details.md). Model version: `battery-v1`; schedule version: `ordered-windows-v1`.
 
@@ -89,4 +89,4 @@ All cases below use two adjacent five-minute intervals, first charge-only and se
 
 Additional negative-sale case: unit efficiency and prices=(-30,-10) still gives margin=20 for a full cycle. Terminal condition prevents selling unreplaced initial inventory. For unrestricted one-interval hindsight at price=-100, E_initial=E_min=E_max=0, capacity=1 and eta_c=eta_d=.9, only idle is physical; a relaxation admitting simultaneous import/export would incorrectly earn money.
 
-NEM-009 must turn these references into independent Java assertions and add rejection cases, input-price permutation checks, partial allocations, nonzero initial energy and sqrt-efficiency round trips. NEM-010 must validate tiny optimisation cases independently before reporting full-day performance. This document is specification evidence, not executed engine tests.
+[NEM-009](../backlog.md#nem-009) implements the fixed-schedule references as [Java tests](../../../core/src/test/java/au/nemlab/batterylab/BatteryEngineTest.java), including rejection cases, price permutation, partial allocation, nonzero initial energy, round-trip efficiencies and 200 seeded physical/accounting scenarios. Both validated NSW1 days run from saved fixtures. Hindsight optimum expectations in this table are mathematical references only; NEM-010 must validate them against the chosen solver before reporting optimality/performance. Display rounding belongs to the later presentation boundary; the core returns unrounded values.

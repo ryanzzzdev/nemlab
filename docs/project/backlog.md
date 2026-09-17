@@ -2,7 +2,7 @@
 
 Updated: 2026-09-17
 
-Task sections own status. The index is navigation, not a second status tracker. Next: NEM-009 implements the core and fixed schedule, then NEM-010 evaluates the solver. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: NEM-010 evaluates the hindsight solver against the verified fixed-schedule core. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -248,7 +248,7 @@ Specified the [v1 engine contract](features/battery-model-contract.md): determin
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-007](#nem-007), [NEM-008](#nem-008)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -264,7 +264,9 @@ Build the minimal Java proof with a deterministic feasible baseline and independ
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Implemented a Java 25 `core` module, checksum-pinned Gradle 9.7.1 wrapper and locked JUnit 6.1.3 dependencies. Immutable battery/efficiency/window/price-day types enforce input and full-day semantics. `FixedSchedule.plan` cannot access prices/costs; separate validation reconstructs energy and checks bounds, power, windows, exclusivity and terminal energy. Accounting is recomputed from dispatch.
+
+Verification: `JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./gradlew clean build --no-daemon --offline` passed on 2026-09-17: **33 tests, zero failures/errors/skips**, including 200 seeded scenarios inside one invariant test and both validated NSW1 price days. [Tests](../../core/src/test/java/au/nemlab/batterylab/BatteryEngineTest.java) cover negative/zero/losing prices, efficiency/fees, connection limits, partial allocation, terminal inventory, price independence, missing/duplicate/wrong-region data, DST-independent market days, invalid windows, overflow and tampered dispatch. No solver or API is claimed. Changes are uncommitted; setup is in [README](../../README.md).
 
 <a id="nem-010"></a>
 
@@ -273,7 +275,7 @@ Not started; no implementation or verification evidence yet.
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-004](#nem-004), [NEM-009](#nem-009)
 - References: [Specification / decision](features/batterylab.md)
 
