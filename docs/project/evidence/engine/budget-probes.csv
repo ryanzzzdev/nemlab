@@ -1,0 +1,5 @@
+budget_ms,iteration_limit,status,raw_state,elapsed_ms,has_dispatch,has_bound
+0,100000,NO_SOLUTION,NOT_RUN,0.004219,false,false
+5000,0,NO_SOLUTION,NOT_RUN,0.000380,false,false
+1,100000,NO_SOLUTION,UNEXPLORED,4.186760,false,false
+5000,1,NO_SOLUTION,UNEXPLORED,1.974254,false,false

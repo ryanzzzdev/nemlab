@@ -27,11 +27,11 @@ Checked 2026-09-17 against primary sources:
 - [Gradle releases](https://gradle.org/releases/): 9.7.1 is the current stable release shown.
 - [Temurin support](https://adoptium.net/support/): Java 25 is LTS, with availability planned through at least September 2031; Java 24 reached end of support in September 2025. Distribution maintenance schedules differ.
 
-NEM-009 subsequently verified a clean Java 25 core build with Gradle 9.7.1 and locked JUnit 6.1.3 dependencies, including an offline rerun. The checksum-pinned wrapper is checked in as a working-tree change. Boot applications and the solver have not been executed yet.
+NEM-009 subsequently verified a clean Java 25 core build with Gradle 9.7.1 and locked JUnit 6.1.3 dependencies, including an offline rerun. The checksum-pinned wrapper is checked in as a working-tree change. NEM-010 subsequently verified ojAlgo 57.3.0 on Java 25. Boot applications have not been executed yet.
 
 ## Minimal engine build and follow-up
 
-NEM-009 created a Gradle root and plain Java `core` module with focused tests, wrapper and locked test dependencies. No database, API, worker or frontend scaffolding is needed to prove the engine. NEM-010 selects and exercises the optimisation library on Java 25; its compatibility is still unverified. NEM-011 introduces Boot applications and CI, rechecks maintained patches and records any updated pins before use.
+NEM-009 created a Gradle root and plain Java `core` module with focused tests, wrapper and locked test dependencies. No database, API, worker or frontend scaffolding is needed to prove the engine. NEM-010 selected and exercised ojAlgo 57.3.0 on Java 25; see [solver decision](007-hindsight-solver.md). NEM-011 introduces Boot applications and CI, rechecks maintained patches and records any updated pins before use.
 
 ## Alternatives and consequences
 
@@ -39,7 +39,7 @@ Java 24 matches the original request but has a shorter maintenance life. Java 21
 
 ## Acceptance source
 
-Java 25: explicit user instruction above. Specific build/version choices: agent selection under the instruction to proceed. Core build validation is complete in NEM-009; Boot application/CI and solver validation remain implementation work.
+Java 25: explicit user instruction above. Specific build/version choices: agent selection under the instruction to proceed. Core build validation is complete in NEM-009; Boot application/CI validation remains implementation work.
 
 ## References
 

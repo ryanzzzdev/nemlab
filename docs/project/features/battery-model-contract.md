@@ -1,7 +1,7 @@
 # Battery engine contract v1
 
 Date: 2026-09-17  
-Status: M2 fixed schedule, input validation, physical validation and accounting implemented and tested in core. Hindsight remains unimplemented. Demo preset values are illustrative, not industry recommendations or a final launch UI decision.
+Status: M2 fixed schedule, input validation, physical validation and accounting implemented and tested in core. Ordered-window hindsight is implemented and independently certified; unrestricted hindsight is deferred. Demo preset values are illustrative, not industry recommendations or a final launch UI decision.
 
 This is the executable specification for [BatteryLab](batterylab.md), refining the earlier [mathematical proposal](../../summaries/battery-arbitrage-details.md). Model version: `battery-v1`; schedule version: `ordered-windows-v1`.
 
@@ -63,7 +63,7 @@ The primary comparison uses the same charge/discharge windows and all physical/c
 
 The solver must enforce exclusivity, including at negative prices; do not rely on positive-price intuition or an unchecked continuous relaxation. Multiple optimal schedules are allowed; compare objective and constraints rather than requiring identical dispatch. Persist solver/version/options, objective, bound, gap and termination status when available.
 
-Only label a result “optimal within tolerance” when the solver establishes that status, the absolute objective bound gap is <= AUD 0.01, and independent feasibility/accounting checks pass. A feasible timeout is `FEASIBLE_NOT_PROVEN`; preserve it diagnostically but do not show it as perfect hindsight. Other outcomes include `FAILED_VALIDATION`, `INFEASIBLE` and `ERROR`. With validated inputs idle is feasible, so an infeasible solver result signals a modelling/numerical problem. Time/resource limits and library choice are NEM-010 deliverables.
+Only label a result “optimal within tolerance” when the solver establishes that status, the absolute objective bound gap is <= AUD 0.01, and independent feasibility/accounting checks pass. A feasible timeout is `FEASIBLE_NOT_PROVEN`; preserve it diagnostically but do not show it as perfect hindsight. Other outcomes include `FAILED_VALIDATION`, `INFEASIBLE` and `ERROR`. With validated inputs idle is feasible, so an infeasible solver result signals a modelling/numerical problem. The [NEM-010 findings](../evidence/engine/findings.md) select ojAlgo 57.3.0, define bound certification and propose execution limits. `NO_SOLUTION` explicitly covers exhausted budgets without a feasible point; `OPTIMAL` means optimal within the documented tolerance.
 
 ## Numerical contract
 
@@ -89,4 +89,4 @@ All cases below use two adjacent five-minute intervals, first charge-only and se
 
 Additional negative-sale case: unit efficiency and prices=(-30,-10) still gives margin=20 for a full cycle. Terminal condition prevents selling unreplaced initial inventory. For unrestricted one-interval hindsight at price=-100, E_initial=E_min=E_max=0, capacity=1 and eta_c=eta_d=.9, only idle is physical; a relaxation admitting simultaneous import/export would incorrectly earn money.
 
-[NEM-009](../backlog.md#nem-009) implements the fixed-schedule references as [Java tests](../../../core/src/test/java/au/nemlab/batterylab/BatteryEngineTest.java), including rejection cases, price permutation, partial allocation, nonzero initial energy, round-trip efficiencies and 200 seeded physical/accounting scenarios. Both validated NSW1 days run from saved fixtures. Hindsight optimum expectations in this table are mathematical references only; NEM-010 must validate them against the chosen solver before reporting optimality/performance. Display rounding belongs to the later presentation boundary; the core returns unrounded values.
+[NEM-009](../backlog.md#nem-009) implements the fixed-schedule references as [Java tests](../../../core/src/test/java/au/nemlab/batterylab/BatteryEngineTest.java), including rejection cases, price permutation, partial allocation, nonzero initial energy, round-trip efficiencies and 200 seeded physical/accounting scenarios. Both validated NSW1 days run from saved fixtures. [NEM-010](../backlog.md#nem-010) validates the ordered-window optimum references against ojAlgo, tiny exact enumeration and fractional manual optima; see the [solver tests](../../../core/src/test/java/au/nemlab/batterylab/HindsightTest.java). The unrestricted example remains a requirement for any future whole-day solver, not implemented evidence. Display rounding belongs to the later presentation boundary; the core returns unrounded values.

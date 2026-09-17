@@ -4,6 +4,7 @@ repositories { mavenCentral() }
 java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 
 dependencies {
+    implementation 'org.ojalgo:ojalgo:57.3.0'
     testImplementation platform('org.junit:junit-bom:6.1.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -11,3 +12,14 @@ dependencies {
 
 test { useJUnitPlatform() }
 dependencyLocking { lockAllConfigurations() }
+
+// Manual evidence run; not part of the normal test task.
+tasks.register('hindsightBenchmark', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'au.nemlab.batterylab.HindsightBenchmark'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+    maxHeapSize = '512m'
+    jvmArgs '-XX:ActiveProcessorCount=2'
+    args rootProject.file('docs/project/evidence/engine/benchmark.csv').absolutePath
+}

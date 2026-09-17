@@ -35,6 +35,8 @@ The first run downloads Gradle and test dependencies. Once cached, `./gradlew cl
 
 The entry point is `au.nemlab.batterylab.BatterySimulation.run`, accepting an explicit battery, ordered windows, costs and complete price day. `FixedSchedule.plan` accepts only physical inputs and windows; `DispatchValidator` independently checks the resulting trajectory. Results include immutable inputs, unrounded dispatch/accounting and model/strategy versions. This is a library, not yet a runnable web application. See the [engine contract](docs/project/features/battery-model-contract.md) for units, input rules and limits.
 
-Local OE credentials remain in ignored configuration; never commit them. Display formatting, persistence and hindsight optimisation are outside this core increment.
+Local OE credentials remain in ignored configuration; never commit them. `OrderedHindsight.solve` provides the certified equal-window comparison using ojAlgo 57.3.0. Always inspect its outcome status: only `OPTIMAL` permits the optimal-within-tolerance label. Solver budgets are cooperative; worker-level hard termination is future work. Whole-day/unrestricted optimisation, display formatting and persistence remain outside this increment.
+
+For the explicit solver experiment, run `./gradlew :core:hindsightBenchmark`. It rewrites the tracked benchmark CSV evidence; ordinary `build` does not. See [measurements and limitations](docs/project/evidence/engine/findings.md).
 
 Read [AGENTS.md](AGENTS.md) before working on this project.

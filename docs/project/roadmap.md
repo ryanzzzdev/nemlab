@@ -4,12 +4,12 @@ Updated: 2026-09-17
 
 The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
-M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. Next: [NEM-010](backlog.md#nem-010), using the tested Java 25 fixed-schedule core. M2 remains in progress until solver correctness and performance are established. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
+M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. M2 now passes for the ordered-window comparison; see [engine evidence](evidence/engine/findings.md). Next: refine [NEM-011](backlog.md#nem-011) into focused shared-foundation tasks. Optional unrestricted hindsight remains deferred. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
 
 | Milestone | Outcome | Status | Depends on |
 | --- | --- | --- | --- |
 | M1 — OE validation | Evidence for supported inputs and coverage | Complete | None |
-| M2 — Battery-engine proof | Correct, reproducible strategies and feasible solver | In progress | M1 price gate; synthetic design can proceed alongside M1 |
+| M2 — Battery-engine proof | Correct, reproducible strategies and feasible solver | Complete | M1 price gate; synthetic design can proceed alongside M1 |
 | M3 — Shared foundation | Ingestion, jobs, persistence, API and frontend shells | Planned | M1 and M2 |
 | M4 — BatteryLab | Complete simulation experience | Planned | M3 |
 | M5 — GridReplay and Admin assessment | Replay experience and an explicit Admin scope decision | Planned | M4 and validated grid inputs |

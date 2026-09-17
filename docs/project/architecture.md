@@ -1,13 +1,13 @@
 # NEMLab architecture
 
 Updated: 2026-09-17  
-Status: Plain Java core and fixed-schedule validation implemented; API, worker, persistence and frontend remain planned.
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; API, worker, persistence and frontend remain planned.
 
 ## Agreed boundaries
 
 One backend repository and one frontend repository. The backend uses Java and Spring Boot, with separately runnable API and worker applications. Admin may become a second application in the frontend repository. See [repository decision](decisions/002-repositories-and-applications.md).
 
-Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. The Java 25 core build/tests pass with the pinned wrapper and locked JUnit 6.1.3 dependencies. Boot applications and solver compatibility remain unverified. See [runtime decision](decisions/004-java-runtime.md).
+Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. The Java 25 core build/tests pass with the pinned wrapper and locked JUnit 6.1.3 dependencies. ojAlgo 57.3.0 also passes the bounded engine evaluation. Boot applications remain unverified. See [runtime decision](decisions/004-java-runtime.md).
 
 ## Proposed structure
 
@@ -57,7 +57,7 @@ These carry forward planning recommendations; [decision 005](decisions/005-infra
 | Charts/tables | Apache ECharts, TanStack Table | Aligned time-series views and administrative tables |
 | Verification | JUnit, database integration tests, Playwright | Domain invariants, persistence recovery, visitor journeys |
 
-A Java optimisation library will be selected through an evidence-producing spike; no solver is chosen yet. Do not require a Python production service merely for optimisation. No broker, distributed cache, Kubernetes, time-series extension, or separate Admin backend is needed by the initial design.
+ojAlgo 57.3.0 is selected for the exact ordered-window LP, with independent dispatch/accounting checks and a dual bound; see [solver decision](decisions/007-hindsight-solver.md) and [measurements](evidence/engine/findings.md). Unrestricted optimisation is deferred. Do not require a Python production service merely for optimisation. No broker, distributed cache, Kubernetes, time-series extension, or separate Admin backend is needed by the initial design.
 
 ## Data ownership and reproducibility
 

@@ -22,7 +22,7 @@ Separate feasibility, numerical validation and accounting from solver implementa
 
 ## Acceptance source
 
-Engineering baseline selected by the agent under the user’s instruction to proceed through runtime and model planning on 2026-09-17; this is not a claim of explicit user approval of each numerical default. Illustrative presets are not final launch assumptions. Solver selection, measured tolerances/performance and public limits remain NEM-010/NEM-020 work. Earlier proposed mathematical principles are retained; multi-cycle schedules are deferred.
+Engineering baseline selected by the agent under the user’s instruction to proceed through runtime and model planning on 2026-09-17; this is not a claim of explicit user approval of each numerical default. Illustrative presets are not final launch assumptions. [Decision 007](007-hindsight-solver.md) now records the tested ordered-window solver and measured tolerances/performance. Public limits remain NEM-020 work. Earlier proposed mathematical principles are retained; multi-cycle schedules are deferred.
 
 ## References
 

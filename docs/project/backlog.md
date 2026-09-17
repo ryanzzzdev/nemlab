@@ -2,7 +2,7 @@
 
 Updated: 2026-09-17
 
-Task sections own status. The index is navigation, not a second status tracker. Next: NEM-010 evaluates the hindsight solver against the verified fixed-schedule core. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-011 into focused shared-foundation tasks before implementation; the bounded M2 engine gate is complete. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -275,7 +275,7 @@ Verification: `JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./gradlew clean buil
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-004](#nem-004), [NEM-009](#nem-009)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -292,7 +292,7 @@ Choose an open-source Java-compatible solver through correctness and runtime evi
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Selected pinned MIT-licensed ojAlgo 57.3.0 on Java 25 for the exact ordered-window model. [Decision 007](decisions/007-hindsight-solver.md) records scope and consequences. [Findings](evidence/engine/findings.md) include primal/dual formulation, independent certification, 47 passing tests (including 40 tiny enumerated and 20 fractional cases), 15 validated full-day runs, memory/time measurements and actual budget probes. Experiment command: `./gradlew clean build :core:hindsightBenchmark --offline --no-daemon` with JAVA_HOME set to JDK 25; final offline `build` also passed after adding the oversized-scenario regression. Cold run 165.55 ms; other runs 2.22–10.42 ms; RSS peak ~94.52 MiB. No unrestricted solver claim. Proposed worker limits/enforcement follow-ups are recorded. NEM-010 changes are included in the local solver commit; NEM-009 was committed as `5c21ecd`.
 
 <a id="nem-011"></a>
 
