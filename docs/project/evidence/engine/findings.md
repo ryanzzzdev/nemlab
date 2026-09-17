@@ -1,5 +1,7 @@
 # NEM-010 — Ordered-window hindsight evaluation
 
+For a nontechnical introduction, read [the plain-language explanation](findings-explained.md).
+
 Date: 2026-09-17  
 Outcome: Pass for the v1 ordered-window comparison. Whole-day/unrestricted optimisation is not implemented or certified.
 
