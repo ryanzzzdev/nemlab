@@ -1,0 +1,19 @@
+{
+  "points": 288,
+  "unique_timestamps": 288,
+  "duplicates": 0,
+  "missing_query_grid_points": 0,
+  "unexpected_query_grid_points": 0,
+  "null_values": 0,
+  "invalid_numeric_values": 0,
+  "all_spacing_300_seconds": true,
+  "all_offsets_utc_plus_10": true,
+  "minimum": 0.0,
+  "maximum": 122.86,
+  "zero_values": 3,
+  "negative_values": 0,
+  "unit": "$/MWh",
+  "first": "2026-09-11T00:00:00+10:00",
+  "last": "2026-09-11T23:55:00+10:00",
+  "response_sha256": "e0df06729cb61575f960092f0fea98d98a007686c4616a1273afd83f62c4120b"
+}

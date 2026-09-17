@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2026-09-11T23:50:00+10:00",
+    "oe_price": 90.49,
+    "aemo_rrp": "90.49",
+    "absolute_difference": "0.00"
+  },
+  {
+    "timestamp": "2026-09-11T23:55:00+10:00",
+    "oe_price": 96.62,
+    "aemo_rrp": "96.62098",
+    "absolute_difference": "0.00098"
+  },
+  {
+    "timestamp": "2026-09-12T00:00:00+10:00",
+    "oe_price": 95.46,
+    "aemo_rrp": "95.45695",
+    "absolute_difference": "0.00305"
+  },
+  {
+    "timestamp": "2026-09-12T00:05:00+10:00",
+    "oe_price": 90.49,
+    "aemo_rrp": "90.49",
+    "absolute_difference": "0.00"
+  }
+]

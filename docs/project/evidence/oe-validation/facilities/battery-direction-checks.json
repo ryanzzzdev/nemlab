@@ -1,0 +1,26 @@
+[
+  {
+    "base": "WALGRV1",
+    "directional": "WALGRVG1",
+    "points": 98,
+    "max_error": 0.0
+  },
+  {
+    "base": "WALGRV1",
+    "directional": "WALGRVL1",
+    "points": 191,
+    "max_error": 0.0
+  },
+  {
+    "base": "WTAHB1",
+    "directional": "WTAHB1G1",
+    "points": 113,
+    "max_error": 0.0
+  },
+  {
+    "base": "WTAHB1",
+    "directional": "WTAHB1L1",
+    "points": 176,
+    "max_error": 0.0
+  }
+]

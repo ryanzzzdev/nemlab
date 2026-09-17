@@ -1,0 +1,14 @@
+{
+  "endpoint": "https://api.openelectricity.org.au/v4/data/network/NEM",
+  "parameters": {
+    "metrics": "power",
+    "interval": "5m",
+    "network_region": "NSW1",
+    "primary_grouping": "network_region",
+    "date_start": "2023-09-11T00:00:00",
+    "date_end": "2023-09-12T01:00:00",
+    "secondary_grouping": "fueltech"
+  },
+  "http_status": 200,
+  "retrieved_at": "2026-09-13T13:08:21.797528+00:00"
+}

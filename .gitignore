@@ -1,0 +1,14 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+
+# Generated build and local tooling files
+.gradle/
+**/build/
+*.class
+__pycache__/
+*.pyc
+.idea/
+*.iml
+.DS_Store

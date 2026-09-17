@@ -1,0 +1,9 @@
+{
+  "endpoint": "https://api.openelectricity.org.au/v4/facilities/",
+  "parameters": {
+    "network_id": "NEM",
+    "network_region": "NSW1"
+  },
+  "status": 200,
+  "retrieved_at": "2026-09-13T13:11:19.403488+00:00"
+}

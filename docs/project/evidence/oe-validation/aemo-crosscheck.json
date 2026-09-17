@@ -1,0 +1,30 @@
+[
+  {
+    "url": "https://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/PUBLIC_DISPATCHIS_202609112350_0000000537350903.zip",
+    "member": "PUBLIC_DISPATCHIS_202609112350_0000000537350903.CSV",
+    "settlementdate": "2026/09/11 23:50:00",
+    "rrp": "90.49",
+    "intervention": "0"
+  },
+  {
+    "url": "https://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/PUBLIC_DISPATCHIS_202609112355_0000000537351562.zip",
+    "member": "PUBLIC_DISPATCHIS_202609112355_0000000537351562.CSV",
+    "settlementdate": "2026/09/11 23:55:00",
+    "rrp": "96.62098",
+    "intervention": "0"
+  },
+  {
+    "url": "https://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/PUBLIC_DISPATCHIS_202609120000_0000000537352084.zip",
+    "member": "PUBLIC_DISPATCHIS_202609120000_0000000537352084.CSV",
+    "settlementdate": "2026/09/12 00:00:00",
+    "rrp": "95.45695",
+    "intervention": "0"
+  },
+  {
+    "url": "https://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/PUBLIC_DISPATCHIS_202609120005_0000000537352642.zip",
+    "member": "PUBLIC_DISPATCHIS_202609120005_0000000537352642.CSV",
+    "settlementdate": "2026/09/12 00:05:00",
+    "rrp": "90.49",
+    "intervention": "0"
+  }
+]

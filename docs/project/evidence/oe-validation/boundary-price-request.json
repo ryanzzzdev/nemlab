@@ -1,0 +1,13 @@
+{
+  "endpoint": "https://api.openelectricity.org.au/v4/market/network/NEM",
+  "parameters": {
+    "metrics": "price",
+    "interval": "5m",
+    "network_region": "NSW1",
+    "primary_grouping": "network_region",
+    "date_start": "2026-09-11T23:50:00",
+    "date_end": "2026-09-12T00:10:00"
+  },
+  "retrieved_at": "2026-09-13T13:03:09.482002+00:00",
+  "http_status": 200
+}

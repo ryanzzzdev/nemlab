@@ -1,0 +1,32 @@
+# Admin
+
+Updated: 2026-09-13  
+Status: Conditional feature; the UI is not committed to initial launch.
+
+## Purpose and boundary
+
+Help the operator inspect data and jobs, request bounded OE refreshes, retry failed work, and audit administrative actions. Admin would be a separate app inside the frontend repository, sharing components and the API client. The existing API application serves protected administrator endpoints; no additional backend service is planned.
+
+## Required operations before launch
+
+- Inspect coverage, freshness, failed ingestion and job progress.
+- Request a refresh/backfill for a specified region/metric/window and see its job ID.
+- Retry eligible failed work safely and see the attempt history.
+- Inspect validation failures and resource/queue limits.
+- Authenticate the operator and record who requested which operation.
+
+These operations must exist through authenticated endpoints or documented operator commands even when the UI is deferred. Raw database editing is not the normal correction path: reingest or use a validated, auditable operation.
+
+## Optional first UI
+
+Coverage table, job list/detail, refresh form, retry action, and audit list. Forms show exact scope before submitting work and enforce the same bounds as the backend. Distinguish queued requests from completed data changes. Do not offer arbitrary SQL, credential display, unrestricted historical refreshes, or generic table CRUD.
+
+Use the same durable job mechanism for schedules, commands and UI requests. Backend authorisation, safe retry semantics, and deduplication are mandatory regardless of frontend controls. Determine identity/session handling and any CSRF protections from the chosen authentication mechanism.
+
+## Decision gate and acceptance
+
+At M5, exercise the operator workflow through the available endpoints/commands. Include the UI if it materially improves coverage inspection and recovery within the release scope; otherwise document the tested alternative and defer the app.
+
+If included, unauthorised requests fail server-side, refresh/retry produces one logical operation, progress and errors are inspectable, and actor/scope/result can be traced. If deferred, equivalent critical operations pass a documented operator rehearsal before M6 completes.
+
+See [NEM-019](../backlog.md#nem-019), [BLK-006](../blockers.md#blk-006), and [architecture](../architecture.md).
