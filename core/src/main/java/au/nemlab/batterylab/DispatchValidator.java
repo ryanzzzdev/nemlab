@@ -1,9 +1,15 @@
 package au.nemlab.batterylab;
 
-/** Independent reconstruction for both the fixed policy and future solver results. */
+/**
+ * Independent reconstruction for both the fixed policy and future solver
+ * results.
+ */
 public final class DispatchValidator {
     public static final double ENERGY_TOLERANCE = 1e-7;
-    private DispatchValidator() {}
+
+    private DispatchValidator() {
+    }
+
     public static void validate(Battery battery, ScheduleWindows windows, Dispatch dispatch) {
         if (dispatch.intervals().size() != PriceDay.INTERVALS)
             throw new IllegalArgumentException("dispatch requires 288 intervals");

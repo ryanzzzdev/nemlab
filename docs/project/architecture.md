@@ -1,7 +1,7 @@
 # NEMLab architecture
 
 Updated: 2026-09-17  
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; persistence and frontend remain planned.
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; scheduled worker integration and frontend remain planned.
 
 ## Agreed boundaries
 
@@ -14,7 +14,7 @@ Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.
 ```text
 nemlab/                         Backend project, already created
   core/                         Domain models and feature services
-  infrastructure/               Adapter boundary; persistence/OE/jobs not implemented
+  infrastructure/               OE price adapter, JDBC revisions/coverage, backfill checkpoints
   api/                          Spring Boot HTTP entry point
   worker/                       Non-web Boot entry point; scheduling/jobs not implemented
   docs/                         Canonical project documentation
@@ -43,7 +43,7 @@ The API validates requests, reads stored series/results, and persists jobs. Sche
 
 ## Proposed technology choices
 
-Spring MVC and Actuator are implemented in the API shell; the worker uses the non-web Boot starter. Other entries carry forward planning recommendations; [decision 005](decisions/005-infrastructure-and-frontend.md) remains Proposed. Verify supported versions, licences, and compatibility when scaffolding.
+PostgreSQL/Flyway/JDBC price storage is implemented under [decision 008](decisions/008-price-data-foundation.md). Spring MVC and Actuator are implemented in the API shell; the worker uses the non-web Boot starter. Other entries carry forward planning recommendations; [decision 005](decisions/005-infrastructure-and-frontend.md) remains Proposed. Verify supported versions, licences, and compatibility when scaffolding.
 
 | Area | Proposed choice | Purpose |
 | --- | --- | --- |

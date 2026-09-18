@@ -21,9 +21,9 @@ This is the backend project and the home of shared project documentation. The Ja
 
 ## Development setup
 
-The backend contains the plain Java battery-engine `core`, an `infrastructure` module reserved for adapters, and separate Spring Boot 4.1.1 `api` and `worker` applications. Database integration, ingestion, jobs and frontend are future work.
+The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Worker scheduling, business APIs and frontend remain future work.
 
-Use JDK 25 (verified locally with OpenJDK 25.0.4+7). The checked-in Gradle 9.7.1 wrapper verifies its distribution checksum; JUnit 6.1.3 and transitive test dependencies are locked. No globally installed Gradle or OE credentials are required.
+Use JDK 25 (verified locally with OpenJDK 25.0.4+7). The checked-in Gradle 9.7.1 wrapper verifies its distribution checksum; JUnit 6.1.3 and transitive test dependencies are locked. No globally installed Gradle or OE credentials are required for tests. A running Docker daemon is required for the PostgreSQL integration tests; the initial run downloads disposable container images.
 
 ```sh
 # Point JAVA_HOME at your JDK 25 installation. On this workstation:
@@ -64,6 +64,14 @@ That script starts each executable jar, checks API health and worker liveness, t
 
 [The backend workflow](.github/workflows/backend.yml) runs the locked build/tests and packaged startup checks on Java 25. Its action revisions and JDK version are pinned. The same commands have passed locally and from a clean source-only copy; no hosted workflow run or remote publication has occurred. If another CI provider is selected, reuse these commands.
 
-`./gradlew verifyModuleBoundaries` rejects forbidden project dependencies. API and worker may depend on core/infrastructure; infrastructure may depend on core; core has no project dependencies. Infrastructure currently has no adapters or Spring beans. See [foundation verification](docs/project/evidence/foundation/findings.md).
+`./gradlew verifyModuleBoundaries` rejects forbidden project dependencies. API and worker may depend on core/infrastructure; infrastructure may depend on core; core has no project dependencies. Infrastructure contains the explicit price-source and JDBC adapters; application wiring is deferred to the worker/API tasks. See [foundation verification](docs/project/evidence/foundation/findings.md).
+
+## Price ingestion and local PostgreSQL
+
+See [infrastructure instructions](infrastructure/README.md) for Compose setup, explicit migrations,
+bounded backfills, resume/status, coverage and import history. The importer preserves immutable
+price revisions and snapshot references, and pauses rather than filling missing data. Tests
+use disposable PostgreSQL containers; ordinary application startup still needs no database.
+The `.env.example` includes local database fields; real secrets stay in ignored configuration.
 
 Read [AGENTS.md](AGENTS.md) before working on this project.

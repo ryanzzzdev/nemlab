@@ -2,13 +2,18 @@ package au.nemlab.batterylab;
 
 import java.util.stream.DoubleStream;
 
-/** Recompute unrounded amounts from dispatch; no schedule logic or display rounding. */
+/**
+ * Recompute unrounded amounts from dispatch; no schedule logic or display
+ * rounding.
+ */
 public record Accounting(double importedMWh, double exportedMWh, double chargingCost,
-                         double revenue, double fees, double degradation, double margin, double lossesMWh) {
+        double revenue, double fees, double degradation, double margin, double lossesMWh) {
     public Accounting {
-        for (double value : new double[]{importedMWh, exportedMWh, chargingCost, revenue,
-                fees, degradation, margin, lossesMWh}) Numbers.finite("accounting total", value);
+        for (double value : new double[] { importedMWh, exportedMWh, chargingCost, revenue,
+                fees, degradation, margin, lossesMWh })
+            Numbers.finite("accounting total", value);
     }
+
     public static Accounting calculate(Battery battery, TradingCosts costs, PriceDay day, Dispatch dispatch) {
         if (dispatch.intervals().size() != PriceDay.INTERVALS)
             throw new IllegalArgumentException("dispatch and price day lengths differ");
@@ -28,6 +33,7 @@ public record Accounting(double importedMWh, double exportedMWh, double charging
         return new Accounting(imported, exported, chargingCost, revenue, fees, degradation,
                 revenue - chargingCost - fees - degradation, losses);
     }
+
     public static boolean reconciles(double expected, double actual) {
         return Double.isFinite(expected) && Double.isFinite(actual)
                 && Math.abs(expected - actual) <= 1e-6 + 1e-9 * Math.max(Math.abs(expected), Math.abs(actual));

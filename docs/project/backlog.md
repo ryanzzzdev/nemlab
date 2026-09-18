@@ -2,7 +2,7 @@
 
 Updated: 2026-09-17
 
-Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-012 into focused database, ingestion and coverage tasks. NEM-011 has established the runnable backend foundation; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-013 into durable worker jobs, scheduling and protected operator controls. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -31,6 +31,10 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-021 — Backend modules and Boot entry points](#nem-021)
 - [NEM-022 — Packaged startup and local setup](#nem-022)
 - [NEM-023 — CI and module dependency checks](#nem-023)
+- [NEM-024 — PostgreSQL migrations](#nem-024)
+- [NEM-025 — OE price retrieval](#nem-025)
+- [NEM-026 — Revision/coverage/snapshot storage](#nem-026)
+- [NEM-027 — Resumable price backfill](#nem-027)
 
 <a id="nem-001"></a>
 
@@ -336,7 +340,7 @@ Git setup was completed earlier. [NEM-021](#nem-021), [NEM-022](#nem-022) and [N
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-011](#nem-011)
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -352,7 +356,11 @@ Refine migrations, source provenance, observation versions, bounded polling and 
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Price-first implementation complete through NEM-024–NEM-027. [Findings](evidence/data-foundation/findings.md) record 64 passing tests, real PostgreSQL migrations/revision/snapshot/checkpoint tests, bounded HTTP stub tests and packaged application smoke checks. [Operator instructions](../../infrastructure/README.md) cover explicit migration/import/resume/coverage/history. GridReplay adapters remain NEM-018; worker integration and scheduling remain NEM-013. No live OE request or hosted CI run was performed. Changes are uncommitted.
+
+### Implementation breakdown
+
+Price-first deliverable: NEM-024 schema, NEM-025 OE adapter, NEM-026 revisions/coverage/snapshots, NEM-027 resumable backfill. GridReplay ingestion adapters will be scoped with NEM-018 after metric semantics are settled; no generic all-metric ingestion promise is made. Scheduling and job leases remain NEM-013.
 
 <a id="nem-013"></a>
 
@@ -622,3 +630,79 @@ A checked-in CI workflow runs the locked build/tests and packaged smoke checks; 
 ### Completion evidence
 
 Added pinned GitHub Actions workflow and Gradle project-dependency enforcement. Local and clean-copy builds pass 49 tests and packaged smoke checks. Injecting core -> api is rejected. Hosted CI remains unexecuted; local verification is recorded in [findings](evidence/foundation/findings.md).
+
+<a id="nem-024"></a>
+
+## NEM-024 — Create PostgreSQL price storage and migrations
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-011](#nem-011)
+- References: [NEM-012](#nem-012)
+
+### Done when
+
+Migrations establish immutable day revisions, current coverage, ingestion attempts, snapshot references and backfill checkpoints; tested against real PostgreSQL.
+
+### Completion evidence
+
+PostgreSQL 18.6 schema and Flyway migrations verified against a disposable real database, including reapplication, constraints and immutable-record enforcement. See [findings](evidence/data-foundation/findings.md).
+
+<a id="nem-025"></a>
+
+## NEM-025 — Implement bounded OE price-day retrieval
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-011](#nem-011)
+- References: [NEM-012](#nem-012)
+
+### Done when
+
+Parse validated OE price format with correct interval-end boundaries; reject invalid metadata/duplicates; preserve gaps/nulls; bounded requests/retries and no credential logging.
+
+### Completion evidence
+
+Implemented exact price-day query/normalisation, matching source metadata and preserved decimal values. Saved historical fixture and local HTTP stub tests cover boundary selection, gaps/nulls, bad units/regions, duplicates, misaligned intervals, bounded retries, sanitized errors and payload cap.
+
+<a id="nem-026"></a>
+
+## NEM-026 — Store revisions, expose coverage and preserve snapshots
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-024](#nem-024), [NEM-025](#nem-025)
+- References: [NEM-012](#nem-012)
+
+### Done when
+
+Repeated identical content creates no duplicate revision; corrected data creates a new revision; current coverage distinguishes missing/null/zero; old snapshots remain unchanged.
+
+### Completion evidence
+
+Sequential/concurrent reimports reuse a revision; corrections create revisions; earlier fetches cannot replace fresher current data; immutable complete snapshots preserve original prices. Coverage/history and snapshot tests pass on PostgreSQL.
+
+<a id="nem-027"></a>
+
+## NEM-027 — Resume price backfills from persisted checkpoints
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-025](#nem-025), [NEM-026](#nem-026)
+- References: [NEM-012](#nem-012)
+
+### Done when
+
+One-day chunks commit data and checkpoint atomically; failed days do not advance; retries/restarts resume; an explicit local runner demonstrates the integration without enabling a scheduler.
+
+### Completion evidence
+
+One-day data and checkpoint commits are atomic. Injected update failure rolls back both; incomplete/failed days pause; a fresh runner resumes from persisted progress; stale commits and >31-day requests are rejected. Local operator commands expose start/resume/status/coverage/history.

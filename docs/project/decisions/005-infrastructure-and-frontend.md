@@ -1,7 +1,7 @@
 # 005 — Infrastructure and frontend stack
 
 Date: 2026-09-13  
-Status: Proposed
+Status: Proposed for remaining choices; PostgreSQL/Flyway/JDBC accepted in [decision 008](008-price-data-foundation.md)
 
 ## Context
 

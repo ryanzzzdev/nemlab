@@ -3,9 +3,12 @@ package au.nemlab.batterylab;
 import java.util.ArrayList;
 import java.util.Objects;
 
-/** Price-independent policy: neither prices nor costs appear in this interface. */
+/**
+ * Price-independent policy: neither prices nor costs appear in this interface.
+ */
 public final class FixedSchedule {
     public static final String VERSION = "ordered-windows-v1";
+
     public Dispatch plan(Battery battery, ScheduleWindows windows) {
         Objects.requireNonNull(battery, "battery");
         Objects.requireNonNull(windows, "windows");

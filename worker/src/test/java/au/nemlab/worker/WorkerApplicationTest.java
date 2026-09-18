@@ -8,12 +8,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.main.keep-alive=false")
 class WorkerApplicationTest {
-    @Autowired ApplicationContext context;
+    @Autowired
+    ApplicationContext context;
 
-    @Test void workerStartsWithoutDatabaseCredentialsOrWebRuntime() {
+    @Test
+    void workerStartsWithoutDatabaseCredentialsOrWebRuntime() {
         assertEquals("nemlab-worker", context.getEnvironment().getProperty("spring.application.name"));
         assertEquals("none", context.getEnvironment().getProperty("spring.main.web-application-type"));
-        assertThrows(ClassNotFoundException.class, () -> Class.forName("org.springframework.web.servlet.DispatcherServlet"));
+        assertThrows(ClassNotFoundException.class,
+                () -> Class.forName("org.springframework.web.servlet.DispatcherServlet"));
         assertThrows(ClassNotFoundException.class, () -> Class.forName("au.nemlab.api.ApiApplication"));
     }
 }

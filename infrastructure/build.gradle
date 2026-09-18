@@ -1,4 +1,24 @@
 plugins { id 'java-library' }
+repositories { mavenCentral() }
 java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
-dependencies { implementation project(':core') }
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    implementation project(':core')
+    implementation 'org.springframework:spring-jdbc'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'org.postgresql:postgresql'
+    implementation 'tools.jackson.core:jackson-databind'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+test { useJUnitPlatform(); jvmArgs '--enable-native-access=ALL-UNNAMED' }
 dependencyLocking { lockAllConfigurations() }
+tasks.register('prices', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'au.nemlab.infrastructure.prices.PriceImportCommand'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+}
+
+sourceSets.test.resources { srcDir rootProject.file('docs/project/evidence/oe-validation'); include 'historical-price-response.json' }

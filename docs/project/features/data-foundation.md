@@ -1,7 +1,8 @@
 # Data foundation
 
-Updated: 2026-09-13  
-Status: Proposed implementation specification. [Two NSW1 price samples passed validation](../evidence/oe-validation/price-gate.md); [regional grid API checks passed with limitations](../evidence/oe-validation/grid/findings.md); unit-level timing, facility joins and broader coverage remain unverified.
+Updated: 2026-09-17
+
+Status: Price-first implementation complete under [decision 008](../decisions/008-price-data-foundation.md). GridReplay adapters, scheduled polling and broader launch coverage remain future work.
 
 ## Outcome and scope
 
@@ -47,3 +48,13 @@ Execution: [NEM-002](../backlog.md#nem-002)–[NEM-006](../backlog.md#nem-006), 
 ## M1 evidence update
 
 The [sampled grid gate](../evidence/oe-validation/grid-gate.md) closes M1 for two NSW1 days with explicit observational scope. Preserve sparse directional battery data and choose one validated representation per facility/time window; do not sum parent and split records. Exact cross-metric physical alignment, population-wide battery totals, curtailment detection and broader launch coverage remain excluded pending follow-up.
+
+## Implemented price slice
+
+NEM-024–NEM-027 implement immutable price-day revisions, explicit missing/null coverage,
+complete-day snapshot references, sanitized retrieval history and atomic backfill checkpoints.
+The [findings](../evidence/data-foundation/findings.md) record 64 passing tests and scope limits.
+The [local runner](../../../infrastructure/README.md) imports one day at a time and
+pauses on failures/incomplete days. Scheduling/overlap, leases and protected operator APIs
+remain NEM-013; public read APIs remain NEM-014. GridReplay adapter storage will be scoped
+with NEM-018 after outstanding metric timing/representation questions are resolved.
