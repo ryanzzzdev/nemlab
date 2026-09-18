@@ -2,7 +2,7 @@
 
 Updated: 2026-09-18
 
-Task sections own status. The index is navigation, not a second status tracker. Next: NEM-029 worker scheduling, then NEM-030 protected operator controls. NEM-028 implements the durable refresh queue. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: NEM-030 protected operator controls. NEM-028 implements the durable queue and NEM-029 connects worker scheduling/execution. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -391,7 +391,7 @@ Refine database jobs, retries, leases, idempotency and protected refresh/status 
 
 ### Completion evidence
 
-Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). NEM-028 is implemented and verified; the package remains incomplete until worker and protected operator integration are verified.
+Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). NEM-028 and NEM-029 are implemented and verified; the package remains incomplete until protected operator integration is verified in NEM-030.
 
 <a id="nem-014"></a>
 
@@ -734,7 +734,7 @@ Real PostgreSQL tests prove concurrent deduplication/claims, expired-claim recov
 
 ### Completion evidence
 
-Implemented in `infrastructure/.../jobs` and migration V2. Spring-proxied PostgreSQL integration tests cover the acceptance criteria, including expiry during price writes. See [job evidence](evidence/jobs/findings.md). Changes remain uncommitted after baseline `9b5536e`.
+Implemented in `infrastructure/.../jobs` and migration V2. Spring-proxied PostgreSQL integration tests cover the acceptance criteria, including expiry during price writes. See [job evidence](evidence/jobs/findings.md). Committed as `c5cd5a3`.
 
 <a id="nem-029"></a>
 
@@ -743,7 +743,7 @@ Implemented in `infrastructure/.../jobs` and migration V2. Spring-proxied Postgr
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-028](#nem-028)
 - References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
 
@@ -757,7 +757,7 @@ Verify startup configuration, scheduled deduplication, bounded execution, recove
 
 ### Completion evidence
 
-Not yet verified.
+Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10 daily submission, child-process fetch deadlines and shutdown/restart recovery. Full offline build: 88 passing tests, including real child-process and PostgreSQL worker tests plus executable-jar child launching without live OE calls. See [worker evidence](evidence/jobs/worker-findings.md) and [setup](../../worker/README.md). Changes remain uncommitted after queue commit `c5cd5a3`.
 
 <a id="nem-030"></a>
 
@@ -766,7 +766,7 @@ Not yet verified.
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-029](#nem-029)
 - References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
 

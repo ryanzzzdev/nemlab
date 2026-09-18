@@ -6,8 +6,8 @@ new revision. Saved price snapshots continue to reference the original values.
 
 It depends on core. The API and worker do not automatically configure a database or run
 migrations; the local operator command below explicitly opts into database access. Scheduled
-polling and protected administrator endpoints remain NEM-029/NEM-030. The durable queue
-and distributed claim fencing are implemented in NEM-028 but are not yet wired into the apps.
+polling is now available through the opt-in [worker](../worker/README.md); protected administrator
+endpoints remain NEM-030. Distributed claim fencing is implemented in NEM-028.
 
 ## Local database
 
@@ -105,8 +105,7 @@ transaction, verified by injected-failure rollback tests.
 The execution sequence is `submit` → `claim` → fetch outside the transaction → `complete` or
 `fail`. A claim carries a token that must accompany every result. Database time controls the
 five-minute lease; expiry or cancellation invalidates the old token. At most one claim is current
-across all worker processes. Lease expiry does not kill a still-running process: execution deadlines
-and shutdown handling must be implemented in NEM-029 before enabling worker polling.
+across all worker processes. Lease expiry does not kill a still-running process: the [worker](../worker/README.md) now enforces a 240-second child-process deadline and shutdown cleanup.
 
 Each job refreshes one completed region/day, with a maximum of three attempts. Retry delays
 are 30 and 60 seconds; the queue accepts at most 100 queued/running jobs. A repeated request
@@ -126,5 +125,4 @@ Failure diagnostics are codes, never raw OE response bodies or exception message
 
 The caller must provide a trusted actor identity; the service is not exposed to HTTP yet.
 The existing direct backfill CLI bypasses job leases. Do not use it to execute a queue-owned
-backfill or run overlapping direct imports while enabling the future worker. Worker/operator
-integration will establish the normal shared submission path. No Admin UI is required for this slice.
+backfill or run overlapping direct imports while running the worker. Worker scheduling uses the shared submission service; NEM-030 adds protected operator submission. No Admin UI is required for this slice.

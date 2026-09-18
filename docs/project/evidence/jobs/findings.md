@@ -39,3 +39,7 @@ stop expired processes. Simulation dispatch and its process watchdog remain NEM-
 
 The queue and retries are bounded; completed history retention and audit access controls still
 need launch operational policy. Broad performance, live-provider and deployment claims are excluded.
+
+
+Follow-up (2026-09-18): this queue slice was committed as `c5cd5a3`. NEM-029 worker execution
+is now verified separately in [worker findings](worker-findings.md); NEM-030 remains outstanding.

@@ -36,3 +36,18 @@ Simulation queueing and its external process watchdog remain NEM-016, before sim
 ## Evidence
 
 See [NEM-028](../backlog.md#nem-028) and [PostgreSQL verification](../evidence/jobs/findings.md).
+
+
+## NEM-029 implementation follow-up — 2026-09-18
+
+The opt-in worker now uses an isolated fetch JVM, not a cancellable thread alone, to enforce
+its 240-second deadline. The parent kills and joins overdue children; a child watchdog also
+bounds work after parent failure. The child receives only the OE credential and cannot commit
+database results. This adds JVM startup overhead per day in exchange for a clear termination
+boundary. A single lifecycle-managed polling thread controls scheduling, claiming and shutdown.
+
+Daily submissions use fixed UTC+10 with a 15-minute post-midnight delay and stable region/day
+keys. Missed historical days and later corrections require explicit refreshes. Permanent source
+and credential errors now fail immediately; retryable errors keep the established bounds.
+The parent and child entry points are verified from the executable Boot jar without live OE traffic.
+Simulation isolation remains separate NEM-016 work. See [worker evidence](../evidence/jobs/worker-findings.md).

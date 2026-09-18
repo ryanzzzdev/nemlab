@@ -1,7 +1,7 @@
 # NEMLab architecture
 
 Updated: 2026-09-17  
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; scheduled worker integration and frontend remain planned.
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; protected operator APIs and frontend remain planned.
 
 ## Agreed boundaries
 
@@ -16,7 +16,7 @@ nemlab/                         Backend project, already created
   core/                         Domain models and feature services
   infrastructure/               OE price adapter, JDBC revisions/coverage, backfill checkpoints
   api/                          Spring Boot HTTP entry point
-  worker/                       Non-web Boot entry point; scheduling/jobs not implemented
+  worker/                       Non-web Boot worker; opt-in scheduling and bounded fetch processes
   docs/                         Canonical project documentation
 
 nemlab-ui/                      Confirmed frontend folder; application not created
@@ -78,7 +78,7 @@ Use UTC instants in storage and explicit fixed UTC+10 NEM market-day interpretat
 
 Implemented for one-day price refreshes: queued, running, succeeded, failed, cancelled. The Spring-managed `RefreshJobService` uses `@Transactional` and PostgreSQL row/advisory locks. A five-minute lease and unique claim token fence price writes, checkpoint advancement and job completion in one transaction. Expired claims recover on the next claim request, with at most three attempts and 30/60-second retry backoff. The queue caps pending work at 100 and allows one current ingestion claim across worker processes. Network calls must happen outside these transactions.
 
-Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. Worker scheduling and hard execution limits remain NEM-029; authenticated operator integration remains NEM-030. See [decision 009](decisions/009-durable-refresh-queue.md) and [verification](evidence/jobs/findings.md).
+Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. NEM-029 wires opt-in worker polling and daily submissions after 00:15 fixed UTC+10 through this service. Fetches run in a separate 128 MiB-heap JVM with a 240-second parent deadline, child watchdog and shutdown cleanup. Non-429 HTTP 4xx, invalid source/configuration and excessive Retry-After delays fail terminally; other failures retain bounded retries. Authenticated operator integration remains NEM-030. See [decision 009](decisions/009-durable-refresh-queue.md), [queue verification](evidence/jobs/findings.md), and [worker verification](evidence/jobs/worker-findings.md).
 
 Deduplicate equivalent refreshes and scenario submissions using stable input keys. Save backfill checkpoints. Keep simulation and ingestion concurrency separately bounded; prevent overlap from repeated schedules. Manual triggers return job IDs immediately. Cancellation and progress detail can be refined with actual job types.
 

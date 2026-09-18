@@ -56,6 +56,6 @@ complete-day snapshot references, sanitized retrieval history and atomic backfil
 The [findings](../evidence/data-foundation/findings.md) record 64 passing tests and scope limits.
 The [local runner](../../../infrastructure/README.md) imports one day at a time and
 pauses on failures/incomplete days. NEM-028 adds a tested durable one-day refresh queue with
-deduplication, leases, retries, cancellation and transactional result fencing. Scheduled execution
-and protected operator APIs remain NEM-029/NEM-030 within NEM-013; public read APIs remain NEM-014. GridReplay adapter storage will be scoped
+deduplication, leases, retries, cancellation and transactional result fencing. NEM-029 implements opt-in daily scheduling and deadline-bounded execution;
+protected operator APIs remain NEM-030 within NEM-013; public read APIs remain NEM-014. GridReplay adapter storage will be scoped
 with NEM-018 after outstanding metric timing/representation questions are resolved.

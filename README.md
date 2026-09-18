@@ -21,7 +21,7 @@ This is the backend project and the home of shared project documentation. The Ja
 
 ## Development setup
 
-The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Worker scheduling, business APIs and frontend remain future work.
+The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Opt-in worker scheduling is available; business APIs, protected operator endpoints and frontend remain future work.
 
 Use JDK 25 (verified locally with OpenJDK 25.0.4+7). The checked-in Gradle 9.7.1 wrapper verifies its distribution checksum; JUnit 6.1.3 and transitive test dependencies are locked. No globally installed Gradle or OE credentials are required for tests. A running Docker daemon is required for the PostgreSQL integration tests; the initial run downloads disposable container images.
 
@@ -50,7 +50,7 @@ After building, start these in separate terminals:
 
 The API binds to `127.0.0.1:8080` by default. Check `http://127.0.0.1:8080/actuator/health`; it returns status UP without component details. `PORT` and `SERVER_ADDRESS` override the API bind settings. Use Ctrl+C to stop either application.
 
-The worker is a non-HTTP application kept alive by Spring Boot. It has no schedules or jobs yet. Neither application needs a database or OE credentials to start. API health currently confirms application startup only, not ingestion/solver/database readiness. Business endpoints and administrator access controls arrive with later tasks.
+The worker is a non-HTTP application kept alive by Spring Boot. Its default mode has no active jobs or schedules and needs no credentials. Enable queue polling and daily refreshes explicitly using the [worker setup](worker/README.md). The API shell still needs no database or OE credentials to start. API health currently confirms application startup only, not ingestion/solver/database readiness. Business endpoints and administrator access controls arrive with later tasks.
 
 For development, `./gradlew :api:bootRun` and `./gradlew :worker:bootRun` are also available. Automated packaged startup checks use Python 3:
 
@@ -64,7 +64,7 @@ That script starts each executable jar, checks API health and worker liveness, t
 
 [The backend workflow](.github/workflows/backend.yml) runs the locked build/tests and packaged startup checks on Java 25. Its action revisions and JDK version are pinned. The same commands have passed locally and from a clean source-only copy; no hosted workflow run or remote publication has occurred. If another CI provider is selected, reuse these commands.
 
-`./gradlew verifyModuleBoundaries` rejects forbidden project dependencies. API and worker may depend on core/infrastructure; infrastructure may depend on core; core has no project dependencies. Infrastructure contains the explicit price-source and JDBC adapters; application wiring is deferred to the worker/API tasks. See [foundation verification](docs/project/evidence/foundation/findings.md).
+`./gradlew verifyModuleBoundaries` rejects forbidden project dependencies. API and worker may depend on core/infrastructure; infrastructure may depend on core; core has no project dependencies. Infrastructure contains the explicit price-source and JDBC adapters; opt-in worker wiring is implemented, while business API wiring remains later work. See [foundation verification](docs/project/evidence/foundation/findings.md).
 
 ## Price ingestion and local PostgreSQL
 

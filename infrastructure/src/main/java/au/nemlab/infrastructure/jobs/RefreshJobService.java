@@ -147,6 +147,14 @@ public class RefreshJobService {
     }
 
     public void fail(UUID id, UUID token, String diagnosticCode) {
+        recordFailure(id, token, diagnosticCode, true);
+    }
+
+    public void failPermanently(UUID id, UUID token, String diagnosticCode) {
+        recordFailure(id, token, diagnosticCode, false);
+    }
+
+    private void recordFailure(UUID id, UUID token, String diagnosticCode, boolean retryable) {
         validateLabel(diagnosticCode, 80);
         if (!diagnosticCode.matches("[A-Z][A-Z0-9_]*")) {
             throw new IllegalArgumentException("Use a diagnostic code, never an exception message or response body");
@@ -155,7 +163,12 @@ public class RefreshJobService {
         prices.recordFailure(prices.backfill(job.backfillId()),
                 jdbc.queryForObject("SELECT clock_timestamp()", Timestamp.class).toInstant(), diagnosticCode);
         requireLiveClaim(id, token);
-        retryOrFail(job, diagnosticCode, false);
+        if (retryable) {
+            retryOrFail(job, diagnosticCode, false);
+        } else {
+            finish(job, "FAILED", diagnosticCode);
+            event(id, "worker", "FAILED", diagnosticCode);
+        }
     }
 
     public boolean cancel(UUID id, String actor) {
