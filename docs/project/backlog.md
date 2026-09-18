@@ -784,4 +784,4 @@ HTTP tests reject unauthorised requests and verify valid/invalid submissions, st
 
 ### Completion evidence
 
-Implemented opt-in bearer authentication, server-derived audit identity, refresh submission, status/recent jobs, paginated events and idempotent cancellation. Direct CLI ingestion is retired. Full build: 97 passing tests; see [HTTP/PostgreSQL evidence](evidence/jobs/admin-findings.md) and [operator guide](../../api/README.md). Changes remain uncommitted after worker commit `dc170bf`.
+Implemented opt-in bearer authentication, server-derived audit identity, refresh submission, status/recent jobs, paginated events and idempotent cancellation. Direct CLI ingestion is retired. Full build: 97 passing tests; see [HTTP/PostgreSQL evidence](evidence/jobs/admin-findings.md) and [operator guide](../../api/README.md). Committed as `8d7c4b1`.

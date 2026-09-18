@@ -31,7 +31,7 @@ running Spring Boot API backed by disposable PostgreSQL 18.6. Checks cover:
 
 No live OE calls, real operator credentials, persistent database migrations or deployment were
 performed. API health remains public and reports application startup, not provider/database readiness.
-The worker implementation was committed first as `dc170bf`; this operator implementation remains uncommitted.
+The worker implementation was committed first as `dc170bf`; this operator implementation is committed as `8d7c4b1`.
 
 ## Boundaries
 
