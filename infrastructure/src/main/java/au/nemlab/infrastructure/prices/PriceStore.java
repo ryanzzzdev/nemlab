@@ -64,6 +64,25 @@ public final class PriceStore {
                 region.name(), day).stream().findFirst();
     }
 
+    public Map<LocalDate, Coverage> coverageRange(PriceDay.Region region, LocalDate start, LocalDate end) {
+        if (!start.isBefore(end) || start.plusDays(31).isBefore(end)) {
+            throw new IllegalArgumentException("Coverage range must contain 1–31 days");
+        }
+        Map<LocalDate, Coverage> result = new LinkedHashMap<>();
+        jdbc.query("""
+                SELECT c.market_day, r.id, r.valid_count, r.missing_count, r.null_count, c.retrieved_at
+                FROM price_current c JOIN price_revision r ON r.id = c.revision_id
+                WHERE c.region = ? AND c.market_day >= ? AND c.market_day < ?
+                ORDER BY c.market_day
+                """, row -> {
+                    Coverage coverage = new Coverage(row.getObject("id", UUID.class),
+                            row.getInt("valid_count"), row.getInt("missing_count"), row.getInt("null_count"),
+                            row.getTimestamp("retrieved_at").toInstant());
+                    result.put(row.getObject("market_day", LocalDate.class), coverage);
+                }, region.name(), start, end);
+        return Map.copyOf(result);
+    }
+
     public record Attempt(UUID id, Instant retrievedAt, String status, UUID revision, String responseHash,
             String sourceVersion, String diagnostic) {
     }

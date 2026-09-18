@@ -1,0 +1,20 @@
+{
+  "name": "@nemlab/api-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi.json -o generated/schema.d.ts",
+    "check": "openapi-typescript openapi.json -o generated/schema.d.ts --check && tsc --noEmit --strict examples/typecheck.ts && node verify.mjs"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.0.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -2,7 +2,7 @@
 
 Updated: 2026-09-18
 
-Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-014 into focused shared API contract and public data endpoint tasks. NEM-028/NEM-029/NEM-030 complete the price-refresh jobs and operator-controls package. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-015 into focused frontend repository, UI shell and integration tasks. NEM-032 delivers the formal OpenAPI contract and generated client inputs. NEM-031 stored-price read endpoints are implemented. NEM-028/NEM-029/NEM-030 complete the price-refresh jobs and operator-controls package. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -41,6 +41,10 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-029 — Worker polling and scheduled refresh execution](#nem-029)
 
 - [NEM-030 — Protected operator job controls](#nem-030)
+
+- [NEM-031 — Public stored-price coverage and day series](#nem-031)
+
+- [NEM-032 — Shared OpenAPI contract and generated client inputs](#nem-032)
 
 <a id="nem-001"></a>
 
@@ -400,7 +404,7 @@ Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). Al
 - Repository: backend
 - Milestone: M3
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-012](#nem-012), [NEM-013](#nem-013)
 - References: [Specification / decision](architecture.md)
 
@@ -416,7 +420,7 @@ Refine coverage/series and job contracts with validation, errors and generated c
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Split into [NEM-031](#nem-031), stored-price read endpoints, and [NEM-032](#nem-032), formal shared contracts and generated client inputs. Both slices are implemented and verified: 103 Java tests, seven contracted operations and 46 actual HTTP response checks. See [contract evidence](evidence/data-foundation/contract-findings.md). Changes remain uncommitted.
 
 <a id="nem-015"></a>
 
@@ -785,3 +789,49 @@ HTTP tests reject unauthorised requests and verify valid/invalid submissions, st
 ### Completion evidence
 
 Implemented opt-in bearer authentication, server-derived audit identity, refresh submission, status/recent jobs, paginated events and idempotent cancellation. Direct CLI ingestion is retired. Full build: 97 passing tests; see [HTTP/PostgreSQL evidence](evidence/jobs/admin-findings.md) and [operator guide](../../api/README.md). Committed as `8d7c4b1`.
+
+<a id="nem-031"></a>
+
+## NEM-031 — Public stored-price coverage and day series
+
+- Repository: backend
+- Milestone: M3
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-012](#nem-012)
+- References: [Data foundation](features/data-foundation.md), parent [NEM-014](#nem-014)
+
+### Outcome
+
+Expose opt-in read-only coverage and current price-day endpoints with explicit units, fixed NEM time, revision identity and missing/null states.
+
+### Done when
+
+Real HTTP/PostgreSQL tests verify complete/incomplete/absent days, exact prices, fixed-offset boundaries, bounded ranges, safe errors, read-only access and coexistence with admin authentication.
+
+### Completion evidence
+
+Opt-in anonymous GET coverage/current-day endpoints implemented with bounded single-query coverage, exact decimal strings and explicit gap states. Java 25 offline build passes 103 tests, including six HTTP/PostgreSQL cases and operator coexistence checks. See [read API evidence](evidence/data-foundation/read-api-findings.md). Changes remain uncommitted.
+
+<a id="nem-032"></a>
+
+## NEM-032 — Shared OpenAPI contract and generated client inputs
+
+- Repository: backend
+- Milestone: M3
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-031](#nem-031)
+- References: [Data foundation](features/data-foundation.md), parent [NEM-014](#nem-014)
+
+### Outcome
+
+Publish a versioned machine-readable contract for price reads and operator jobs; produce deterministic frontend type/client inputs without creating a frontend repository.
+
+### Done when
+
+Validate the contract, check it against endpoint behaviour and errors, and verify reproducible generated artifacts. Document compatibility/versioning and preserve protected operator boundaries.
+
+### Completion evidence
+
+Versioned OpenAPI 3.0.3 contract, pinned toolchain and deterministic TypeScript declarations implemented. A clean Java 25 offline build passes 103 tests and validates 46 real HTTP responses across all seven operations and application error codes. Stale generated output fails checks; regeneration is byte-for-byte reproducible. See [contract evidence](evidence/data-foundation/contract-findings.md) and [consumer/update guide](../../api/contracts/README.md). Changes remain uncommitted.

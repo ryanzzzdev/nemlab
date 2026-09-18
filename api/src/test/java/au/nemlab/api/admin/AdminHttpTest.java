@@ -1,5 +1,6 @@
 package au.nemlab.api.admin;
 
+import au.nemlab.api.ContractCapture;
 import au.nemlab.batterylab.PriceDay;
 import au.nemlab.infrastructure.jobs.RefreshJobService;
 import au.nemlab.infrastructure.prices.PriceStore;
@@ -30,7 +31,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"nemlab.admin.enabled=true", "NEMLAB_ADMIN_OPERATOR=alice",
+        properties = {"nemlab.admin.enabled=true", "nemlab.data.enabled=true", "NEMLAB_ADMIN_OPERATOR=alice",
                 "NEMLAB_ADMIN_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"})
 class AdminHttpTest {
     private static final String TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
@@ -230,7 +231,11 @@ class AdminHttpTest {
         builder.method(method, body == null ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(body));
         try (var client = HttpClient.newHttpClient()) {
-            return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            var response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            if (path.startsWith("/api/admin/v1/")) {
+                ContractCapture.record(method, path, response);
+            }
+            return response;
         }
     }
 

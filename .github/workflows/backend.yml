@@ -16,6 +16,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '25.0.4+7'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: api/contracts/package-lock.json
+      - name: Install locked contract tooling
+        run: npm ci --ignore-scripts --prefix api/contracts
       - name: Build and test all modules
         run: ./gradlew clean build --no-daemon
       - name: Verify packaged application startup

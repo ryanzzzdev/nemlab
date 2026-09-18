@@ -1,7 +1,7 @@
 # NEMLab architecture
 
 Updated: 2026-09-17  
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; public product APIs and frontend remain planned.
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; simulation/GridReplay APIs and frontend remain planned.
 
 ## Agreed boundaries
 
@@ -97,3 +97,15 @@ Proposed initial deployment: static frontend, API process/container, worker proc
 Verify physical/accounting invariants independently of optimiser implementation; exercise database rollback, duplicate ingestion, expired leases and revision handling with integration tests. Browser checks cover a saved BatteryLab result and a GridReplay-to-BatteryLab journey. Set measurable performance budgets after the engine/data spikes; do not invent latency promises now.
 
 See [blockers](blockers.md) for unresolved choices and [roadmap](roadmap.md) for implementation gates.
+
+
+## Stored-price read API — NEM-031
+
+`NEMLAB_DATA_ENABLED` independently enables anonymous GET coverage and current-day price series
+under `/api/v1/prices`. API database wiring is shared with opt-in operator controls, whose bearer
+boundary remains intact. Coverage uses one bounded query for 1–31 completed NEM days; series
+load the captured immutable revision and return exactly 288 slots with explicit gap states.
+Prices are decimal strings in AUD/MWh; interval boundaries are UTC instants with fixed +10:00
+market-day metadata. Reads neither enqueue work nor contact OE. Responses are not cacheable
+across corrections. See the [endpoint contract](../../api/README.md#public-stored-price-reads).
+NEM-032 implements the versioned [OpenAPI contract and generated TypeScript declarations](../../api/contracts/README.md). The checked-in contract owns the seven enabled price/operator operations; Java HTTP tests provide response captures validated against it during the Gradle build. Generation and validation are pinned Node development tooling, not application runtime dependencies. See the contract guide for compatibility, regeneration and the future frontend handoff.

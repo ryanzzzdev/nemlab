@@ -1,8 +1,8 @@
 # Data foundation
 
-Updated: 2026-09-17
+Updated: 2026-09-18
 
-Status: Price-first implementation complete under [decision 008](../decisions/008-price-data-foundation.md). GridReplay adapters, scheduled polling and broader launch coverage remain future work.
+Status: Price-first implementation complete under [decision 008](../decisions/008-price-data-foundation.md). Scheduled polling, operator controls and stored-price reads are implemented. GridReplay adapters and broader launch coverage remain future work.
 
 ## Outcome and scope
 
@@ -57,5 +57,14 @@ The [findings](../evidence/data-foundation/findings.md) record 64 passing tests 
 The [local runner](../../../infrastructure/README.md) imports one day at a time and
 pauses on failures/incomplete days. NEM-028 adds a tested durable one-day refresh queue with
 deduplication, leases, retries, cancellation and transactional result fencing. NEM-029 implements opt-in daily scheduling and deadline-bounded execution;
-NEM-030 adds protected operator submission/status/cancellation and retires direct CLI execution; public read APIs remain NEM-014. GridReplay adapter storage will be scoped
+NEM-030 adds protected operator submission/status/cancellation and retires direct CLI execution; NEM-031 adds public coverage/current-day price reads; NEM-032 publishes the versioned [shared contract and generated types](../../../api/contracts/README.md) within NEM-014. GridReplay adapter storage will be scoped
 with NEM-018 after outstanding metric timing/representation questions are resolved.
+
+
+## Stored-price read behaviour
+
+Coverage distinguishes `NOT_IMPORTED` (null counts) from imported `COMPLETE`/`INCOMPLETE` days
+with valid/missing/source-null counts. Public day series preserve all 288 slots, with null gap prices
+and exact decimal strings for values. Fixed UTC+10 boundaries do not change for daylight saving.
+Read requests are bounded to one price day or 1–31 coverage days and never trigger ingestion.
+The [read API contract](../../../api/README.md#public-stored-price-reads) specifies fields/errors.

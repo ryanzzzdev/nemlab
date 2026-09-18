@@ -1,14 +1,10 @@
 package au.nemlab.api.admin;
 
-import au.nemlab.infrastructure.jobs.RefreshJobConfiguration;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,7 +14,6 @@ import org.springframework.security.oauth2.server.resource.introspection.BadOpaq
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.security.web.SecurityFilterChain;
 
-import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,7 +22,6 @@ import java.util.Map;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "nemlab.admin.enabled", havingValue = "true")
-@Import(RefreshJobConfiguration.class)
 public class AdminConfiguration {
     @Bean
     public OpaqueTokenIntrospector operatorTokens(Environment environment) {
@@ -70,23 +64,6 @@ public class AdminConfiguration {
                         })
                         .accessDeniedHandler((request, response, failure) -> response.setStatus(403)))
                 .build();
-    }
-
-    @Bean
-    public DataSource dataSource(Environment environment, OpaqueTokenIntrospector operatorTokens) {
-        // Authentication configuration must validate before enabling database-backed controls.
-        PGSimpleDataSource source = new PGSimpleDataSource();
-        source.setURL(required(environment, "NEMLAB_DB_URL"));
-        source.setUser(required(environment, "NEMLAB_DB_USER"));
-        source.setPassword(required(environment, "NEMLAB_DB_PASSWORD"));
-        source.setConnectTimeout(5);
-        source.setSocketTimeout(10);
-        try {
-            new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job WHERE false", Integer.class);
-        } catch (RuntimeException failure) {
-            throw new IllegalStateException("Admin database unavailable or migrations missing (details omitted)");
-        }
-        return source;
     }
 
     private static String required(Environment environment, String name) {

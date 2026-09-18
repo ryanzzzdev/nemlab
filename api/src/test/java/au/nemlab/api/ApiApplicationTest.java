@@ -32,6 +32,11 @@ class ApiApplicationTest {
                             + "/api/admin/v1/price-refreshes")).build(),
                     HttpResponse.BodyHandlers.ofString());
             assertEquals(404, admin.statusCode());
+            var prices = client.send(
+                    HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                            + "/api/v1/prices/NSW1/2023-10-01")).build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals(404, prices.statusCode());
         }
     }
 }

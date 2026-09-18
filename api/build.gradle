@@ -23,3 +23,25 @@ test {
     jvmArgs '--enable-native-access=ALL-UNNAMED'
 }
 dependencyLocking { lockAllConfigurations() }
+
+// Response captures are test outputs, so cached tests retain their contract evidence.
+def contractCaptures = layout.buildDirectory.dir('contract-responses')
+tasks.named('test') {
+    outputs.dir(contractCaptures)
+    systemProperty 'nemlab.contract.captures', contractCaptures.get().asFile.absolutePath
+    doFirst {
+        delete contractCaptures
+    }
+}
+
+tasks.register('checkContract', Exec) {
+    group = 'verification'
+    description = 'Validate OpenAPI, generated types and actual HTTP test responses (run npm ci first).'
+    dependsOn tasks.named('test')
+    workingDir 'contracts'
+    commandLine 'npm', 'run', 'check'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('checkContract')
+}
