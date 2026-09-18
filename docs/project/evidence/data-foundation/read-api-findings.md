@@ -33,4 +33,4 @@ both database-backed API features. No live OE requests, persistent database migr
 Formal OpenAPI and reproducible generated frontend inputs are NEM-032; NEM-014 remains in
 progress. Historical revision retrieval, simulation requests/results and GridReplay data APIs
 remain later feature work. These tests establish endpoint behaviour, not broad historical
-coverage or production load performance. Implementation remains uncommitted.
+coverage or production load performance. Implementation is committed as `6e527ed`.

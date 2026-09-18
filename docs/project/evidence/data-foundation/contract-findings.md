@@ -1,6 +1,6 @@
 # Shared API contract verification — NEM-032
 
-Date: 2026-09-18. Changes are uncommitted.
+Date: 2026-09-18. Changes are committed as `6e527ed`.
 
 ## Delivered
 

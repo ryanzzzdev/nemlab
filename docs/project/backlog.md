@@ -420,7 +420,7 @@ Refine coverage/series and job contracts with validation, errors and generated c
 
 ### Completion evidence
 
-Split into [NEM-031](#nem-031), stored-price read endpoints, and [NEM-032](#nem-032), formal shared contracts and generated client inputs. Both slices are implemented and verified: 103 Java tests, seven contracted operations and 46 actual HTTP response checks. See [contract evidence](evidence/data-foundation/contract-findings.md). Changes remain uncommitted.
+Split into [NEM-031](#nem-031), stored-price read endpoints, and [NEM-032](#nem-032), formal shared contracts and generated client inputs. Both slices are implemented and verified: 103 Java tests, seven contracted operations and 46 actual HTTP response checks. See [contract evidence](evidence/data-foundation/contract-findings.md). Committed as `6e527ed`.
 
 <a id="nem-015"></a>
 
@@ -811,7 +811,7 @@ Real HTTP/PostgreSQL tests verify complete/incomplete/absent days, exact prices,
 
 ### Completion evidence
 
-Opt-in anonymous GET coverage/current-day endpoints implemented with bounded single-query coverage, exact decimal strings and explicit gap states. Java 25 offline build passes 103 tests, including six HTTP/PostgreSQL cases and operator coexistence checks. See [read API evidence](evidence/data-foundation/read-api-findings.md). Changes remain uncommitted.
+Opt-in anonymous GET coverage/current-day endpoints implemented with bounded single-query coverage, exact decimal strings and explicit gap states. Java 25 offline build passes 103 tests, including six HTTP/PostgreSQL cases and operator coexistence checks. See [read API evidence](evidence/data-foundation/read-api-findings.md). Committed as `6e527ed`.
 
 <a id="nem-032"></a>
 
@@ -834,4 +834,4 @@ Validate the contract, check it against endpoint behaviour and errors, and verif
 
 ### Completion evidence
 
-Versioned OpenAPI 3.0.3 contract, pinned toolchain and deterministic TypeScript declarations implemented. A clean Java 25 offline build passes 103 tests and validates 46 real HTTP responses across all seven operations and application error codes. Stale generated output fails checks; regeneration is byte-for-byte reproducible. See [contract evidence](evidence/data-foundation/contract-findings.md) and [consumer/update guide](../../api/contracts/README.md). Changes remain uncommitted.
+Versioned OpenAPI 3.0.3 contract, pinned toolchain and deterministic TypeScript declarations implemented. A clean Java 25 offline build passes 103 tests and validates 46 real HTTP responses across all seven operations and application error codes. Stale generated output fails checks; regeneration is byte-for-byte reproducible. See [contract evidence](evidence/data-foundation/contract-findings.md) and [consumer/update guide](../../api/contracts/README.md). Committed as `6e527ed`.
