@@ -51,7 +51,10 @@ class PriceIngestionTest {
     @BeforeEach
     void reset() {
         jdbc = new JdbcTemplate(ds);
-        jdbc.execute("TRUNCATE price_snapshot,price_current,price_import_attempt,price_revision,price_backfill");
+        jdbc.execute("""
+                TRUNCATE refresh_job_event, refresh_request, refresh_job,
+                    price_snapshot, price_current, price_import_attempt, price_revision, price_backfill
+                """);
         store = new PriceStore(ds);
     }
 

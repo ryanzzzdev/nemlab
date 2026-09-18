@@ -76,7 +76,9 @@ Use UTC instants in storage and explicit fixed UTC+10 NEM market-day interpretat
 
 ## Durable jobs and scheduling
 
-Proposed job states: queued, running, succeeded, failed, cancelled. A database transaction claims work with a lease and claim token; only the current claim can commit completion. Lease expiry makes crashed work recoverable. Side effects must be idempotent because a job may execute again. Use bounded retries with backoff for transient errors and explicit terminal errors for invalid work.
+Implemented for one-day price refreshes: queued, running, succeeded, failed, cancelled. The Spring-managed `RefreshJobService` uses `@Transactional` and PostgreSQL row/advisory locks. A five-minute lease and unique claim token fence price writes, checkpoint advancement and job completion in one transaction. Expired claims recover on the next claim request, with at most three attempts and 30/60-second retry backoff. The queue caps pending work at 100 and allows one current ingestion claim across worker processes. Network calls must happen outside these transactions.
+
+Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. Worker scheduling and hard execution limits remain NEM-029; authenticated operator integration remains NEM-030. See [decision 009](decisions/009-durable-refresh-queue.md) and [verification](evidence/jobs/findings.md).
 
 Deduplicate equivalent refreshes and scenario submissions using stable input keys. Save backfill checkpoints. Keep simulation and ingestion concurrency separately bounded; prevent overlap from repeated schedules. Manual triggers return job IDs immediately. Cancellation and progress detail can be refined with actual job types.
 

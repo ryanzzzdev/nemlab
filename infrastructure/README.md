@@ -6,7 +6,8 @@ new revision. Saved price snapshots continue to reference the original values.
 
 It depends on core. The API and worker do not automatically configure a database or run
 migrations; the local operator command below explicitly opts into database access. Scheduled
-polling, distributed leases and protected administrator endpoints belong to NEM-013.
+polling and protected administrator endpoints remain NEM-029/NEM-030. The durable queue
+and distributed claim fencing are implemented in NEM-028 but are not yet wired into the apps.
 
 ## Local database
 
@@ -92,3 +93,38 @@ See [data-foundation findings](../docs/project/evidence/data-foundation/findings
 No live OE request was made during this implementation verification. Broader launch coverage,
 non-price GridReplay ingestion, retention policy, worker scheduling and public APIs remain
 separate work. Nothing here promises availability of every requested historical day.
+
+## Durable refresh queue (internal service)
+
+Migration V2 adds refresh jobs, persistent request-key mappings, and an actor/action event log.
+`RefreshJobConfiguration` must be imported into a Spring context that supplies a `DataSource`.
+Use the injected `RefreshJobService` bean so `@Transactional` applies; constructing it manually
+bypasses transaction interception. Existing `PriceStore` transactions join the same datasource
+transaction, verified by injected-failure rollback tests.
+
+The execution sequence is `submit` → `claim` → fetch outside the transaction → `complete` or
+`fail`. A claim carries a token that must accompany every result. Database time controls the
+five-minute lease; expiry or cancellation invalidates the old token. At most one claim is current
+across all worker processes. Lease expiry does not kill a still-running process: execution deadlines
+and shutdown handling must be implemented in NEM-029 before enabling worker polling.
+
+Each job refreshes one completed region/day, with a maximum of three attempts. Retry delays
+are 30 and 60 seconds; the queue accepts at most 100 queued/running jobs. A repeated request
+key returns its original job even after completion. A new key can refresh a completed day again;
+while a day is active, new keys become aliases of that same job. Cancelling a job stops future
+commits, leaves already stored history intact, and requires a new request key to try again.
+
+Failure diagnostics are codes, never raw OE response bodies or exception messages:
+
+| Code | Operator action |
+| --- | --- |
+| `LEASE_EXPIRED` | Check worker availability and execution duration; recovery occurs during claiming. |
+| `INCOMPLETE_PRICE_DAY` | Inspect stored coverage and source availability; retry is bounded. |
+| `HTTP_401` / `HTTP_403` | Check the server-side OE credential and access before submitting a new refresh. |
+| `HTTP_429` / `HTTP_503` | Check source availability/rate limits; inspect retry history. |
+| `CANCELLED_BY_OPERATOR` | Check the recorded cancellation actor before requesting a new refresh. |
+
+The caller must provide a trusted actor identity; the service is not exposed to HTTP yet.
+The existing direct backfill CLI bypasses job leases. Do not use it to execute a queue-owned
+backfill or run overlapping direct imports while enabling the future worker. Worker/operator
+integration will establish the normal shared submission path. No Admin UI is required for this slice.

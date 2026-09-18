@@ -1,8 +1,8 @@
 # NEMLab backlog
 
-Updated: 2026-09-17
+Updated: 2026-09-18
 
-Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-013 into durable worker jobs, scheduling and protected operator controls. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: NEM-029 worker scheduling, then NEM-030 protected operator controls. NEM-028 implements the durable refresh queue. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -35,6 +35,12 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-025 — OE price retrieval](#nem-025)
 - [NEM-026 — Revision/coverage/snapshot storage](#nem-026)
 - [NEM-027 — Resumable price backfill](#nem-027)
+
+- [NEM-028 — Durable price-refresh queue and fenced results](#nem-028)
+
+- [NEM-029 — Worker polling and scheduled refresh execution](#nem-029)
+
+- [NEM-030 — Protected operator job controls](#nem-030)
 
 <a id="nem-001"></a>
 
@@ -369,7 +375,7 @@ Price-first deliverable: NEM-024 schema, NEM-025 OE adapter, NEM-026 revisions/c
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Backlog
+- Status: In progress
 - Depends on: [NEM-011](#nem-011)
 - References: [Specification / decision](architecture.md)
 
@@ -385,7 +391,7 @@ Refine database jobs, retries, leases, idempotency and protected refresh/status 
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). NEM-028 is implemented and verified; the package remains incomplete until worker and protected operator integration are verified.
 
 <a id="nem-014"></a>
 
@@ -706,3 +712,72 @@ One-day chunks commit data and checkpoint atomically; failed days do not advance
 ### Completion evidence
 
 One-day data and checkpoint commits are atomic. Injected update failure rolls back both; incomplete/failed days pause; a fresh runner resumes from persisted progress; stale commits and >31-day requests are rejected. Local operator commands expose start/resume/status/coverage/history.
+
+<a id="nem-028"></a>
+
+## NEM-028 — Durable price-refresh queue and fenced results
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Done
+- Depends on: [NEM-012](#nem-012)
+- References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
+
+### Outcome
+
+Persist one completed price day per job with idempotent submission, bounded retries, expiring claims, cancellation and an audit trail. Use Spring-managed transaction boundaries; network fetches occur outside transactions.
+
+### Done when
+
+Real PostgreSQL tests prove concurrent deduplication/claims, expired-claim recovery, stale-result rejection, atomic price/checkpoint/job updates, bounded retries and cancellation.
+
+### Completion evidence
+
+Implemented in `infrastructure/.../jobs` and migration V2. Spring-proxied PostgreSQL integration tests cover the acceptance criteria, including expiry during price writes. See [job evidence](evidence/jobs/findings.md). Changes remain uncommitted after baseline `9b5536e`.
+
+<a id="nem-029"></a>
+
+## NEM-029 — Worker polling and scheduled refresh execution
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Ready
+- Depends on: [NEM-028](#nem-028)
+- References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
+
+### Outcome
+
+Connect the durable queue to the non-web worker. Scheduled refresh and manual submission use the same queue; configuration is opt-in and validated.
+
+### Done when
+
+Verify startup configuration, scheduled deduplication, bounded execution, recovery after restart and graceful shutdown. Define and verify ingestion deadlines. Simulation subprocess/watchdog integration belongs to NEM-016 before simulation jobs are enabled.
+
+### Completion evidence
+
+Not yet verified.
+
+<a id="nem-030"></a>
+
+## NEM-030 — Protected operator job controls
+
+- Repository: backend
+- Milestone: M3
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-029](#nem-029)
+- References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
+
+### Outcome
+
+Expose authorised refresh submission, job status and cancellation with audited operator identity. Document safe local operation and failure diagnostics.
+
+### Done when
+
+HTTP tests reject unauthorised requests and verify valid/invalid submissions, status, cancellation and audit identity. Retire or explicitly constrain the direct backfill CLI execution path while the worker operates.
+
+### Completion evidence
+
+Not yet verified.
