@@ -8,7 +8,7 @@ Status: Price-first implementation complete under [decision 008](../decisions/00
 
 Provide validated historical NEM prices for BatteryLab and aligned price/demand/generation/flow data for GridReplay. Start with one sample region and bounded windows; all five NEM regions remain potential coverage, not a promise of complete history.
 
-Reference background: [project ideas and validation exercise](../../summaries/nemlab-project-ideas.md). This specification owns the current proposed implementation behaviour; the summary remains a historical record.
+Reference background: [project ideas and validation exercise](../../initial-ideas/nemlab-project-ideas.md). This specification owns the current proposed implementation behaviour; the summary remains a historical record.
 
 ## Initial validation protocol
 

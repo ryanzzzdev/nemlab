@@ -7,7 +7,7 @@ Scope: Project planning, task tracking, decisions, and work records across the b
 
 Use Markdown documents to keep NEMLab understandable between working sessions: what we intend to build, what is agreed, what to do next, what is blocked, and what has been verified as complete.
 
-The canonical project-wide documents live in the NEMLab backend project at `nemlab/docs/project/`, relative to the shared workspace. Within the backend project, this guide is `docs/project/documentation-guide.md`. Idea and discussion records live in `nemlab/docs/summaries/`. When the separate NEMLab frontend is created, link to the backend's canonical documents from its README and keep frontend-specific implementation and setup documentation in the frontend repository.
+The canonical project-wide documents live in the NEMLab backend project at `nemlab/docs/project/`, relative to the shared workspace. Within the backend project, this guide is `docs/project/documentation-guide.md`. Idea and discussion records live in `nemlab/docs/initial-ideas/`. When the separate NEMLab frontend is created, link to the backend's canonical documents from its README and keep frontend-specific implementation and setup documentation in the frontend repository.
 
 The `nemlab/` backend Git repository was initialised on 2026-09-17. Project documentation and validation evidence are included in the initial version history. Keep one authoritative copy in this project rather than duplicating them at the workspace root or in sibling projects.
 
@@ -50,7 +50,7 @@ Create documents when they have useful content. This guide does not require empt
 | `decisions/*.md` | A significant choice, context, alternatives, consequences, and its acceptance status. | When proposing or accepting an important decision, or replacing a previous decision. |
 | `journal/YYYY-MM.md` | Short dated entries identifying the LLM model and coding agent used, completed work, verification, unresolved issues, and links to tasks and commits/PRs. | At the end of a meaningful work session. It is a historical record, not the next-work list. |
 
-The existing documents in `docs/summaries/` remain idea and discussion records. Link to them as background when drafting feature specifications. A discussion summary is not automatically an approved specification. If a later accepted specification replaces a proposal, make that relationship clear; avoid maintaining two current specifications for the same behaviour.
+The existing documents in `docs/initial-ideas/` remain idea and discussion records. Link to them as background when drafting feature specifications. A discussion summary is not automatically an approved specification. If a later accepted specification replaces a proposal, make that relationship clear; avoid maintaining two current specifications for the same behaviour.
 
 ## Roadmap conventions
 

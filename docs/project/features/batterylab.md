@@ -19,7 +19,7 @@ A static mocked-data prototype of this journey lives at [docs/demos/batterylab/i
 
 One aggregate site with separate total charge/discharge MW, energy capacity MWh, import/export connection limits, efficiencies, minimum/maximum/initial stored energy, operating windows, and selected variable fees/degradation. Identical battery count may scale power and capacity before applying shared connection limits. The terminal energy equals initial energy in the initial comparison.
 
-The [M2 engine contract](battery-model-contract.md) defines implementation rules, illustrative defaults, validation and reference fixtures. It refines the earlier [mathematical proposal](../../summaries/battery-arbitrage-details.md). Implementation must enforce:
+The [M2 engine contract](battery-model-contract.md) defines implementation rules, illustrative defaults, validation and reference fixtures. It refines the earlier [mathematical proposal](../../initial-ideas/battery-arbitrage-details.md). Implementation must enforce:
 
 - `E[t] = E[t-1] + eta_c*c[t] - d[t]/eta_d`, with grid-side imported/exported MWh and explicit interval duration.
 - Energy/power/connection bounds and mutually exclusive charge/discharge in every interval.

@@ -3,7 +3,7 @@
 Date: 2026-09-17  
 Status: M2 fixed schedule, input validation, physical validation and accounting implemented and tested in core. Ordered-window hindsight is implemented and independently certified; unrestricted hindsight is deferred. Demo preset values are illustrative, not industry recommendations or a final launch UI decision.
 
-This is the executable specification for [BatteryLab](batterylab.md), refining the earlier [mathematical proposal](../../summaries/battery-arbitrage-details.md). Model version: `battery-v1`; schedule version: `ordered-windows-v1`.
+This is the executable specification for [BatteryLab](batterylab.md), refining the earlier [mathematical proposal](../../initial-ideas/battery-arbitrage-details.md). Model version: `battery-v1`; schedule version: `ordered-windows-v1`.
 
 ## Inputs and time
 

@@ -19,7 +19,7 @@ This is the backend project and the home of shared project documentation. The Ja
 - [Decision records](docs/project/decisions/)
 - [Documentation workflow](docs/project/documentation-guide.md)
 - [Work journal](docs/project/journal/)
-- [Original project ideas](docs/summaries/nemlab-project-ideas.md)
+- [Original project ideas](docs/initial-ideas/nemlab-project-ideas.md)
 
 ## Development setup
 
