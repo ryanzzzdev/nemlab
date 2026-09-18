@@ -11,6 +11,11 @@ import java.util.*;
  */
 public final class PriceImportCommand {
     public static void main(String[] args) {
+        if (args.length > 0 && (args[0].equals("start") || args[0].equals("resume"))) {
+            System.err.println("Direct ingestion is retired. Submit refreshes through the protected operator API.");
+            System.exit(2);
+            return;
+        }
         try {
             run(args);
         } catch (Exception ex) {
@@ -34,23 +39,6 @@ public final class PriceImportCommand {
             case "migrate" -> {
                 PriceStore.migrate(ds);
                 System.out.println("Price schema migrated");
-            }
-            case "start" -> {
-                UUID id = store.createBackfill(PriceDay.Region.valueOf(args[1]), LocalDate.parse(args[2]),
-                        LocalDate.parse(args[3]), Clock.systemUTC());
-                System.out.println("Created backfill " + id);
-            }
-            case "resume" -> {
-                UUID id = UUID.fromString(args[1]);
-                var runner = new PriceBackfill(store, new OePriceSource(required("OPEN_ELECTRICITY_API_KEY")),
-                        Clock.systemUTC());
-                for (int i = 0; i < 31 && runner.step(id); i++) {
-                }
-                var b = store.backfill(id);
-                System.out.println("Backfill " + id + " status=" + b.status() + " next=" + b.next() + " diagnostic="
-                        + b.diagnostic());
-                if (!b.status().equals("COMPLETE"))
-                    throw new IllegalStateException();
             }
             case "status" -> System.out.println(store.backfill(UUID.fromString(args[1])));
             case "history" ->

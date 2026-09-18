@@ -7,7 +7,7 @@ new revision. Saved price snapshots continue to reference the original values.
 It depends on core. The API and worker do not automatically configure a database or run
 migrations; the local operator command below explicitly opts into database access. Scheduled
 polling is now available through the opt-in [worker](../worker/README.md); protected administrator
-endpoints remain NEM-030. Distributed claim fencing is implemented in NEM-028.
+endpoints are available through the opt-in [operator API](../api/README.md). Distributed claim fencing is implemented in NEM-028.
 
 ## Local database
 
@@ -33,28 +33,22 @@ unless deliberately discarding the local database.
 
 Copy the field names from the root `.env.example` as needed. Compose reads `.env`; Gradle
 and the Java command **do not**. Export the variables in the command's environment (including
-`JAVA_HOME` pointing at JDK 25). The OE key is needed only for `resume`; do not put it in
-command arguments. Migrations run explicitly, once per deployment, before ingestion.
+`JAVA_HOME` pointing at JDK 25). The OE key is needed only by the worker; do not put it in command arguments. Migrations run explicitly, once per deployment, before ingestion.
 
 ## Bounded import and recovery
 
-Each backfill covers one region and 1–31 completed market days. The end date is exclusive.
-Dates before 2021-10-01 and incomplete current market days are rejected. For the previously
-validated historical sample:
+Submit one completed region/day through the [operator API](../api/README.md). The worker handles
+execution, retry, cancellation and lease recovery. `start` and `resume` direct-import commands
+have been retired and exit before accessing credentials. Existing legacy backfill checkpoints
+remain inspectable; use new queued day requests for remaining legacy work.
+
+Read-only inspection remains available:
 
 ```sh
-./gradlew :infrastructure:prices --args='start NSW1 2023-09-11 2023-09-12'
-# Copy the returned UUID into the following commands.
-./gradlew :infrastructure:prices --args='resume <backfill-uuid>'
-./gradlew :infrastructure:prices --args='status <backfill-uuid>'
+./gradlew :infrastructure:prices --args='status <legacy-backfill-uuid>'
 ./gradlew :infrastructure:prices --args='coverage NSW1 2023-09-11'
 ./gradlew :infrastructure:prices --args='history NSW1 2023-09-11'
 ```
-
-A resume invocation attempts at most 31 one-day steps and stops on failure/incomplete data.
-It exits unsuccessfully if the range remains paused. Retrying `resume` uses the persisted next
-day. Successfully saved days are not fetched again by that backfill. To refresh an already
-completed range for source corrections, create another backfill for the same dates.
 
 A one-day OE query includes the midnight boundary padding established by M1. Normalisation
 selects interval endings in `(day start, next midnight]` and retains exactly 288 slots. Missing
@@ -91,7 +85,7 @@ rejected; privileged database administration is outside that immutability guaran
 Docker must be available: PostgreSQL tests fail rather than silently skip when it is missing.
 See [data-foundation findings](../docs/project/evidence/data-foundation/findings.md) for evidence.
 No live OE request was made during this implementation verification. Broader launch coverage,
-non-price GridReplay ingestion, retention policy, worker scheduling and public APIs remain
+non-price GridReplay ingestion, retention policy and public product APIs remain
 separate work. Nothing here promises availability of every requested historical day.
 
 ## Durable refresh queue (internal service)
@@ -123,6 +117,6 @@ Failure diagnostics are codes, never raw OE response bodies or exception message
 | `HTTP_429` / `HTTP_503` | Check source availability/rate limits; inspect retry history. |
 | `CANCELLED_BY_OPERATOR` | Check the recorded cancellation actor before requesting a new refresh. |
 
-The caller must provide a trusted actor identity; the service is not exposed to HTTP yet.
-The existing direct backfill CLI bypasses job leases. Do not use it to execute a queue-owned
-backfill or run overlapping direct imports while running the worker. Worker scheduling uses the shared submission service; NEM-030 adds protected operator submission. No Admin UI is required for this slice.
+The protected operator API derives actor identity from bearer authentication and uses this service.
+Direct CLI ingestion has been retired so normal imports always use the queue. No Admin UI is
+required for these controls; see the [operator guide](../api/README.md).

@@ -50,3 +50,7 @@ Simulation subprocess limits remain NEM-016. Hosted CI has not run in this works
 
 The initial build caught eager Gradle test-classpath resolution; moving that resolution to test
 execution fixed it. Subsequent full builds pass. Implementation and documentation remain uncommitted.
+
+
+Follow-up (2026-09-18): worker execution was committed as `dc170bf`. NEM-030 operator controls
+are now verified in [operator findings](admin-findings.md), including retirement of direct CLI ingestion.

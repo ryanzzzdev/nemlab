@@ -12,7 +12,9 @@ This is the backend project and the home of shared project documentation. The Ja
 - [Blockers and open questions](docs/project/blockers.md)
 - [Data foundation](docs/project/features/data-foundation.md)
 - [BatteryLab](docs/project/features/batterylab.md)
+- [BatteryLab static demo](docs/demos/batterylab/index.html) — mocked-data preview of the simulation journey
 - [GridReplay](docs/project/features/gridreplay.md)
+- [GridReplay static demo](docs/demos/gridreplay/index.html) — mocked-data preview of the event catalogue and replay
 - [Admin](docs/project/features/admin.md)
 - [Decision records](docs/project/decisions/)
 - [Documentation workflow](docs/project/documentation-guide.md)
@@ -21,7 +23,7 @@ This is the backend project and the home of shared project documentation. The Ja
 
 ## Development setup
 
-The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Opt-in worker scheduling is available; business APIs, protected operator endpoints and frontend remain future work.
+The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Opt-in worker scheduling is available; protected [operator endpoints](api/README.md) are also available. Public product APIs and frontend remain future work.
 
 Use JDK 25 (verified locally with OpenJDK 25.0.4+7). The checked-in Gradle 9.7.1 wrapper verifies its distribution checksum; JUnit 6.1.3 and transitive test dependencies are locked. No globally installed Gradle or OE credentials are required for tests. A running Docker daemon is required for the PostgreSQL integration tests; the initial run downloads disposable container images.
 

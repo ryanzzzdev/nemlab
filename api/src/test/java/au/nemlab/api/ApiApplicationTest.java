@@ -27,6 +27,11 @@ class ApiApplicationTest {
                     HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/actuator/env")).build(),
                     HttpResponse.BodyHandlers.ofString());
             assertEquals(404, environment.statusCode());
+            var admin = client.send(
+                    HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                            + "/api/admin/v1/price-refreshes")).build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals(404, admin.statusCode());
         }
     }
 }

@@ -66,7 +66,7 @@ public class RefreshJobService {
         if (existing.isPresent()) {
             RefreshJob job = existing.get();
             if (job.region() != region || !job.day().equals(day)) {
-                throw new IllegalArgumentException("Request key already belongs to another price day");
+                throw new RequestKeyConflict();
             }
             event(job.id(), actor, "DUPLICATE_REQUEST", null);
             return job.id();
@@ -84,7 +84,7 @@ public class RefreshJobService {
                     SELECT count(*) FROM refresh_job WHERE status IN ('QUEUED', 'RUNNING')
                     """, Integer.class);
             if (pending >= MAX_PENDING_JOBS) {
-                throw new IllegalStateException("Refresh queue is full; wait for existing jobs");
+                throw new QueueFull();
             }
             UUID backfillId = prices.createBackfill(region, day, day.plusDays(1), Clock.systemUTC());
             jobId = UUID.randomUUID();
@@ -183,6 +183,8 @@ public class RefreshJobService {
                 """, id);
         if (changed == 1) {
             event(id, actor, "CANCELLED", null);
+        } else if (find(id).isPresent()) {
+            event(id, actor, "CANCEL_NOOP", null);
         }
         return changed == 1;
     }
@@ -190,6 +192,49 @@ public class RefreshJobService {
     @Transactional(readOnly = true, timeout = 30)
     public Optional<RefreshJob> find(UUID id) {
         return jdbc.query("SELECT * FROM refresh_job WHERE id = ?", JOB_MAPPER, id).stream().findFirst();
+    }
+
+    public record JobEvent(long id, java.time.Instant occurredAt, String actor, String action, String diagnostic) {
+    }
+
+    @Transactional(readOnly = true, timeout = 30)
+    public List<RefreshJob> recent(int limit) {
+        validateLimit(limit);
+        return jdbc.query("""
+                SELECT * FROM refresh_job ORDER BY created_at DESC, id DESC LIMIT ?
+                """, JOB_MAPPER, limit);
+    }
+
+    @Transactional(readOnly = true, timeout = 30)
+    public List<JobEvent> events(UUID id, long after, int limit) {
+        validateLimit(limit);
+        if (after < 0) {
+            throw new IllegalArgumentException("Event cursor must be nonnegative");
+        }
+        return jdbc.query("""
+                SELECT id, occurred_at, actor, action, diagnostic FROM refresh_job_event
+                WHERE job_id = ? AND id > ? ORDER BY id LIMIT ?
+                """, (result, row) -> new JobEvent(result.getLong("id"),
+                        result.getTimestamp("occurred_at").toInstant(), result.getString("actor"),
+                        result.getString("action"), result.getString("diagnostic")), id, after, limit);
+    }
+
+    private static void validateLimit(int limit) {
+        if (limit < 1 || limit > 100) {
+            throw new IllegalArgumentException("Limit must be between 1 and 100");
+        }
+    }
+
+    public static class RequestKeyConflict extends IllegalArgumentException {
+        public RequestKeyConflict() {
+            super("Request key already belongs to another price day");
+        }
+    }
+
+    public static class QueueFull extends IllegalStateException {
+        public QueueFull() {
+            super("Refresh queue is full; wait for existing jobs");
+        }
     }
 
     private RefreshJob requireLiveClaim(UUID id, UUID token) {

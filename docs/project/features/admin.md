@@ -30,3 +30,12 @@ At M5, exercise the operator workflow through the available endpoints/commands. 
 If included, unauthorised requests fail server-side, refresh/retry produces one logical operation, progress and errors are inspectable, and actor/scope/result can be traced. If deferred, equivalent critical operations pass a documented operator rehearsal before M6 completes.
 
 See [NEM-019](../backlog.md#nem-019), [BLK-006](../blockers.md#blk-006), and [architecture](../architecture.md).
+
+
+## Implemented operator API — NEM-030
+
+The opt-in [operator API](../../../api/README.md) now supports authenticated one-day price refreshes,
+bounded recent-job and audit-event lists, status and idempotent cancellation. Audit identity is
+server-derived from one configured operator token; browser login and multiple operator accounts
+remain outside this slice. Direct CLI execution is retired. Coverage inspection remains available
+through read-only commands until NEM-014. The optional Admin frontend decision is unchanged.

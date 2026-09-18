@@ -2,7 +2,7 @@
 
 Updated: 2026-09-18
 
-Task sections own status. The index is navigation, not a second status tracker. Next: NEM-030 protected operator controls. NEM-028 implements the durable queue and NEM-029 connects worker scheduling/execution. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-014 into focused shared API contract and public data endpoint tasks. NEM-028/NEM-029/NEM-030 complete the price-refresh jobs and operator-controls package. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -375,7 +375,7 @@ Price-first deliverable: NEM-024 schema, NEM-025 OE adapter, NEM-026 revisions/c
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: In progress
+- Status: Done
 - Depends on: [NEM-011](#nem-011)
 - References: [Specification / decision](architecture.md)
 
@@ -517,6 +517,10 @@ Refine detector definitions, versioned events, catalogue API and replay frontend
 ### Completion evidence
 
 Not started; no implementation or verification evidence yet.
+
+### Notes
+
+A static mock-data demo of the catalogue/replay concept lives at [docs/demos/gridreplay/index.html](../demos/gridreplay/index.html) (2026-09-18) for discussion; illustrative only — detector definitions and scope remain unsettled per the feature spec and [BLK-005](blockers.md#blk-005).
 
 <a id="nem-019"></a>
 
@@ -757,7 +761,7 @@ Verify startup configuration, scheduled deduplication, bounded execution, recove
 
 ### Completion evidence
 
-Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10 daily submission, child-process fetch deadlines and shutdown/restart recovery. Full offline build: 88 passing tests, including real child-process and PostgreSQL worker tests plus executable-jar child launching without live OE calls. See [worker evidence](evidence/jobs/worker-findings.md) and [setup](../../worker/README.md). Changes remain uncommitted after queue commit `c5cd5a3`.
+Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10 daily submission, child-process fetch deadlines and shutdown/restart recovery. Full offline build: 88 passing tests, including real child-process and PostgreSQL worker tests plus executable-jar child launching without live OE calls. See [worker evidence](evidence/jobs/worker-findings.md) and [setup](../../worker/README.md). Committed as `dc170bf`.
 
 <a id="nem-030"></a>
 
@@ -766,7 +770,7 @@ Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-029](#nem-029)
 - References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
 

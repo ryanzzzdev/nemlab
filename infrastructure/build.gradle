@@ -14,7 +14,13 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
-test { useJUnitPlatform(); jvmArgs '--enable-native-access=ALL-UNNAMED' }
+test {
+    useJUnitPlatform()
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    doFirst {
+        systemProperty 'infrastructure.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    }
+}
 dependencyLocking { lockAllConfigurations() }
 tasks.register('prices', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath

@@ -24,7 +24,7 @@ def check(module):
     with tempfile.TemporaryFile(mode="w+t") as log:
         args = [JAVA, "-jar", str(jar(module))]
         if module == "api":
-            args += ["--server.port=0", "--server.address=127.0.0.1"]
+            args += ["--server.port=0", "--server.address=127.0.0.1", "--nemlab.admin.enabled=false"]
         else:
             args += ["--nemlab.worker.enabled=false"]
         process = subprocess.Popen(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)

@@ -27,9 +27,8 @@ export NEMLAB_WORKER_REGIONS=NSW1
 
 Setting `NEMLAB_WORKER_ENABLED=true` with scheduling disabled only consumes existing queued
 jobs. Scheduling and manually submitted jobs share `RefreshJobService.submit` and the same
-claim/fetch/commit path. Protected HTTP submission/status/cancellation arrives in NEM-030.
-The local direct-import CLI bypasses the queue: do not run it against queue-owned backfills
-or overlapping active worker imports.
+claim/fetch/commit path. Protected HTTP submission/status/cancellation is available through the [operator API](../api/README.md).
+The direct-import CLI `start`/`resume` commands are retired; manual imports now use the queue.
 
 ## Settings
 
