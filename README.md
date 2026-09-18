@@ -52,7 +52,7 @@ After building, start these in separate terminals:
 
 The API binds to `127.0.0.1:8080` by default. Check `http://127.0.0.1:8080/actuator/health`; it returns status UP without component details. `PORT` and `SERVER_ADDRESS` override the API bind settings. Use Ctrl+C to stop either application.
 
-The worker is a non-HTTP application kept alive by Spring Boot. Its default mode has no active jobs or schedules and needs no credentials. Enable queue polling and daily refreshes explicitly using the [worker setup](worker/README.md). The API shell still needs no database or OE credentials to start. API health currently confirms application startup only, not ingestion/solver/database readiness. Business endpoints and administrator access controls arrive with later tasks.
+The worker is a non-HTTP application kept alive by Spring Boot. Its default mode has no active jobs or schedules and needs no credentials. Enable queue polling and daily refreshes explicitly using the [worker setup](worker/README.md). The API shell still needs no database or OE credentials to start. API health currently confirms application startup only, not ingestion/solver/database readiness. Operator controls can be enabled separately using the [API setup](api/README.md); public product endpoints remain later work.
 
 For development, `./gradlew :api:bootRun` and `./gradlew :worker:bootRun` are also available. Automated packaged startup checks use Python 3:
 

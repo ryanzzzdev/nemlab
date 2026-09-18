@@ -1,0 +1,11 @@
+{
+  "name": "gridreplay-demo-tests",
+  "private": true,
+  "description": "Dev-only test harness for the GridReplay static demo page. Not part of the Gradle build.",
+  "scripts": {
+    "test": "node data.test.js && node smoke.js"
+  },
+  "devDependencies": {
+    "jsdom": "24.1.3"
+  }
+}

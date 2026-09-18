@@ -42,3 +42,7 @@ Execution is refined in [NEM-018](../backlog.md#nem-018) after BatteryLab. Data 
 ## Data-validation constraints from M1
 
 The [grid gate](../evidence/oe-validation/grid-gate.md) supports an observation-time replay for the sample days. Shared cursor positions must not imply identical measurement windows. Regional battery totals, curtailment-based events and renewable-peak detection require additional methodology checks before implementation; individual provider series can remain contextual with explicit labels. Keep the three-event target, but settle the third detector using the proposed fallback or validated renewable methodology in NEM-018.
+
+## Exploration demo
+
+A static mock-data page at [docs/demos/gridreplay/index.html](../../demos/gridreplay/index.html) sketches the catalogue, filters, synchronised replay cursor and catalogue→replay→BatteryLab navigation for discussion. It runs a seeded synthetic NSW1 generator with no backend; the detector parameters, thresholds and provisional renewable/ramp definitions shown are illustrative, not accepted definitions, and the page is not a design commitment for NEM-018.

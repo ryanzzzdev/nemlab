@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BatteryLab — static demo</title>
+<style>
+  :root {
+    --ink: #17202a; --muted: #5b6470; --faint: #8a94a0;
+    --line: #e3e6ea; --bg: #f5f6f8; --card: #ffffff;
+    --teal: #0e7a5f; --teal-soft: #e6f4f0;
+    --slate: #64748b; --amber: #b45309; --blue: #2563eb;
+    --red: #dc2626; --green: #0e9f6e;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  header.page {
+    background: #0f172a; color: #e8ecf1; padding: 18px 28px;
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  }
+  header.page h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+  header.page .tag {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+    background: #f59e0b; color: #1f2937; border-radius: 4px; padding: 2px 7px;
+  }
+  header.page p { margin: 0; color: #9aa7b8; font-size: 13px; }
+  main { max-width: 1160px; margin: 0 auto; padding: 20px 24px 48px; }
+  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 940px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin: 0 0 12px; }
+  .card h3 { font-size: 14px; margin: 0; }
+
+  fieldset { border: 0; margin: 0 0 14px; padding: 0; }
+  legend { font-size: 12px; font-weight: 600; color: var(--muted); padding: 0; margin-bottom: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+  label.f { display: block; font-size: 12px; color: var(--muted); }
+  label.f input, label.f select {
+    width: 100%; margin-top: 3px; padding: 6px 8px; font: inherit; color: var(--ink);
+    border: 1px solid #cfd5db; border-radius: 6px; background: #fff;
+  }
+  label.f input:focus, label.f select:focus { outline: 2px solid var(--teal); outline-offset: -1px; border-color: var(--teal); }
+  label.f input.bad { border-color: var(--red); }
+  .err { display: none; color: var(--red); font-size: 11px; margin-top: 2px; }
+  .err.on { display: block; }
+  .radio-row { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .radio-row label { display: flex; gap: 5px; align-items: center; }
+  .hint { font-size: 11px; color: var(--faint); margin: 10px 0 0; }
+
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 7px; padding: 8px 14px;
+    border: 1px solid transparent;
+  }
+  button.primary { background: var(--teal); color: #fff; }
+  button.primary:hover { background: #0b6650; }
+  button.ghost { background: #fff; border-color: #cfd5db; color: var(--ink); }
+  button.ghost:hover { border-color: var(--slate); }
+  button:disabled { opacity: .55; cursor: default; }
+
+  .job { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    border-radius: 999px; padding: 3px 10px;
+  }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .chip.queued { background: #fef3c7; color: #92400e; }
+  .chip.running { background: #dbeafe; color: #1d4ed8; }
+  .chip.running::before { animation: pulse 1s infinite; }
+  .chip.complete { background: var(--teal-soft); color: var(--teal); }
+  .chip.failed { background: #fee2e2; color: var(--red); }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .job .meta { color: var(--faint); font-size: 12px; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+  .stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .stat .v.neg { color: var(--red); }
+  .stat .sub { font-size: 11px; color: var(--faint); margin-top: 2px; }
+
+  .explain { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; }
+  .explain ul { margin: 0; padding-left: 18px; }
+  .explain li { margin: 3px 0; font-size: 13px; }
+
+  .charts { position: relative; }
+  .chart-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px 8px; margin-bottom: 12px; }
+  .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .chart-head .t { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); align-items: center; }
+  .legend .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  .legend .sw.dash { height: 0; border-top: 2px dashed var(--slate); }
+  .seg { display: inline-flex; border: 1px solid #cfd5db; border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: #fff; font-size: 11px; font-weight: 600; color: var(--muted); padding: 3px 10px; }
+  .seg button.on { background: var(--teal); color: #fff; }
+  svg.chart { display: block; width: 100%; height: auto; }
+  svg.chart text { font-size: 10px; fill: var(--faint); }
+  .charts:focus-visible { outline: 2px solid var(--teal); border-radius: var(--radius); }
+
+  #tooltip {
+    position: absolute; display: none; pointer-events: none; z-index: 5;
+    background: rgba(15, 23, 42, .94); color: #e8ecf1; border-radius: 7px; padding: 8px 10px;
+    font-size: 11px; line-height: 1.45; min-width: 200px; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    font-variant-numeric: tabular-nums;
+  }
+  #tooltip .tt { color: #93c5fd; font-weight: 700; margin-bottom: 3px; }
+  #tooltip table { border-collapse: collapse; width: 100%; }
+  #tooltip td { padding: 0 0 1px; }
+  #tooltip td.r { text-align: right; padding-left: 10px; }
+  #tooltip .fixed td:first-child { color: #94a3b8; }
+  #tooltip .hind td:first-child { color: #34d399; }
+
+  table.breakdown { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  table.breakdown th, table.breakdown td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); font-size: 13px; }
+  table.breakdown th:first-child, table.breakdown td:first-child { text-align: left; }
+  table.breakdown thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  table.breakdown tr.total td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--line); }
+  table.breakdown td.credit { color: var(--teal); }
+
+  details.method { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; margin-top: 12px; }
+  details.method summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+  details.method .body { margin-top: 10px; font-size: 13px; color: #334155; }
+  details.method code, details.method pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  details.method pre { background: #f1f5f9; border-radius: 6px; padding: 10px 12px; font-size: 12px; overflow-x: auto; }
+
+  footer.page { max-width: 1160px; margin: 0 auto; padding: 0 24px 32px; color: var(--faint); font-size: 12px; }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>BatteryLab</h1>
+  <span class="tag">Static demo</span>
+  <p>Simulated energy-trading margin for a battery on a historical NEM day — fixed schedule vs perfect hindsight.</p>
+</header>
+
+<main>
+  <div class="layout">
+    <form id="scenario" class="card" novalidate>
+      <h2>Scenario</h2>
+
+      <fieldset>
+        <legend>Market day</legend>
+        <div class="grid2">
+          <label class="f">Region
+            <select id="region">
+              <option value="NSW1" selected>NSW1</option>
+              <option disabled>QLD1 — no demo coverage</option>
+              <option disabled>SA1 — no demo coverage</option>
+              <option disabled>TAS1 — no demo coverage</option>
+              <option disabled>VIC1 — no demo coverage</option>
+            </select>
+          </label>
+          <label class="f">Date
+            <select id="day">
+              <option value="2023-09-11" selected>11 Sep 2023</option>
+              <option value="2026-09-11">11 Sep 2026</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Aggregate site</legend>
+        <div class="grid2">
+          <label class="f">Capacity (MWh)<input id="capacity" type="number" step="any" value="2"></label>
+          <span></span>
+          <label class="f">Charge power (MW)<input id="chargeMW" type="number" step="any" value="1"></label>
+          <label class="f">Discharge power (MW)<input id="dischargeMW" type="number" step="any" value="1"></label>
+          <label class="f">Import limit (MW)<input id="importLimit" type="number" step="any" value="1"></label>
+          <label class="f">Export limit (MW)<input id="exportLimit" type="number" step="any" value="1"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Stored energy (MWh)</legend>
+        <div class="grid2">
+          <label class="f">Minimum<input id="eMin" type="number" step="any" value="0"></label>
+          <label class="f">Maximum<input id="eMax" type="number" step="any" value="2"></label>
+          <label class="f">Initial<input id="eInit" type="number" step="any" value="0"></label>
+        </div>
+        <p class="hint">Terminal energy always equals initial energy (fair daily comparison).</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Efficiency</legend>
+        <div class="radio-row">
+          <label><input type="radio" name="effmode" value="roundTrip" checked> Round-trip</label>
+          <label><input type="radio" name="effmode" value="legs"> Separate legs</label>
+        </div>
+        <div class="grid2" id="eff-rt">
+          <label class="f">Round-trip (0–1)<input id="roundTrip" type="number" step="any" value="0.9"></label>
+        </div>
+        <div class="grid2" id="eff-legs" hidden>
+          <label class="f">Charge η<input id="etaC" type="number" step="any" value="0.95"></label>
+          <label class="f">Discharge η<input id="etaD" type="number" step="any" value="0.95"></label>
+        </div>
+        <p class="hint">Round-trip input is split as ηc = ηd = √r.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Operating windows (NEM time)</legend>
+        <div class="grid2">
+          <label class="f">Charge start<input id="chargeStart" type="time" step="300" value="10:00"></label>
+          <label class="f">Charge end<input id="chargeEnd" type="time" step="300" value="14:00"></label>
+          <label class="f">Discharge start<input id="dischargeStart" type="time" step="300" value="17:00"></label>
+          <label class="f">Discharge end<input id="dischargeEnd" type="time" step="300" value="21:00"></label>
+        </div>
+        <div class="err" id="err-windows"></div>
+        <p class="hint">One charge window followed by one discharge window; half-open, five-minute aligned.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Variable costs (AUD/MWh)</legend>
+        <div class="grid2">
+          <label class="f">Import fee<input id="importFee" type="number" step="any" value="0"></label>
+          <label class="f">Export fee<input id="exportFee" type="number" step="any" value="0"></label>
+          <label class="f">Degradation / exported MWh<input id="degradation" type="number" step="any" value="0"></label>
+        </div>
+      </fieldset>
+
+      <div class="btns">
+        <button type="submit" class="primary" id="run">Run simulation</button>
+        <button type="button" class="ghost" id="preset">Demo preset</button>
+        <button type="button" class="ghost" id="share">Copy share link</button>
+      </div>
+
+      <div class="job" id="job" hidden>
+        <span class="chip" id="job-chip">queued</span>
+        <span class="meta" id="job-meta"></span>
+      </div>
+      <p class="hint">Illustrative preset — not a recommended real-world assumption. Prices are the validated NSW1 Open Electricity fixtures (288 × 5-minute intervals, fixed UTC+10).</p>
+    </form>
+
+    <section id="results" hidden aria-live="polite">
+      <div class="summary" id="summary"></div>
+      <div class="explain"><ul id="explain"></ul></div>
+
+      <div class="charts" id="charts" tabindex="0" aria-label="Simulation charts; use left and right arrow keys to move the cursor">
+        <div id="tooltip"></div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="t">Regional price — AUD/MWh</span>
+            <span class="legend"><span><span class="sw" style="background:var(--amber)"></span>Price</span><span><span class="sw" style="background:var(--red)"></span>Negative</span></span>
+          </div>
+          <div id="chart-price"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="t">Grid-side power — MW</span>
+            <span class="legend">
+              <span><span class="sw" style="background:var(--blue)"></span>Charging</span>
+              <span><span class="sw" style="background:var(--green)"></span>Discharging</span>
+              <span class="seg" id="power-seg">
+                <button type="button" data-s="fixed">Fixed</button>
+                <button type="button" data-s="hindsight" class="on">Hindsight</button>
+              </span>
+            </span>
+          </div>
+          <div id="chart-power"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="t">Stored energy — MWh</span>
+            <span class="legend"><span><span class="sw dash"></span>Fixed</span><span><span class="sw" style="background:var(--teal)"></span>Hindsight</span></span>
+          </div>
+          <div id="chart-energy"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <span class="t">Cumulative margin — AUD</span>
+            <span class="legend"><span><span class="sw dash"></span>Fixed</span><span><span class="sw" style="background:var(--teal)"></span>Hindsight</span></span>
+          </div>
+          <div id="chart-margin"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h2>Financial breakdown</h2>
+        <table class="breakdown" id="breakdown"></table>
+        <p class="hint" id="versions"></p>
+      </div>
+
+      <details class="method">
+        <summary>Methodology and scope</summary>
+        <div class="body">
+          <p>The engine simulates a price-taking wholesale battery over one complete NEM market day (288 contiguous five-minute intervals, fixed UTC+10). For each interval, grid imports <code>c</code> and exports <code>d</code> (MWh) satisfy:</p>
+          <pre>E[t] = E[t−1] + ηc·c[t] − d[t]/ηd
+c[t] ≤ min(charge MW, import limit)·dt    d[t] ≤ min(discharge MW, export limit)·dt
+E_min ≤ E[t] ≤ E_max    c[t] = 0 or d[t] = 0    E[last] = E_initial</pre>
+          <p><b>Fixed schedule</b> allocates the largest feasible single charge-then-discharge excursion across the configured windows without looking at prices. <b>Perfect hindsight</b> maximises margin over the same windows and constraints; the demo reports it optimal only when an independently evaluated dual bound certifies the gap within AUD 0.01.</p>
+          <pre>margin = Σ price·d − Σ price·c − import_fee·Σc − export_fee·Σd − degradation·Σd</pre>
+          <p>Negative purchase prices are a credit; efficiency losses are a physical quantity, never charged twice. Excluded: capital/finance costs, contracts, network charges and loss factors, FCAS and retail tariffs. Results are a simulated energy-trading margin — not investment return or actual facility revenue.</p>
+          <p>This page embeds the two validated NSW1 Open Electricity price fixtures and a JavaScript port of the tested <code>battery-v1</code> core (verified against the Java engine's published margins). Job execution is simulated in the browser; there is no backend.</p>
+        </div>
+      </details>
+    </section>
+  </div>
+</main>
+
+<footer class="page">
+  NEMLab · BatteryLab static demo · mocked job execution, real NSW1 price data · simulated margin, not investment advice.
+</footer>
+
+<script>
+const PRICES = {"2023-09-11":[87.0,88.88,88.88,85.98,85.98,85.98,87.0,87.0,75.62,70.71,71.8,85.98,87.0,87.0,85.98,75.43,69.43,70.43,70.32,71.03,85.98,85.98,70.29,74.17,73.72,70.93,71.01,70.5,70.51,70.47,70.45,70.52,71.02,70.95,69.88,70.41,68.09,70.51,70.54,70.6,70.58,71.03,70.57,70.58,70.59,71.1,70.46,71.71,86.52,102.07,100.0,88.88,88.88,92.38,95.87,100.0,88.88,100.6,100.0,101.34,100.53,102.24,103.14,109.15,120.49,109.15,99.06,100.55,99.67,100.47,102.86,144.32,95.37,142.22,145.0,145.16,145.04,145.0,168.93,165.42,162.3,145.59,109.15,99.5,82.62,65.52,62.73,61.5,60.29,0.0,15.85,0.0,-9.5,-24.89,-24.61,-24.06,-4.34,89.52,88.69,35.64,61.5,36.27,39.28,54.95,37.31,58.92,54.95,19.03,59.41,65.63,54.95,23.76,54.59,58.95,54.95,54.95,54.95,54.95,54.95,-7.58,26.21,61.5,54.95,5.05,21.54,3.51,35.43,52.87,45.55,29.61,12.14,35.16,43.44,42.53,35.29,10.0,10.0,28.61,43.47,44.57,36.06,36.06,36.06,35.65,30.13,36.06,36.06,35.85,26.23,26.06,25.52,40.27,36.06,36.06,36.06,36.06,36.19,54.93,54.95,36.81,37.49,45.23,54.95,37.42,37.45,37.45,21.72,36.92,36.06,36.06,36.06,37.88,48.31,54.95,61.5,122.0,108.67,108.67,61.5,36.06,61.5,22.99,21.43,16.99,36.06,38.23,45.0,24.63,10.0,20.68,25.07,37.15,9.07,20.69,20.69,43.91,61.5,82.61,42.51172,92.63,94.42,143.56,176.47,238.92,131.75,145.0,189.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.99,299.49,288.89,216.24,196.12,196.12,189.99,189.99,189.99,189.99,177.22,145.0,145.0,160.05,172.76,171.17,165.21,148.59,150.15,141.37,145.0,142.64,138.84,127.42,110.0,100.0,130.67,145.15,129.4,110.0,110.0,110.0,120.93,134.59,122.0,115.76,105.04,98.19,113.48,115.95,115.45,116.99,116.99,114.82,122.0,122.0,116.99,133.77,116.99,109.34,108.37,116.99,116.99,116.99,121.86,144.3,122.0,122.0,122.0,122.0,116.99,100.28],"2026-09-11":[86.17,94.95,86.13,84.79,87.38,85.27,83.99,86.9,76.74,77.06,83.99,83.99,87.52,83.99,83.99,76.91,83.99,76.15,76.15,76.15,76.15,76.15,76.15,76.15,69.88,69.24,67.6,67.78,54.58,64.95,66.77,66.64,66.35,65.78,66.23,64.95,64.97,64.95,64.58,67.51,68.09,50.85,64.95,52.21,63.85,65.0,64.24,51.51,61.75,68.67,51.09,68.68,67.59,68.13,61.62,63.72,63.27,63.7,66.6,67.65,64.95,82.46,82.9,82.95,80.84,77.5,71.4,78.18,85.19,80.18,82.9,88.3,79.62,83.21,82.9,83.62,100.8,109.1,99.87,100.48,96.49,91.86,84.12,80.61,71.38,69.69,59.99,40.0,0.0,5.6,42.54,42.08,42.54,42.8,42.54,64.89,42.8,57.39,42.59,87.86,75.96,42.56,42.8,83.99,59.8,42.8,64.89,16.3,43.74,28.95,87.86,34.37,57.39,10.44,15.97,57.39,42.8,64.07,41.88,57.39,46.88,57.39,46.45,52.9,57.39,46.45,76.15,76.15,68.02,64.07,57.39,64.07,35.9,76.15,63.16,76.15,57.39,64.95,64.07,64.07,54.97,76.15,48.24,64.07,49.82,62.41,49.19,75.96,49.59,75.96,52.44,64.95,49.96,63.72,69.33,41.19,44.54,40.36,63.72,38.64,46.56,27.39,42.24,42.8,43.32,43.56,23.51,40.8,40.44,38.42,41.44,24.48,39.52,42.8,28.89,30.01,21.64,31.2,23.51,59.5,24.95,6.47,57.49,24.73,0.01,0.01,0.0,0.0,24.14,53.22,24.71,54.09,53.3,67.22,75.74,90.5,87.6,60.27,68.7,77.02,76.29,93.01,92.29,98.11,96.76,94.56,97.83,110.54,111.85,110.05,108.85,109.54,113.9,122.86,122.86,111.98,113.59,111.98,114.3,114.99,111.98,113.11,111.98,113.5,99.66,107.51,111.98,108.76,106.76,109.58,99.84,98.51,100.81,105.67,105.73,105.4,98.34,96.11,98.64,98.3,98.7,98.93,95.2,95.49,98.85,95.2,93.63,95.2,97.72,95.2,95.2,95.2,95.2,95.2,98.13,97.26,93.8,95.2,95.2,95.2,88.89,96.88,95.2,95.2,90.49,99.76,95.2,90.49,95.2,95.2,99.56,96.47,97.32,99.92,96.53,95.27,99.27,95.2,105.42,95.2,96.29,97.42,95.87,97.14,95.29,90.49,96.62,95.46]};
+
+/* BatteryLab engine — JS port of the battery-v1 contract (ordered-windows-v1 /
+ * ordered-hindsight-v1 semantics). Pure functions; no DOM access. */
+"use strict";
+
+const ENGINE = (() => {
+
+  const ENERGY_TOL = 1e-7;
+  const MARGIN_TOL_BASE = 1e-6, MARGIN_TOL_REL = 1e-9;
+  const OPTIMAL_GAP_AUD = 0.01;
+
+  function finite(name, v) {
+    if (!Number.isFinite(v)) throw new Error(name + " must be finite");
+    return v;
+  }
+
+  // ---------- input normalisation / validation ----------
+  // Returns {errors: {field: msg}} or {battery, costs, windows}
+  function normalise(input) {
+    const errors = {};
+    const num = (k) => {
+      const v = input[k];
+      if (typeof v !== "number" || !Number.isFinite(v)) { errors[k] = "Enter a finite number"; return NaN; }
+      return v;
+    };
+    const capacity = num("capacity"), eMin = num("eMin"), eMax = num("eMax"), eInit = num("eInit");
+    const chargeMW = num("chargeMW"), dischargeMW = num("dischargeMW");
+    const importLimit = num("importLimit"), exportLimit = num("exportLimit");
+    const importFee = num("importFee"), exportFee = num("exportFee"), degradation = num("degradation");
+    let etaC, etaD;
+    if (input.efficiencyMode === "legs") {
+      etaC = num("etaC"); etaD = num("etaD");
+      for (const [k, v] of [["etaC", etaC], ["etaD", etaD]])
+        if (Number.isFinite(v) && (v <= 0 || v > 1)) errors[k] = "Efficiency must be in (0, 1]";
+    } else {
+      const r = num("roundTrip");
+      if (Number.isFinite(r) && (r <= 0 || r > 1)) errors.roundTrip = "Round-trip efficiency must be in (0, 1]";
+      if (!errors.roundTrip) etaC = etaD = Math.sqrt(r);
+    }
+    if (Number.isFinite(capacity) && capacity <= 0) errors.capacity = "Capacity must be positive";
+    for (const [k, v] of [["chargeMW", chargeMW], ["dischargeMW", dischargeMW],
+        ["importLimit", importLimit], ["exportLimit", exportLimit],
+        ["importFee", importFee], ["exportFee", exportFee], ["degradation", degradation]])
+      if (Number.isFinite(v) && v < 0) errors[k] = "Must be nonnegative";
+    if (!errors.eMin && !errors.eInit && !errors.eMax && !errors.capacity &&
+        !(0 <= eMin && eMin <= eInit && eInit <= eMax && eMax <= capacity))
+      errors.eInit = "Require 0 ≤ min ≤ initial ≤ max ≤ capacity";
+
+    const cs = input.chargeStart, ce = input.chargeEnd, ds = input.dischargeStart, de = input.dischargeEnd;
+    let windows = null;
+    if (!(Number.isInteger(cs) && Number.isInteger(ce) && Number.isInteger(ds) && Number.isInteger(de)
+        && cs >= 0 && cs < ce && ce <= ds && ds < de && de <= input.intervals)) {
+      errors.windows = "Require ordered, nonempty, nonoverlapping windows (charge before discharge) within the day";
+    } else {
+      windows = { chargeStart: cs, chargeEnd: ce, dischargeStart: ds, dischargeEnd: de };
+    }
+    if (Object.keys(errors).length) return { errors };
+    return {
+      battery: { capacityMWh: capacity, minimumMWh: eMin, maximumMWh: eMax, initialMWh: eInit,
+                 chargeMW, dischargeMW, importLimitMW: importLimit, exportLimitMW: exportLimit,
+                 etaC, etaD },
+      costs: { importFee, exportFee, degradationPerExportedMWh: degradation },
+      windows
+    };
+  }
+
+  const eff = (b) => ({
+    pc: Math.min(b.chargeMW, b.importLimitMW),
+    pd: Math.min(b.dischargeMW, b.exportLimitMW)
+  });
+
+  // ---------- fixed schedule (price-blind) ----------
+  function fixedSchedule(battery, windows, n) {
+    const { pc, pd } = eff(battery);
+    const nc = windows.chargeEnd - windows.chargeStart, nd = windows.dischargeEnd - windows.dischargeStart;
+    const headroom = battery.maximumMWh - battery.initialMWh;
+    const availC = battery.etaC * pc * nc / 12, availD = pd * nd / (12 * battery.etaD);
+    const q = Math.min(headroom, availC, availD);
+    const limit = q === headroom ? "ENERGY_HEADROOM" : q === availC ? "CHARGE_WINDOW" : "DISCHARGE_WINDOW";
+    let remC = finite("total import", q / battery.etaC), remD = finite("total export", q * battery.etaD);
+    const c = new Array(n).fill(0), d = new Array(n).fill(0), e = new Array(n);
+    let energy = battery.initialMWh;
+    for (let i = 0; i < n; i++) {
+      const ci = (i >= windows.chargeStart && i < windows.chargeEnd) ? Math.min(pc / 12, remC) : 0;
+      const di = (i >= windows.dischargeStart && i < windows.dischargeEnd) ? Math.min(pd / 12, remD) : 0;
+      remC -= ci; remD -= di;
+      energy += battery.etaC * ci - di / battery.etaD;
+      c[i] = ci; d[i] = di; e[i] = energy;
+    }
+    return { intervals: { c, d, e }, limitingReason: limit };
+  }
+
+  // ---------- exact ordered-window hindsight ----------
+  // Solves the LP by marginal water-filling (valid only because all charging
+  // precedes all discharging), then evaluates an analytic dual upper bound.
+  function hindsight(battery, windows, costs, prices) {
+    const n = prices.length;
+    const { pc, pd } = eff(battery);
+    const u = battery.etaC * pc / 12;              // stored MWh addable per charge interval
+    const v = pd / (12 * battery.etaD);            // stored MWh removable per discharge interval
+    const head = battery.maximumMWh - battery.initialMWh;
+
+    const buys = [], sells = [];
+    for (let i = 0; i < n; i++) {
+      if (i >= windows.chargeStart && i < windows.chargeEnd)
+        buys.push({ i, b: finite("stored import cost", (prices[i] + costs.importFee) / battery.etaC), cap: u, used: 0 });
+      if (i >= windows.dischargeStart && i < windows.dischargeEnd)
+        sells.push({ i, s: finite("stored export revenue",
+            (prices[i] - costs.exportFee - costs.degradationPerExportedMWh) * battery.etaD), cap: v, used: 0 });
+    }
+    buys.sort((a, b) => a.b - b.b);
+    sells.sort((a, b) => b.s - a.s);
+
+    let q = 0, bi = 0, sj = 0;
+    while (bi < buys.length && sj < sells.length && q < head) {
+      if (!(sells[sj].s > buys[bi].b)) break;      // marginal pair not profitable
+      const delta = Math.min(buys[bi].cap - buys[bi].used, sells[sj].cap - sells[sj].used, head - q);
+      if (delta <= 0) break;
+      buys[bi].used += delta; sells[sj].used += delta; q += delta;
+      if (buys[bi].cap - buys[bi].used <= ENERGY_TOL) bi++;
+      if (sells[sj].cap - sells[sj].used <= ENERGY_TOL) sj++;
+    }
+
+    const c = new Array(n).fill(0), d = new Array(n).fill(0), e = new Array(n);
+    let energy = battery.initialMWh;
+    for (const slot of buys) c[slot.i] = slot.used / battery.etaC;
+    for (const slot of sells) d[slot.i] = slot.used * battery.etaD;
+    for (let i = 0; i < n; i++) { energy += battery.etaC * c[i] - d[i] / battery.etaD; e[i] = energy; }
+
+    // --- analytic dual bound (matches the Java certificate's Lagrangian form) ---
+    // Marginal slot values: next free capacity vs last used capacity.
+    const bNext = bi < buys.length ? buys[bi].b : Infinity;
+    const sNext = sj < sells.length ? sells[sj].s : -Infinity;
+    let bLast = -Infinity, sLast = Infinity;
+    for (const s of buys) if (s.used > ENERGY_TOL) bLast = Math.max(bLast, s.b);
+    for (const s of sells) if (s.used > ENERGY_TOL) sLast = Math.min(sLast, s.s);
+
+    let upper;
+    if (q <= ENERGY_TOL) {
+      upper = 0;
+    } else {
+      let lambda, mu;
+      if (sNext <= bNext) {                        // stopped on economics or capacity
+        mu = 0;
+        const lo = Math.max(-bNext, sLast === Infinity ? -Infinity : -sLast);
+        const hi = Math.min(bLast === -Infinity ? Infinity : -bLast, -sNext);
+        lambda = (lo + hi) / 2;
+      } else {                                     // headroom bound the excursion
+        lambda = -sLast; mu = sLast - bNext;
+      }
+      upper = mu * head;
+      for (const s of buys) upper += u * Math.max(0, -s.b - lambda - mu);
+      for (const s of sells) upper += v * Math.max(0, s.s + lambda);
+    }
+
+    const dispatch = { intervals: { c, d, e }, limitingReason: "NOT_EVALUATED" };
+    const accounting = account(battery, costs, prices, dispatch);
+    const gap = upper - accounting.margin;
+    const optimal = Number.isFinite(gap) && gap >= -1e-9 && gap <= OPTIMAL_GAP_AUD;
+    return {
+      dispatch, accounting,
+      status: optimal ? "OPTIMAL" : "FEASIBLE_NOT_PROVEN",
+      upperBound: Number.isFinite(upper) ? upper : null,
+      absoluteGap: Number.isFinite(gap) ? gap : null
+    };
+  }
+
+  // ---------- accounting ----------
+  function account(battery, costs, prices, dispatch) {
+    const n = prices.length;
+    const { c, d } = dispatch.intervals;
+    let imported = 0, exported = 0, chargingCost = 0, revenue = 0;
+    const cumulative = new Array(n);
+    let run = 0;
+    for (let i = 0; i < n; i++) {
+      imported += c[i]; exported += d[i];
+      chargingCost += prices[i] * c[i]; revenue += prices[i] * d[i];
+      run += prices[i] * d[i] - prices[i] * c[i] - costs.importFee * c[i]
+           - (costs.exportFee + costs.degradationPerExportedMWh) * d[i];
+      cumulative[i] = run;
+    }
+    const fees = costs.importFee * imported + costs.exportFee * exported;
+    const degradation = costs.degradationPerExportedMWh * exported;
+    const losses = (1 - battery.etaC) * imported + (1 / battery.etaD - 1) * exported;
+    return { importedMWh: imported, exportedMWh: exported, chargingCost, revenue,
+             fees, degradation, lossesMWh: losses,
+             margin: revenue - chargingCost - fees - degradation, cumulative };
+  }
+
+  // ---------- independent validation (mirrors DispatchValidator) ----------
+  function validateDispatch(battery, windows, dispatch, n) {
+    const { c, d, e } = dispatch.intervals;
+    let recon = battery.initialMWh, prev = battery.initialMWh;
+    for (let i = 0; i < n; i++) {
+      if ((i < windows.chargeStart || i >= windows.chargeEnd) && c[i] > ENERGY_TOL) return "charge outside window @" + i;
+      if ((i < windows.dischargeStart || i >= windows.dischargeEnd) && d[i] > ENERGY_TOL) return "discharge outside window @" + i;
+      if (c[i] > eff(battery).pc / 12 + ENERGY_TOL || d[i] > eff(battery).pd / 12 + ENERGY_TOL) return "power limit @" + i;
+      if (c[i] > ENERGY_TOL && d[i] > ENERGY_TOL) return "simultaneous c/d @" + i;
+      recon += battery.etaC * c[i] - d[i] / battery.etaD;
+      const residual = e[i] - prev - battery.etaC * c[i] + d[i] / battery.etaD;
+      if (Math.abs(residual) > ENERGY_TOL || Math.abs(recon - e[i]) > ENERGY_TOL) return "energy balance @" + i;
+      if (recon < battery.minimumMWh - ENERGY_TOL || recon > battery.maximumMWh + ENERGY_TOL) return "energy bounds @" + i;
+      prev = e[i];
+    }
+    if (Math.abs(recon - battery.initialMWh) > ENERGY_TOL) return "terminal energy";
+    return null;
+  }
+
+  function run(input) {
+    const norm = normalise(input);
+    if (norm.errors) return { errors: norm.errors };
+    const { battery, costs, windows } = norm;
+    const prices = input.prices, n = prices.length;
+
+    const fixedDispatch = fixedSchedule(battery, windows, n);
+    const fixedViolation = validateDispatch(battery, windows, fixedDispatch, n);
+    if (fixedViolation) throw new Error("fixed dispatch invalid: " + fixedViolation);
+    const fixedAccounting = account(battery, costs, prices, fixedDispatch);
+
+    const h = hindsight(battery, windows, costs, prices);
+    const hViolation = validateDispatch(battery, windows, h.dispatch, n);
+    if (hViolation) return { battery, costs, windows,
+      fixed: { dispatch: fixedDispatch, accounting: fixedAccounting },
+      hindsight: { status: "FAILED_VALIDATION", diagnostic: hViolation } };
+
+    return { battery, costs, windows,
+      fixed: { dispatch: fixedDispatch, accounting: fixedAccounting },
+      hindsight: h };
+  }
+
+  return { run, normalise, fixedSchedule, hindsight, account, validateDispatch,
+           ENERGY_TOL, OPTIMAL_GAP_AUD };
+})();
+
+if (typeof module !== "undefined") module.exports = ENGINE;
+
+// ---------------- UI ----------------
+const $ = id => document.getElementById(id);
+const fmt = {
+  aud: v => (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  mwh: v => v.toFixed(3) + " MWh",
+  mw: v => v.toFixed(3) + " MW",
+  time: i => String(Math.floor(i * 5 / 60)).padStart(2, "0") + ":" + String((i * 5) % 60).padStart(2, "0")
+};
+const DAYS = Object.keys(PRICES);
+const N = 288;
+
+let lastResult = null, lastInput = null, lastSig = null, lastDay = null;
+let powerStrategy = "hindsight";
+let cursorIdx = null;
+
+function t2i(id) { // "HH:MM" -> interval index (start boundary)
+  const [h, m] = $(id).value.split(":").map(Number);
+  return (h * 60 + m) / 5;
+}
+function i2t(i) { return fmt.time(i); }
+
+function readForm() {
+  const num = id => $(id).value === "" ? NaN : Number($(id).value);
+  const mode = document.querySelector('input[name="effmode"]:checked').value;
+  return {
+    day: $("day").value,
+    capacity: num("capacity"), eMin: num("eMin"), eMax: num("eMax"), eInit: num("eInit"),
+    chargeMW: num("chargeMW"), dischargeMW: num("dischargeMW"),
+    importLimit: num("importLimit"), exportLimit: num("exportLimit"),
+    efficiencyMode: mode, roundTrip: num("roundTrip"), etaC: num("etaC"), etaD: num("etaD"),
+    importFee: num("importFee"), exportFee: num("exportFee"), degradation: num("degradation"),
+    chargeStart: t2i("chargeStart"), chargeEnd: t2i("chargeEnd"),
+    dischargeStart: t2i("dischargeStart"), dischargeEnd: t2i("dischargeEnd"),
+    intervals: N, prices: PRICES[$("day").value]
+  };
+}
+
+const FIELD_IDS = { capacity: "capacity", eMin: "eMin", eMax: "eMax", eInit: "eInit",
+  chargeMW: "chargeMW", dischargeMW: "dischargeMW", importLimit: "importLimit",
+  exportLimit: "exportLimit", roundTrip: "roundTrip", etaC: "etaC", etaD: "etaD",
+  importFee: "importFee", exportFee: "exportFee", degradation: "degradation" };
+
+function clearErrors() {
+  document.querySelectorAll("input.bad").forEach(el => el.classList.remove("bad"));
+  document.querySelectorAll(".err.on").forEach(el => el.classList.remove("on"));
+}
+function showErrors(errors) {
+  clearErrors();
+  for (const [k, msg] of Object.entries(errors)) {
+    const id = FIELD_IDS[k];
+    if (id) {
+      $(id).classList.add("bad");
+      const label = $(id).closest("label");
+      let s = label.querySelector(".err");
+      if (!s) { s = document.createElement("span"); s.className = "err"; label.appendChild(s); }
+      s.textContent = msg; s.classList.add("on");
+    } else if (k === "windows") {
+      const s = $("err-windows"); s.textContent = msg; s.classList.add("on");
+    }
+  }
+}
+
+// ---- simulated job lifecycle ----
+let jobTimer = null;
+function setJob(status, meta) {
+  $("job").hidden = false;
+  const chip = $("job-chip");
+  chip.className = "chip " + status;
+  chip.textContent = status;
+  $("job-meta").textContent = meta || "";
+}
+function submit(ev) {
+  if (ev) ev.preventDefault();
+  const input = readForm();
+  const result = ENGINE.run(input);
+  if (result.errors) {
+    showErrors(result.errors);
+    setJob("failed", "invalid configuration — fix the highlighted fields");
+    return;
+  }
+  clearErrors();
+  const sig = JSON.stringify({ ...input, prices: undefined, day: input.day });
+  if (jobTimer) clearTimeout(jobTimer);
+  const t0 = performance.now();
+  setJob("queued", "waiting for a worker slot…");
+  jobTimer = setTimeout(() => {
+    setJob("running", "solving fixed schedule and hindsight LP…");
+    jobTimer = setTimeout(() => {
+      const deduped = sig === lastSig && lastResult;
+      lastResult = result; lastInput = input; lastSig = sig; lastDay = input.day;
+      cursorIdx = null;
+      render(result, input);
+      const jobId = "job-" + Math.abs(hash(sig)).toString(16).slice(0, 6);
+      setJob("complete", `${jobId} · ${deduped ? "deduplicated — identical scenario" : "computed"} in ${Math.max(1, Math.round(performance.now() - t0))} ms · ${i2t(0)}–24:00 · 288 intervals`);
+    }, 700);
+  }, 350);
+}
+function hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
+
+// ---- rendering ----
+const W = 960, PL = 52, PR = 12, PT = 14, PB = 22;
+const X = i => PL + (i + .5) / N * (W - PL - PR);
+const Y = (v, lo, hi, h) => PT + (1 - (v - lo) / ((hi - lo) || 1)) * (h - PT - PB);
+
+function ticks(lo, hi, fmtFn, n = 4) {
+  const out = [];
+  for (let i = 0; i <= n; i++) out.push({ v: lo + (hi - lo) * i / n, label: fmtFn(lo + (hi - lo) * i / n) });
+  return out;
+}
+function niceRange(lo, hi) {
+  if (lo === hi) { lo -= 1; hi += 1; }
+  const pad = (hi - lo) * .06; return [lo - pad, hi + pad];
+}
+function xGrid(h) {
+  let s = "";
+  for (let i = 0; i <= N; i += 24) {
+    const x = PL + i / N * (W - PL - PR);
+    s += `<line x1="${x}" y1="${PT}" x2="${x}" y2="${h - PB}" stroke="#eef1f4"/>`;
+  }
+  return s;
+}
+function xLabels(h) {
+  let s = "";
+  for (let i = 0; i <= N; i += 24) {
+    const x = PL + i / N * (W - PL - PR);
+    s += `<text x="${x}" y="${h - 6}" text-anchor="middle">${i2t(i)}</text>`;
+  }
+  return s;
+}
+function yTicks(ts, h) {
+  let s = "";
+  for (const t of ts) {
+    const y = Y(t.v, ts[0].v, ts[ts.length - 1].v, h);
+    s += `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="#eef1f4"/>`
+       + `<text x="${PL - 6}" y="${y + 3}" text-anchor="end">${t.label}</text>`;
+  }
+  return s;
+}
+function path(data, lo, hi, h, color, dash, step) {
+  let d = "";
+  for (let i = 0; i < data.length; i++) {
+    const x = X(i), y = Y(data[i], lo, hi, h);
+    if (i === 0) d = `M ${x} ${y}`;
+    else if (step) { const px = X(i - 1), py = Y(data[i - 1], lo, hi, h); d += ` L ${x} ${py} L ${x} ${y}`; }
+    else d += ` L ${x} ${y}`;
+  }
+  return `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" ${dash ? 'stroke-dasharray="5 4"' : ""}/>`;
+}
+function svgWrap(h, inner) {
+  return `<svg class="chart" viewBox="0 0 ${W} ${h}" role="img">${inner}</svg>`;
+}
+function cursorBits(h) {
+  return `<line class="cur" x1="-10" y1="${PT}" x2="-10" y2="${h - PB}" stroke="#334155" stroke-width="1"/><g class="dots"></g>`;
+}
+function overlay(h, key) {
+  return `<rect x="${PL}" y="${PT}" width="${W - PL - PR}" height="${h - PT - PB}" fill="transparent" data-chart="${key}" style="cursor:crosshair"/>`;
+}
+
+function renderPriceChart(input) {
+  const h = 120, prices = input.prices;
+  const [lo, hi] = niceRange(Math.min(...prices, 0), Math.max(...prices, 0));
+  let inner = xGrid(h) + yTicks(ticks(lo, hi, v => "$" + v.toFixed(0)), h);
+  const zy = Y(0, lo, hi, h);
+  inner += `<rect x="${PL}" y="${zy}" width="${W - PL - PR}" height="${h - PB - zy}" fill="rgba(220,38,38,.10)"/>`;
+  inner += `<line x1="${PL}" y1="${zy}" x2="${W - PR}" y2="${zy}" stroke="#94a3b8" stroke-dasharray="3 3"/>`;
+  inner += path(prices, lo, hi, h, "var(--amber)");
+  inner += cursorBits(h) + overlay(h, "price") + xLabels(h);
+  $("chart-price").innerHTML = svgWrap(h, inner);
+}
+
+function renderPowerChart(res) {
+  const h = 120;
+  const disp = res[powerStrategy].dispatch || res.fixed.dispatch;
+  const d = disp.intervals;
+  const b = res.battery;
+  const maxMW = Math.max(b.chargeMW, b.dischargeMW, b.importLimitMW, b.exportLimitMW, .001) * 1.08;
+  const lo = -maxMW, hi = maxMW, zy = Y(0, lo, hi, h);
+  const bw = (W - PL - PR) / N;
+  let inner = xGrid(h) + yTicks(ticks(lo, hi, v => v.toFixed(1)), h);
+  inner += `<line x1="${PL}" y1="${zy}" x2="${W - PR}" y2="${zy}" stroke="#94a3b8"/>`;
+  for (let i = 0; i < N; i++) {
+    const cw = d.c[i] * 12, dw = d.d[i] * 12;
+    if (cw > 1e-9) inner += `<rect x="${X(i) - bw / 2}" y="${Y(cw, lo, hi, h)}" width="${Math.max(bw - .4, .6)}" height="${zy - Y(cw, lo, hi, h)}" fill="var(--blue)"/>`;
+    if (dw > 1e-9) inner += `<rect x="${X(i) - bw / 2}" y="${zy}" width="${Math.max(bw - .4, .6)}" height="${Y(-dw, lo, hi, h) - zy}" fill="var(--green)"/>`;
+  }
+  inner += cursorBits(h) + overlay(h, "power") + xLabels(h);
+  $("chart-power").innerHTML = svgWrap(h, inner);
+}
+
+function renderEnergyChart(res) {
+  const h = 130, b = res.battery;
+  const eF = res.fixed.dispatch.intervals.e, eH = res.hindsight.dispatch ? res.hindsight.dispatch.intervals.e : eF;
+  const [lo, hi] = niceRange(Math.min(b.minimumMWh, ...eF, ...eH), Math.max(b.maximumMWh, ...eF, ...eH));
+  let inner = xGrid(h) + yTicks(ticks(lo, hi, v => v.toFixed(1)), h);
+  const yMax = Y(b.maximumMWh, lo, hi, h), yMin = Y(b.minimumMWh, lo, hi, h);
+  inner += `<rect x="${PL}" y="${yMax}" width="${W - PL - PR}" height="${yMin - yMax}" fill="rgba(14,122,95,.06)"/>`;
+  inner += `<line x1="${PL}" y1="${yMax}" x2="${W - PR}" y2="${yMax}" stroke="#94a3b8" stroke-dasharray="4 3"/>`;
+  inner += `<line x1="${PL}" y1="${yMin}" x2="${W - PR}" y2="${yMin}" stroke="#94a3b8" stroke-dasharray="4 3"/>`;
+  inner += path(eF, lo, hi, h, "var(--slate)", true, true);
+  if (res.hindsight.dispatch) inner += path(eH, lo, hi, h, "var(--teal)", false, true);
+  inner += cursorBits(h) + overlay(h, "energy") + xLabels(h);
+  $("chart-energy").innerHTML = svgWrap(h, inner);
+}
+
+function renderMarginChart(res) {
+  const h = 130;
+  const mF = res.fixed.accounting.cumulative;
+  const mH = res.hindsight.accounting ? res.hindsight.accounting.cumulative : mF;
+  const [lo, hi] = niceRange(Math.min(0, ...mF, ...mH), Math.max(0, ...mF, ...mH));
+  let inner = xGrid(h) + yTicks(ticks(lo, hi, v => "$" + v.toFixed(0)), h);
+  const zy = Y(0, lo, hi, h);
+  inner += `<line x1="${PL}" y1="${zy}" x2="${W - PR}" y2="${zy}" stroke="#94a3b8" stroke-dasharray="3 3"/>`;
+  inner += path(mF, lo, hi, h, "var(--slate)", true);
+  if (res.hindsight.accounting) inner += path(mH, lo, hi, h, "var(--teal)");
+  inner += cursorBits(h) + overlay(h, "margin") + xLabels(h);
+  $("chart-margin").innerHTML = svgWrap(h, inner);
+}
+
+function renderSummary(res, input) {
+  const f = res.fixed.accounting, h = res.hindsight.accounting;
+  const uplift = h ? h.margin - f.margin : null;
+  const pct = uplift !== null && Math.abs(f.margin) > 1e-9 ? ` (${(uplift / Math.abs(f.margin) * 100).toFixed(0)}%)` : "";
+  const status = res.hindsight.status === "OPTIMAL"
+    ? `OPTIMAL · bound gap ${fmt.aud(res.hindsight.absoluteGap ?? 0)}`
+    : res.hindsight.status;
+  $("summary").innerHTML = `
+    <div class="stat"><div class="k">Fixed schedule margin</div>
+      <div class="v ${f.margin < 0 ? "neg" : ""}">${fmt.aud(f.margin)}</div>
+      <div class="sub">ordered-windows-v1 · ${limitText(res.fixed.dispatch.limitingReason, res.battery)}</div></div>
+    <div class="stat"><div class="k">Perfect hindsight margin</div>
+      <div class="v ${h && h.margin < 0 ? "neg" : ""}">${h ? fmt.aud(h.margin) : "—"}</div>
+      <div class="sub">${status}</div></div>
+    <div class="stat"><div class="k">Hindsight uplift</div>
+      <div class="v">${uplift !== null ? fmt.aud(uplift) + pct : "—"}</div>
+      <div class="sub">equal windows and constraints</div></div>
+    <div class="stat"><div class="k">Energy losses (hindsight)</div>
+      <div class="v" style="font-size:18px">${h ? fmt.mwh(h.lossesMWh) : "—"}</div>
+      <div class="sub">physical efficiency loss, not a fee</div></div>`;
+}
+function limitText(l, b) {
+  return { ENERGY_HEADROOM: `limited by energy headroom (E_max − E_initial = ${(b.maximumMWh - b.initialMWh).toFixed(3)} MWh)`,
+           CHARGE_WINDOW: "limited by the charge window", DISCHARGE_WINDOW: "limited by the discharge window" }[l] || "";
+}
+
+function weightedAvg(prices, qty) {
+  let num = 0, den = 0;
+  for (let i = 0; i < qty.length; i++) { num += prices[i] * qty[i]; den += qty[i]; }
+  return den > 1e-9 ? num / den : null;
+}
+function countActive(q) { let n = 0; for (const v of q) if (v > 1e-7) n++; return n; }
+function negCount(prices, q) { let n = 0; for (let i = 0; i < q.length; i++) if (q[i] > 1e-7 && prices[i] < 0) n++; return n; }
+
+function renderExplain(res, input) {
+  const p = input.prices, items = [];
+  const describe = (name, d, a) => {
+    const nc = countActive(d.c), nd = countActive(d.d);
+    if (!nc && !nd) return `${name} did not trade.`;
+    const avgB = weightedAvg(p, d.c), avgS = weightedAvg(p, d.d);
+    let s = `${name} imported ${a.importedMWh.toFixed(3)} MWh across ${nc} interval${nc === 1 ? "" : "s"}` +
+      (avgB !== null ? ` (avg ${fmt.aud(avgB)}/MWh)` : "") +
+      ` and exported ${a.exportedMWh.toFixed(3)} MWh across ${nd}` +
+      (avgS !== null ? ` (avg ${fmt.aud(avgS)}/MWh)` : "") + ".";
+    const neg = negCount(p, d.c);
+    if (neg) s += ` ${neg} charged interval${neg === 1 ? "" : "s"} had negative prices — a credit, not a cost.`;
+    return s;
+  };
+  items.push(describe("Fixed schedule", res.fixed.dispatch.intervals, res.fixed.accounting));
+  items.push(limitText(res.fixed.dispatch.limitingReason, res.battery).replace(/^./, c => c.toUpperCase()) + ".");
+  if (res.hindsight.dispatch) {
+    items.push(describe("Hindsight", res.hindsight.dispatch.intervals, res.hindsight.accounting));
+    const f = res.fixed.accounting.margin, h = res.hindsight.accounting.margin;
+    if (h <= 1e-9 && f < -1e-9) items.push(`The fixed schedule lost ${fmt.aud(-f)}; hindsight avoided trading and stayed at $0.`);
+    else items.push(`Hindsight earned ${fmt.aud(h - f)} more than the fixed schedule under identical constraints.`);
+    if (res.hindsight.status === "OPTIMAL")
+      items.push(`Independently evaluated dual bound: ${fmt.aud(res.hindsight.upperBound)} — gap ${fmt.aud(res.hindsight.absoluteGap)} ≤ $0.01.`);
+  } else {
+    items.push(`Hindsight comparison unavailable (${res.hindsight.status}).`);
+  }
+  $("explain").innerHTML = items.map(x => `<li>${x}</li>`).join("");
+}
+
+function renderBreakdown(res) {
+  const f = res.fixed.accounting, h = res.hindsight.accounting;
+  const row = (label, fv, hv, cls = "") =>
+    `<tr><td>${label}</td><td class="${cls}">${fv}</td><td class="${cls}">${hv}</td></tr>`;
+  const money = v => fmt.aud(v);
+  $("breakdown").innerHTML = `
+    <thead><tr><th>Component</th><th>Fixed schedule</th><th>Perfect hindsight</th></tr></thead>
+    <tbody>
+    ${row("Energy imported", fmt.mwh(f.importedMWh), h ? fmt.mwh(h.importedMWh) : "—")}
+    ${row("Energy exported", fmt.mwh(f.exportedMWh), h ? fmt.mwh(h.exportedMWh) : "—")}
+    ${row("Charging cost (credit if negative)", money(f.chargingCost), h ? money(h.chargingCost) : "—", f.chargingCost < 0 || (h && h.chargingCost < 0) ? "credit" : "")}
+    ${row("Discharge revenue", money(f.revenue), h ? money(h.revenue) : "—")}
+    ${row("Variable fees", money(f.fees), h ? money(h.fees) : "—")}
+    ${row("Degradation", money(f.degradation), h ? money(h.degradation) : "—")}
+    ${row("Energy losses (physical)", fmt.mwh(f.lossesMWh), h ? fmt.mwh(h.lossesMWh) : "—")}
+    <tr class="total"><td>Modelled margin</td><td>${money(f.margin)}</td><td>${h ? money(h.margin) : "—"}</td></tr>
+    </tbody>`;
+  $("versions").textContent =
+    `battery-v1 · ordered-windows-v1 · ordered-hindsight-v1 · source: OE NSW1 fixture ${lastDay} · 288 intervals, fixed UTC+10 · unrounded values; display rounded (AUD 2dp, energy/MW 3dp)`;
+}
+
+// ---- shared cursor ----
+const SERIES = {}; // key -> {data, lo, hi, h, color}
+function collectSeries(res, input) {
+  const h1 = 120, h2 = 130;
+  const [plo, phi] = niceRange(Math.min(...input.prices, 0), Math.max(...input.prices, 0));
+  SERIES.price = [{ data: input.prices, lo: plo, hi: phi, h: h1, color: "var(--amber)" }];
+  const disp = res[powerStrategy].dispatch || res.fixed.dispatch;
+  const d = disp.intervals;
+  const pw = d.c.map((c, i) => (c - d.d[i]) * 12);
+  const b = res.battery;
+  const maxMW = Math.max(b.chargeMW, b.dischargeMW, b.importLimitMW, b.exportLimitMW, .001) * 1.08;
+  SERIES.power = [{ data: pw, lo: -maxMW, hi: maxMW, h: h1, color: "#334155" }];
+  const eF = res.fixed.dispatch.intervals.e, eH = res.hindsight.dispatch ? res.hindsight.dispatch.intervals.e : eF;
+  const [elo, ehi] = niceRange(Math.min(b.minimumMWh, ...eF, ...eH), Math.max(b.maximumMWh, ...eF, ...eH));
+  SERIES.energy = [{ data: eF, lo: elo, hi: ehi, h: h2, color: "var(--slate)" }];
+  if (res.hindsight.dispatch) SERIES.energy.push({ data: eH, lo: elo, hi: ehi, h: h2, color: "var(--teal)" });
+  const mF = res.fixed.accounting.cumulative, mH = res.hindsight.accounting ? res.hindsight.accounting.cumulative : mF;
+  const [mlo, mhi] = niceRange(Math.min(0, ...mF, ...mH), Math.max(0, ...mF, ...mH));
+  SERIES.margin = [{ data: mF, lo: mlo, hi: mhi, h: h2, color: "var(--slate)" }];
+  if (res.hindsight.accounting) SERIES.margin.push({ data: mH, lo: mlo, hi: mhi, h: h2, color: "var(--teal)" });
+}
+
+function updateCursor(i, clientX) {
+  cursorIdx = i;
+  const charts = $("charts");
+  for (const key of ["price", "power", "energy", "margin"]) {
+    const svg = $("chart-" + key).querySelector("svg");
+    if (!svg) continue;
+    const x = X(i);
+    const line = svg.querySelector(".cur");
+    line.setAttribute("x1", x); line.setAttribute("x2", x);
+    const dots = svg.querySelector(".dots");
+    dots.innerHTML = (SERIES[key] || []).map(s =>
+      `<circle cx="${x}" cy="${Y(s.data[i], s.lo, s.hi, s.h)}" r="3" fill="${s.color}"/>`).join("");
+  }
+  const tt = $("tooltip"), res = lastResult;
+  const e = res.fixed.dispatch.intervals, h = res.hindsight;
+  const price = lastInput.prices[i];
+  const fMW = (e.c[i] - e.d[i]) * 12;
+  const hMW = h.dispatch ? (h.dispatch.intervals.c[i] - h.dispatch.intervals.d[i]) * 12 : 0;
+  let rows = `<div class="tt">${i2t(i)}–${i2t(i + 1)} · interval ${i + 1}/288</div>
+    <table>
+      <tr><td>Price</td><td class="r">${fmt.aud(price)}/MWh</td></tr>
+      <tr class="fixed"><td>Fixed</td><td class="r">${fMW >= 0 ? "+" : ""}${fMW.toFixed(3)} MW · ${e.e[i].toFixed(3)} MWh · ${fmt.aud(res.fixed.accounting.cumulative[i])}</td></tr>
+      <tr class="hind"><td>Hindsight</td><td class="r">${h.dispatch ? `${hMW >= 0 ? "+" : ""}${hMW.toFixed(3)} MW · ${h.dispatch.intervals.e[i].toFixed(3)} MWh · ${fmt.aud(h.accounting.cumulative[i])}` : "n/a"}</td></tr>
+    </table>`;
+  tt.innerHTML = rows;
+  tt.style.display = "block";
+  const rect = charts.getBoundingClientRect();
+  let tx = clientX - rect.left + 14;
+  if (tx + 220 > rect.width) tx -= 240;
+  let ty = 8;
+  tt.style.left = tx + "px"; tt.style.top = ty + "px";
+}
+function hideCursor() {
+  cursorIdx = null;
+  $("tooltip").style.display = "none";
+  document.querySelectorAll("#charts .cur").forEach(l => { l.setAttribute("x1", -10); l.setAttribute("x2", -10); });
+  document.querySelectorAll("#charts .dots").forEach(g => g.innerHTML = "");
+}
+
+function bindCursor() {
+  const charts = $("charts");
+  charts.addEventListener("mousemove", ev => {
+    const rect = ev.target.closest("[data-chart]") || ev.target;
+    const holder = rect.closest(".chart-card");
+    if (!holder) return;
+    const svg = holder.querySelector("svg");
+    const r = svg.getBoundingClientRect();
+    const frac = (ev.clientX - r.left - PL / W * r.width) / (r.width * (1 - (PL + PR) / W));
+    const i = Math.max(0, Math.min(N - 1, Math.floor(frac * N)));
+    updateCursor(i, ev.clientX);
+  });
+  charts.addEventListener("mouseleave", hideCursor);
+  charts.addEventListener("keydown", ev => {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    ev.preventDefault();
+    const i = cursorIdx === null ? N >> 1 : Math.max(0, Math.min(N - 1, cursorIdx + (ev.key === "ArrowRight" ? 1 : -1)));
+    const r = charts.getBoundingClientRect();
+    updateCursor(i, r.left + r.width / 2);
+  });
+}
+
+// ---- share link ----
+function scenarioState() {
+  const ids = ["day", "capacity", "chargeMW", "dischargeMW", "importLimit", "exportLimit",
+    "eMin", "eMax", "eInit", "roundTrip", "etaC", "etaD", "importFee", "exportFee", "degradation",
+    "chargeStart", "chargeEnd", "dischargeStart", "dischargeEnd"];
+  const s = { m: document.querySelector('input[name="effmode"]:checked').value };
+  for (const id of ids) s[id] = $(id).value;
+  return s;
+}
+function applyState(s) {
+  if (!s || typeof s !== "object") return false;
+  if (!DAYS.includes(s.day)) return false;
+  for (const [k, v] of Object.entries(s)) {
+    if (k === "m") continue;
+    if ($(k)) $(k).value = v;
+  }
+  document.querySelector(`input[name="effmode"][value="${s.m === "legs" ? "legs" : "roundTrip"}"]`).checked = true;
+  syncEffMode();
+  return true;
+}
+function syncEffMode() {
+  const legs = document.querySelector('input[name="effmode"]:checked').value === "legs";
+  $("eff-legs").hidden = !legs; $("eff-rt").hidden = legs;
+}
+
+// ---- render all ----
+function render(res, input) {
+  $("results").hidden = false;
+  collectSeries(res, input);
+  renderPriceChart(input);
+  renderPowerChart(res);
+  renderEnergyChart(res);
+  renderMarginChart(res);
+  renderSummary(res, input);
+  renderExplain(res, input);
+  renderBreakdown(res);
+  $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ---- wiring ----
+$("scenario").addEventListener("submit", submit);
+$("preset").addEventListener("click", () => {
+  applyState({ m: "roundTrip", day: "2023-09-11", capacity: "2", chargeMW: "1", dischargeMW: "1",
+    importLimit: "1", exportLimit: "1", eMin: "0", eMax: "2", eInit: "0", roundTrip: "0.9",
+    etaC: "0.95", etaD: "0.95", importFee: "0", exportFee: "0", degradation: "0",
+    chargeStart: "10:00", chargeEnd: "14:00", dischargeStart: "17:00", dischargeEnd: "21:00" });
+  clearErrors();
+});
+$("share").addEventListener("click", async () => {
+  const u = new URL(location.href.split("#")[0]);
+  u.hash = "s=" + btoa(JSON.stringify(scenarioState()));
+  try { await navigator.clipboard.writeText(u.href); $("share").textContent = "Link copied"; }
+  catch { location.hash = u.hash.slice(1); $("share").textContent = "Link in address bar"; }
+  setTimeout(() => $("share").textContent = "Copy share link", 1800);
+});
+document.querySelectorAll('input[name="effmode"]').forEach(r => r.addEventListener("change", syncEffMode));
+$("power-seg").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  powerStrategy = b.dataset.s;
+  $("power-seg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+  if (lastResult) { collectSeries(lastResult, lastInput); renderPowerChart(lastResult); }
+});
+bindCursor();
+
+// restore shared scenario
+if (location.hash.startsWith("#s=")) {
+  try { if (applyState(JSON.parse(atob(location.hash.slice(3))))) submit(); } catch { /* ignore bad share payload */ }
+} else {
+  submit();
+}
+</script>
+</body>
+</html>

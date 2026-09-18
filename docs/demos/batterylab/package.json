@@ -1,0 +1,11 @@
+{
+  "name": "batterylab-demo-tests",
+  "private": true,
+  "description": "Dev-only test harness for the BatteryLab static demo page. Not part of the Gradle build.",
+  "scripts": {
+    "test": "node engine.test.js && node smoke.js"
+  },
+  "devDependencies": {
+    "jsdom": "24.1.3"
+  }
+}

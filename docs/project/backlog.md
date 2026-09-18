@@ -391,7 +391,7 @@ Refine database jobs, retries, leases, idempotency and protected refresh/status 
 
 ### Completion evidence
 
-Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). NEM-028 and NEM-029 are implemented and verified; the package remains incomplete until protected operator integration is verified in NEM-030.
+Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). All three price-refresh slices are implemented and verified, including protected HTTP controls and retirement of direct CLI ingestion. See [operator evidence](evidence/jobs/admin-findings.md). Simulation job execution remains NEM-016; M3 still needs public API contracts and frontend integration.
 
 <a id="nem-014"></a>
 
@@ -784,4 +784,4 @@ HTTP tests reject unauthorised requests and verify valid/invalid submissions, st
 
 ### Completion evidence
 
-Not yet verified.
+Implemented opt-in bearer authentication, server-derived audit identity, refresh submission, status/recent jobs, paginated events and idempotent cancellation. Direct CLI ingestion is retired. Full build: 97 passing tests; see [HTTP/PostgreSQL evidence](evidence/jobs/admin-findings.md) and [operator guide](../../api/README.md). Changes remain uncommitted after worker commit `dc170bf`.

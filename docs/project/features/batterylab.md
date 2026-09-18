@@ -13,6 +13,8 @@ Choose an available region/day, adjust site inputs, submit the scenario, follow 
 
 Use a curated example to make the first result understandable without configuring every advanced field. Illustrative defaults are in the engine contract; final launch presets and initial dates remain UI/coverage choices; do not turn illustrative values into recommended real-world assumptions.
 
+A static mocked-data prototype of this journey lives at [docs/demos/batterylab/index.html](../../demos/batterylab/index.html). It previews the form, job lifecycle, comparison, charts, breakdown and share link with a JavaScript port of the engine; it is a visualisation aid, not the NEM-017 frontend.
+
 ## Inputs and domain rules
 
 One aggregate site with separate total charge/discharge MW, energy capacity MWh, import/export connection limits, efficiencies, minimum/maximum/initial stored energy, operating windows, and selected variable fees/degradation. Identical battery count may scale power and capacity before applying shared connection limits. The terminal energy equals initial energy in the initial comparison.
