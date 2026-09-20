@@ -1,6 +1,6 @@
 # Blockers and open questions
 
-Updated: 2026-09-13
+Updated: 2026-09-20
 
 These records distinguish future decision gates from work that is blocked now. No failed implementation attempt is implied. Each record is Open until evidence and its resolution date are recorded. Task execution status belongs in the [backlog](backlog.md).
 
@@ -86,3 +86,17 @@ These records distinguish future decision gates from work that is blocked now. N
 - Blocking scope: Not an immediate blocker. Blocks final launch readiness if unresolved.
 - Next action / owner: Use engine/runtime measurements to propose deployment limits and costs, rehearse operator commands, and decide Admin UI scope with the user before launch.
 - Resolution: Not yet resolved.
+
+
+<a id="blk-007"></a>
+
+## BLK-007 — Hosted CI evidence for M3
+
+- Identified: 2026-09-20
+- Status: Open
+- Impact: M3 exit criterion “CI runs relevant checks”.
+- Affected tasks: [NEM-038](backlog.md#nem-038). Local M4 implementation proceeds at the user’s direction; hosted CI still gates formal M3 completion.
+- Evidence: Both workflows exist and their checks have recorded local passes. Neither Git repository has a configured remote; no hosted run is recorded. See [exit review](evidence/foundation/m3-exit-review.md).
+- Blocking scope: Formal M3 completion; no missing local implementation was identified by this review.
+- Next action / owner: User supplies/authorises repository destinations and publication when ready; implementing agent then verifies hosted workflow runs and records commit/run links. No account creation or push is authorised by NEM-037.
+- Resolution: Pending.

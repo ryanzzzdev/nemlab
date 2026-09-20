@@ -50,6 +50,10 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-035 — Typed stored-price API integration](#nem-035)
 - [NEM-036 — Synchronised time-series chart prototype](#nem-036)
 - [NEM-037 — Shared-foundation exit review](#nem-037)
+- [NEM-038 — Verify hosted foundation CI](#nem-038)
+- [NEM-039 — Simulation request contract and validation](#nem-039)
+- [NEM-040 — Durable simulation execution and immutable results](#nem-040)
+- [NEM-041 — Simulation HTTP lifecycle and generated contract](#nem-041)
 
 
 <a id="nem-001"></a>
@@ -476,7 +480,7 @@ Refine scenario validation, queued execution, immutable result storage and retri
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Refined 2026-09-20 during NEM-037. NEM-039 request preparation and NEM-040 durable execution/results are complete; NEM-041 HTTP integration is Ready. The user directed local implementation to continue while the separate M3 hosted CI gate remains open.
 
 <a id="nem-017"></a>
 

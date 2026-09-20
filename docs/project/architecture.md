@@ -1,7 +1,7 @@
 # NEMLab architecture
 
-Updated: 2026-09-18
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation/GridReplay APIs and frontend product integration remain planned.
+Updated: 2026-09-20
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation request normalisation and immutable price-input capture are implemented; durable simulation execution/results are implemented; simulation HTTP APIs, GridReplay APIs and frontend product integration remain planned.
 
 ## Agreed boundaries
 
