@@ -1,6 +1,6 @@
 # Public navigation and shell — NEM-034
 
-Date: 2026-09-18. Changes are uncommitted.
+Date: 2026-09-18. Changes committed: backend records `19834eb`, frontend `e963747`.
 
 ## Delivered
 

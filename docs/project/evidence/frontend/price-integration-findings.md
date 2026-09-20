@@ -1,7 +1,7 @@
 # Typed stored-price integration — NEM-035
 
 Implemented: 2026-09-18. Interrupted-session audit and closeout: 2026-09-20.
-Changes remain uncommitted.
+Changes committed: backend records `19834eb`, frontend `e963747`.
 
 ## Delivered
 

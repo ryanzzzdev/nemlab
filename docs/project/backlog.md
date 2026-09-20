@@ -451,7 +451,7 @@ Create the separate frontend repo and validate the proposed stack on one API/cha
 
 ### Completion evidence
 
-Split into NEM-033 (repository/tooling), NEM-034 (public shell), NEM-035 (typed API integration) and NEM-036 (synchronised charts). NEM-033–NEM-036 are verified. The frontend baseline, typed API slice and shared-chart proof meet this package’s criteria; see [chart evidence](evidence/frontend/chart-findings.md). Changes remain uncommitted; overall M3 exit review is NEM-037.
+Split into NEM-033 (repository/tooling), NEM-034 (public shell), NEM-035 (typed API integration) and NEM-036 (synchronised charts). NEM-033–NEM-036 are verified. The frontend baseline, typed API slice and shared-chart proof meet this package’s criteria; see [chart evidence](evidence/frontend/chart-findings.md). Committed as `19834eb` (backend records) and `e963747` (frontend); overall M3 exit review is NEM-037.
 
 <a id="nem-016"></a>
 
@@ -863,7 +863,7 @@ A locked clean install, strict TypeScript checks, formatting checks and producti
 
 ### Completion evidence
 
-Separate `nemlab-ui/.git` repository and React/TypeScript/Vite npm workspace created. Clean locked install, formatting, strict TypeScript and production build pass; two desktop/mobile Chromium checks pass and screenshots were inspected. Versions/licences are recorded in [decision 011](decisions/011-frontend-foundation.md); see [evidence](evidence/frontend/foundation-findings.md). Changes remain uncommitted; no remote or deployment.
+Separate `nemlab-ui/.git` repository and React/TypeScript/Vite npm workspace created. Clean locked install, formatting, strict TypeScript and production build pass; two desktop/mobile Chromium checks pass and screenshots were inspected. Versions/licences are recorded in [decision 011](decisions/011-frontend-foundation.md); see [evidence](evidence/frontend/foundation-findings.md). Committed as `19834eb` (backend records) and `e963747` (frontend); no remote or deployment.
 
 <a id="nem-034"></a>
 
@@ -886,7 +886,7 @@ Keyboard navigation, direct route loading, unknown-route handling and responsive
 
 ### Completion evidence
 
-Shared public shell, four named routes, not-found recovery and keyboard/focus behaviour implemented. Locked clean install, formatting, strict build and 16 desktop/mobile Chromium cases pass; desktop/mobile screenshots reviewed. See [navigation evidence](evidence/frontend/navigation-findings.md) and [decision 012](decisions/012-public-navigation.md). Changes remain uncommitted.
+Shared public shell, four named routes, not-found recovery and keyboard/focus behaviour implemented. Locked clean install, formatting, strict build and 16 desktop/mobile Chromium cases pass; desktop/mobile screenshots reviewed. See [navigation evidence](evidence/frontend/navigation-findings.md) and [decision 012](decisions/012-public-navigation.md). Committed as `19834eb` (backend records) and `e963747` (frontend).
 
 <a id="nem-035"></a>
 
@@ -909,7 +909,7 @@ Verify real local backend integration plus browser fixtures for loading, complet
 
 ### Completion evidence
 
-Completed the interrupted task on 2026-09-20. Contract snapshot/provenance, drift checks, typed public client, query caching and stored-price UI are implemented. Fresh checks pass formatting, strict build, 34 browser cases and two real Java/PostgreSQL integration cases. Mobile screenshot reviewed; exact values, gap states, revision metadata and credential omission verified. See [evidence](evidence/frontend/price-integration-findings.md) and [decision 013](decisions/013-typed-price-client.md). Changes remain uncommitted.
+Completed the interrupted task on 2026-09-20. Contract snapshot/provenance, drift checks, typed public client, query caching and stored-price UI are implemented. Fresh checks pass formatting, strict build, 34 browser cases and two real Java/PostgreSQL integration cases. Mobile screenshot reviewed; exact values, gap states, revision metadata and credential omission verified. See [evidence](evidence/frontend/price-integration-findings.md) and [decision 013](decisions/013-typed-price-client.md). Committed as `19834eb` (backend records) and `e963747` (frontend).
 
 <a id="nem-036"></a>
 
@@ -932,7 +932,7 @@ Verify aligned cursor/zoom across two panels, negative prices, gaps, fixed NEM t
 
 ### Completion evidence
 
-ECharts 6.1.0 linked SVG prototype verified with exact text/table alternatives, shared cursor/zoom geometry, gaps, keyboard/touch, fixed NEM labels, resize and download-failure recovery. Clean build and 40 browser cases pass; two real Java/PostgreSQL cases include charts. Optional chunk is 176.64 kB gzip; sampled local initial renders were 78.4/82.6 ms. See [evidence](evidence/frontend/chart-findings.md) and [decision 014](decisions/014-linked-chart-prototype.md). Changes remain uncommitted.
+ECharts 6.1.0 linked SVG prototype verified with exact text/table alternatives, shared cursor/zoom geometry, gaps, keyboard/touch, fixed NEM labels, resize and download-failure recovery. Clean build and 40 browser cases pass; two real Java/PostgreSQL cases include charts. Optional chunk is 176.64 kB gzip; sampled local initial renders were 78.4/82.6 ms. See [evidence](evidence/frontend/chart-findings.md) and [decision 014](decisions/014-linked-chart-prototype.md). Committed as `19834eb` (backend records) and `e963747` (frontend).
 
 <a id="nem-037"></a>
 

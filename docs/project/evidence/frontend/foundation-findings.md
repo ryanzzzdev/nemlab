@@ -1,6 +1,6 @@
 # Frontend foundation — NEM-033
 
-Date: 2026-09-18. Backend records and frontend changes are uncommitted.
+Date: 2026-09-18. Backend records committed as `19834eb`; frontend committed as `e963747`.
 
 ## Delivered
 

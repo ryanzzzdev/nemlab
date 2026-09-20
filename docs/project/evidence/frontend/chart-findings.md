@@ -1,6 +1,6 @@
 # Linked-chart prototype — NEM-036
 
-Date: 2026-09-20. Changes remain uncommitted.
+Date: 2026-09-20. Changes committed: backend records `19834eb`, frontend `e963747`.
 
 ## Implemented and verified
 
