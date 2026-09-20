@@ -2,7 +2,7 @@
 
 NEMLab explores Australia's National Electricity Market through historical analysis and experiments. BatteryLab compares simulated battery trading strategies; GridReplay helps visitors investigate notable market periods.
 
-This is the backend project and the home of shared project documentation. The Java/Spring Boot backend has separate runnable API and worker applications. The frontend will live in a separate repository.
+This is the backend project and the home of shared project documentation. The Java/Spring Boot backend has separate runnable API and worker applications. The [frontend](../nemlab-ui/README.md) lives in the separate sibling `nemlab-ui` Git repository.
 
 ## Project documentation
 
@@ -23,7 +23,7 @@ This is the backend project and the home of shared project documentation. The Ja
 
 ## Development setup
 
-The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Opt-in worker scheduling is available; protected [operator endpoints](api/README.md) are also available. Public [stored-price reads](api/README.md#public-stored-price-reads) are available separately. Simulation/GridReplay APIs and frontend remain future work.
+The backend contains the plain Java battery-engine `core`, an `infrastructure` module for versioned price ingestion/storage, and separate Spring Boot 4.1.1 `api` and `worker` applications. PostgreSQL price ingestion and resumable backfills are available through an explicit local operator command. Opt-in worker scheduling is available; protected [operator endpoints](api/README.md) are also available. Public [stored-price reads](api/README.md#public-stored-price-reads) are available separately. The frontend build foundation is available; simulation/GridReplay APIs and frontend product integration remain future work.
 
 Use Node.js 22.23.1/npm 10.9.8 for the [API contract checks](api/contracts/README.md), alongside JDK 25 (verified locally with OpenJDK 25.0.4+7). The checked-in Gradle 9.7.1 wrapper verifies its distribution checksum; JUnit 6.1.3 and transitive test dependencies are locked. No globally installed Gradle or OE credentials are required for tests. A running Docker daemon is required for the PostgreSQL integration tests; the initial run downloads disposable container images.
 

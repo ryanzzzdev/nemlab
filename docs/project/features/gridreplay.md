@@ -46,3 +46,9 @@ The [grid gate](../evidence/oe-validation/grid-gate.md) supports an observation-
 ## Exploration demo
 
 A static mock-data page at [docs/demos/gridreplay/index.html](../../demos/gridreplay/index.html) sketches the catalogue, filters, synchronised replay cursor and catalogue→replay→BatteryLab navigation for discussion. It runs a seeded synthetic NSW1 generator with no backend; the detector parameters, thresholds and provisional renewable/ramp definitions shown are illustrative, not accepted definitions, and the page is not a design commitment for NEM-018.
+
+## Public shell implementation
+
+NEM-034 adds a `/gridreplay` overview in the separate frontend, with explicit unfinished-feature
+copy and a methodology link. It contains no data, controls or calculated results. The
+full product journey and acceptance criteria above remain future work.

@@ -1,7 +1,7 @@
 # NEMLab architecture
 
-Updated: 2026-09-17  
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; simulation/GridReplay APIs and frontend remain planned.
+Updated: 2026-09-18
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation/GridReplay APIs and frontend product integration remain planned.
 
 ## Agreed boundaries
 
@@ -43,7 +43,7 @@ The API validates requests, reads stored series/results, and persists jobs. Sche
 
 ## Proposed technology choices
 
-PostgreSQL/Flyway/JDBC price storage is implemented under [decision 008](decisions/008-price-data-foundation.md). Spring MVC and Actuator are implemented in the API shell; the worker uses the non-web Boot starter. Other entries carry forward planning recommendations; [decision 005](decisions/005-infrastructure-and-frontend.md) remains Proposed. Verify supported versions, licences, and compatibility when scaffolding.
+PostgreSQL/Flyway/JDBC price storage is implemented under [decision 008](decisions/008-price-data-foundation.md). Spring MVC and Actuator are implemented in the API shell; the worker uses the non-web Boot starter. The React/TypeScript/Vite foundation is accepted and verified under [decision 011](decisions/011-frontend-foundation.md). Remaining libraries in [decision 005](decisions/005-infrastructure-and-frontend.md) are proposals; verify versions, licences and compatibility when implementing their slices.
 
 | Area | Proposed choice | Purpose |
 | --- | --- | --- |
@@ -109,3 +109,15 @@ Prices are decimal strings in AUD/MWh; interval boundaries are UTC instants with
 market-day metadata. Reads neither enqueue work nor contact OE. Responses are not cacheable
 across corrections. See the [endpoint contract](../../api/README.md#public-stored-price-reads).
 NEM-032 implements the versioned [OpenAPI contract and generated TypeScript declarations](../../api/contracts/README.md). The checked-in contract owns the seven enabled price/operator operations; Java HTTP tests provide response captures validated against it during the Gradle build. Generation and validation are pinned Node development tooling, not application runtime dependencies. See the contract guide for compatibility, regeneration and the future frontend handoff.
+
+## Frontend foundation
+
+NEM-033 creates the separate `nemlab-ui/.git` repository. Its npm workspace contains
+one static public app in `apps/public`, with React 19.3.0, TypeScript 5.9.3 and Vite 8.3.0.
+Pinned Node/npm tooling, Prettier, strict compilation and production-browser checks
+are described in [decision 011](decisions/011-frontend-foundation.md). A future Admin
+would use a separate application/build in this repo; none exists now.
+
+The current landing page needs no backend or credentials. NEM-034 implements public navigation, shared layout and methodology with React Router 8.4.0 and plain CSS; see [decision 012](decisions/012-public-navigation.md).
+NEM-035 implements the typed public price client and coverage/day table, backed by a versioned contract snapshot and verified against the real Java API. [Decision 013](decisions/013-typed-price-client.md) records client/cache choices and contract ownership. NEM-036 verifies linked charts with lazy-loaded ECharts 6.1.0, SVG rendering, shared interval/window state and native keyboard/touch controls. [Decision 014](decisions/014-linked-chart-prototype.md) records measured limits; the companion trace is explicitly synthetic, not simulation output.
+The backend remains the only owner of project-wide tracking and API contracts.

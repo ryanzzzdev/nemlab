@@ -1,10 +1,10 @@
 # NEMLab roadmap
 
-Updated: 2026-09-17
+Updated: 2026-09-20
 
 The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
-M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. M2 now passes for the ordered-window comparison; see [engine evidence](evidence/engine/findings.md). The API/worker foundation now passes [NEM-011](backlog.md#nem-011); [NEM-012](backlog.md#nem-012) now implements the price-storage/backfill slice. [NEM-013](backlog.md#nem-013) is split into focused tasks: the durable queue is verified in NEM-028; NEM-029 adds verified worker scheduling/execution; NEM-030 verifies protected operator controls and completes this price-refresh package. NEM-031 implements public stored-price reads; NEM-032 verifies formal contracts and generated client inputs, completing NEM-014. Next is refinement of NEM-015 frontend foundation into focused tasks; M3 remains in progress. Optional unrestricted hindsight remains deferred. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
+M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. M2 now passes for the ordered-window comparison; see [engine evidence](evidence/engine/findings.md). The API/worker foundation now passes [NEM-011](backlog.md#nem-011); [NEM-012](backlog.md#nem-012) now implements the price-storage/backfill slice. [NEM-013](backlog.md#nem-013) is split into focused tasks: the durable queue is verified in NEM-028; NEM-029 adds verified worker scheduling/execution; NEM-030 verifies protected operator controls and completes this price-refresh package. NEM-031 implements public stored-price reads; NEM-032 verifies formal contracts and generated client inputs, completing NEM-014. NEM-015 is split into NEM-033–NEM-036: the separate frontend repository/tooling is verified in NEM-033; NEM-034 verifies public navigation and shell; NEM-035 verifies typed public price integration; NEM-036 verifies synchronised charts and completes NEM-015. NEM-037 reviews the aggregate M3 exit evidence; M3 remains in progress pending that review. Optional unrestricted hindsight remains deferred. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
 
 | Milestone | Outcome | Status | Depends on |
 | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ Tasks: [NEM-007](backlog.md#nem-007) through [NEM-010](backlog.md#nem-010).
 
 ## M3 — Shared foundation
 
-Scope: establish two repositories, backend modules, frontend workspace, PostgreSQL migrations, OE ingestion, durable jobs, API contract and generated frontend client. Runtime/library choices remain proposals in [architecture](architecture.md).
+Scope: establish two repositories, backend modules, frontend workspace, PostgreSQL migrations, OE ingestion, durable jobs, API contract and generated frontend client. Implemented runtime/build choices are recorded in [architecture](architecture.md); remaining UI libraries await their focused checks.
 
 Exit criteria: a clean local setup can ingest a validated day, report coverage, submit work through the API, recover an interrupted job, and display API data in the frontend. CI runs relevant checks. Repeated ingestion does not duplicate observations. Stored simulation inputs remain reproducible after source refreshes.
 

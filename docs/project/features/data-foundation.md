@@ -68,3 +68,10 @@ with valid/missing/source-null counts. Public day series preserve all 288 slots,
 and exact decimal strings for values. Fixed UTC+10 boundaries do not change for daylight saving.
 Read requests are bounded to one price day or 1–31 coverage days and never trigger ingestion.
 The [read API contract](../../../api/README.md#public-stored-price-reads) specifies fields/errors.
+
+## Frontend price consumer
+
+NEM-035 verifies the frontend coverage/day consumer with synthetic browser fixtures and
+a disposable PostgreSQL/real API integration. It uses the series revision's own metadata
+when coverage and series reads straddle a correction. Exact values and null gaps survive
+the contract handoff. See [client decision](../decisions/013-typed-price-client.md).

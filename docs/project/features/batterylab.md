@@ -54,3 +54,24 @@ Assume a price-taking wholesale battery. Exclude capital/finance costs, contract
 - Charts and totals agree; keyboard-accessible controls, clear units and meaningful loading/error states support the full browser journey.
 
 Deferred: reactive thresholds, forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
+
+## Public shell implementation
+
+NEM-034 adds a `/batterylab` overview in the separate frontend, with explicit unfinished-feature
+copy and a methodology link. It contains no data, controls or calculated results. The
+full product journey and acceptance criteria above remain future work.
+
+## Stored-price exploration implementation
+
+NEM-035 adds a bounded region/completed-day price view to the BatteryLab page. It reads
+coverage before loading the 288 intervals, preserves exact decimal strings and gap states,
+and displays source, units and revision metadata. Loading, unavailable coverage and safe
+errors are explicit. This read-only view neither imports data nor runs the battery engine;
+the simulator and chart journey remain future work.
+
+## Chart interaction proof
+
+NEM-036 adds an optional two-panel chart to the price view. The second panel is explicitly
+synthetic energy, not a computed battery trajectory. Shared cursor/window selection,
+fixed-time labels, visible gaps and text/table alternatives are verified. Final multi-series
+simulation presentation remains NEM-017 after real simulation APIs exist.

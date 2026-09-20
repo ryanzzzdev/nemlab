@@ -1,8 +1,8 @@
 # NEMLab backlog
 
-Updated: 2026-09-18
+Updated: 2026-09-20
 
-Task sections own status. The index is navigation, not a second status tracker. Next: refine NEM-015 into focused frontend repository, UI shell and integration tasks. NEM-032 delivers the formal OpenAPI contract and generated client inputs. NEM-031 stored-price read endpoints are implemented. NEM-028/NEM-029/NEM-030 complete the price-refresh jobs and operator-controls package. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. Next: NEM-037 shared-foundation exit review, then refine NEM-016 into focused simulation API tasks. NEM-036 chart interaction proof is verified. NEM-035 typed price reads are verified. NEM-034 public navigation and shell is verified. NEM-033 repository/tooling is verified. NEM-032 delivers the formal OpenAPI contract and generated client inputs. NEM-031 stored-price read endpoints are implemented. NEM-028/NEM-029/NEM-030 complete the price-refresh jobs and operator-controls package. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -45,6 +45,12 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-031 — Public stored-price coverage and day series](#nem-031)
 
 - [NEM-032 — Shared OpenAPI contract and generated client inputs](#nem-032)
+- [NEM-033 — Frontend repository and reproducible tooling](#nem-033)
+- [NEM-034 — Public navigation and UI shell](#nem-034)
+- [NEM-035 — Typed stored-price API integration](#nem-035)
+- [NEM-036 — Synchronised time-series chart prototype](#nem-036)
+- [NEM-037 — Shared-foundation exit review](#nem-037)
+
 
 <a id="nem-001"></a>
 
@@ -429,7 +435,7 @@ Split into [NEM-031](#nem-031), stored-price read endpoints, and [NEM-032](#nem-
 - Repository: frontend
 - Milestone: M3
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-014](#nem-014)
 - References: [Specification / decision](decisions/005-infrastructure-and-frontend.md)
 
@@ -445,7 +451,7 @@ Create the separate frontend repo and validate the proposed stack on one API/cha
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Split into NEM-033 (repository/tooling), NEM-034 (public shell), NEM-035 (typed API integration) and NEM-036 (synchronised charts). NEM-033–NEM-036 are verified. The frontend baseline, typed API slice and shared-chart proof meet this package’s criteria; see [chart evidence](evidence/frontend/chart-findings.md). Changes remain uncommitted; overall M3 exit review is NEM-037.
 
 <a id="nem-016"></a>
 
@@ -835,3 +841,123 @@ Validate the contract, check it against endpoint behaviour and errors, and verif
 ### Completion evidence
 
 Versioned OpenAPI 3.0.3 contract, pinned toolchain and deterministic TypeScript declarations implemented. A clean Java 25 offline build passes 103 tests and validates 46 real HTTP responses across all seven operations and application error codes. Stale generated output fails checks; regeneration is byte-for-byte reproducible. See [contract evidence](evidence/data-foundation/contract-findings.md) and [consumer/update guide](../../api/contracts/README.md). Committed as `6e527ed`.
+
+<a id="nem-033"></a>
+
+## NEM-033 — Frontend repository and reproducible tooling
+
+- Repository: frontend
+- Milestone: M3
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-032](#nem-032)
+- References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
+
+### Outcome
+
+Create the separate nemlab-ui Git repository with one public React/TypeScript/Vite application, pinned dependencies, standard formatting, CI and canonical documentation links. Reserve the eventual Admin app boundary without creating an empty application.
+
+### Done when
+
+A locked clean install, strict TypeScript checks, formatting checks and production build pass. Chromium loads the production bundle at desktop/mobile widths without browser errors. Verify selected versions/licences and separate Git roots; document local setup. No API client or product workflows are implied.
+
+### Completion evidence
+
+Separate `nemlab-ui/.git` repository and React/TypeScript/Vite npm workspace created. Clean locked install, formatting, strict TypeScript and production build pass; two desktop/mobile Chromium checks pass and screenshots were inspected. Versions/licences are recorded in [decision 011](decisions/011-frontend-foundation.md); see [evidence](evidence/frontend/foundation-findings.md). Changes remain uncommitted; no remote or deployment.
+
+<a id="nem-034"></a>
+
+## NEM-034 — Public navigation and UI shell
+
+- Repository: frontend
+- Milestone: M3
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-033](#nem-033)
+- References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
+
+### Outcome
+
+Build accessible public navigation and shared page layout for BatteryLab, GridReplay and methodology, with explicit unfinished-feature states. Select and verify routing and styling tools from the proposed stack.
+
+### Done when
+
+Keyboard navigation, direct route loading, unknown-route handling and responsive layouts pass browser checks. No invented market results or working simulation claims. Document static-host fallback requirements.
+
+### Completion evidence
+
+Shared public shell, four named routes, not-found recovery and keyboard/focus behaviour implemented. Locked clean install, formatting, strict build and 16 desktop/mobile Chromium cases pass; desktop/mobile screenshots reviewed. See [navigation evidence](evidence/frontend/navigation-findings.md) and [decision 012](decisions/012-public-navigation.md). Changes remain uncommitted.
+
+<a id="nem-035"></a>
+
+## NEM-035 — Typed stored-price API integration
+
+- Repository: frontend
+- Milestone: M3
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-034](#nem-034), [NEM-032](#nem-032)
+- References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
+
+### Outcome
+
+Import versioned backend contract inputs with recorded provenance and a drift check. Implement the public typed price client, query caching and a bounded region/day coverage/price view.
+
+### Done when
+
+Verify real local backend integration plus browser fixtures for loading, complete/incomplete/not-imported days, invalid input and HTTP/transport failures. Preserve exact strings, fixed UTC+10 and revision metadata. Development and deployment API routing are documented; public code cannot send operator credentials.
+
+### Completion evidence
+
+Completed the interrupted task on 2026-09-20. Contract snapshot/provenance, drift checks, typed public client, query caching and stored-price UI are implemented. Fresh checks pass formatting, strict build, 34 browser cases and two real Java/PostgreSQL integration cases. Mobile screenshot reviewed; exact values, gap states, revision metadata and credential omission verified. See [evidence](evidence/frontend/price-integration-findings.md) and [decision 013](decisions/013-typed-price-client.md). Changes remain uncommitted.
+
+<a id="nem-036"></a>
+
+## NEM-036 — Synchronised time-series chart prototype
+
+- Repository: frontend
+- Milestone: M3
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-035](#nem-035)
+- References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
+
+### Outcome
+
+Verify Apache ECharts against the required shared time axis, cursor and zoom behaviour before adopting it for BatteryLab/GridReplay. Use the price slice and explicitly labelled synthetic companion data where needed.
+
+### Done when
+
+Verify aligned cursor/zoom across two panels, negative prices, gaps, fixed NEM time, resizing and mobile/touch behaviour. Include accessible text/table alternatives, browser evidence and measured bundle/performance observations. Confirm chart licence/version and close or record failures before completing NEM-015.
+
+### Completion evidence
+
+ECharts 6.1.0 linked SVG prototype verified with exact text/table alternatives, shared cursor/zoom geometry, gaps, keyboard/touch, fixed NEM labels, resize and download-failure recovery. Clean build and 40 browser cases pass; two real Java/PostgreSQL cases include charts. Optional chunk is 176.64 kB gzip; sampled local initial renders were 78.4/82.6 ms. See [evidence](evidence/frontend/chart-findings.md) and [decision 014](decisions/014-linked-chart-prototype.md). Changes remain uncommitted.
+
+<a id="nem-037"></a>
+
+## NEM-037 — Shared-foundation exit review
+
+- Repository: both
+- Milestone: M3
+- Priority: Normal
+- Status: Ready
+- Depends on: [NEM-011](#nem-011)–[NEM-015](#nem-015)
+- References: [M3 exit criteria](roadmap.md#m3--shared-foundation)
+
+### Outcome
+
+Reconcile the completed foundation slices against the milestone's cross-repository exit
+criteria before starting BatteryLab delivery. Avoid repeating already adequate checks.
+
+### Done when
+
+Map ingestion/idempotency, immutable snapshots, queue recovery, operator submission,
+public reads and frontend/CI checks to concrete evidence. Run any missing local combined
+verification, distinguish configured/local CI from hosted execution, and explicitly record
+whether M3 can close or which specific gap remains. Refine NEM-016's next work accordingly;
+this review does not authorise a push, deployment or new hosted account.
+
+### Completion evidence
+
+Not yet reviewed as a complete milestone.

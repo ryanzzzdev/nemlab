@@ -1,7 +1,7 @@
 # 005 — Infrastructure and frontend stack
 
 Date: 2026-09-13  
-Status: Proposed for remaining choices; PostgreSQL/Flyway/JDBC accepted in [decision 008](008-price-data-foundation.md)
+Status: Partially superseded; PostgreSQL/Flyway/JDBC accepted in [decision 008](008-price-data-foundation.md), React/TypeScript/Vite foundation accepted in [decision 011](011-frontend-foundation.md). Remaining UI library choices are Proposed.
 
 ## Context
 
@@ -26,3 +26,28 @@ Not accepted as a final technology baseline. These are recommendations from arch
 ## References
 
 [Architecture](../architecture.md), [NEM-011](../backlog.md#nem-011)–[NEM-015](../backlog.md#nem-015).
+
+## 2026-09-18 implementation update
+
+NEM-033 verifies the separate frontend repository, React/TypeScript/Vite baseline,
+formatting/build tooling and Chromium startup. Decision 011 supersedes only that
+portion of this proposal. Routing, query caching, forms, styling, charts and tables
+remain proposals for their focused implementation tasks.
+
+## 2026-09-18 navigation update
+
+NEM-034 accepts React Router 8.4.0 for the public routes under
+[decision 012](012-public-navigation.md). The shell uses existing plain CSS; Tailwind
+and shadcn remain proposals to assess when richer controls are implemented.
+
+## 2026-09-20 price-client closeout
+
+[Decision 013](013-typed-price-client.md) accepts the tested openapi-fetch/TanStack Query
+versions and traced contract snapshot workflow for NEM-035. Charts and richer form/UI
+libraries remain subject to their focused implementation checks.
+
+## 2026-09-20 chart proof update
+
+[Decision 014](014-linked-chart-prototype.md) accepts Apache ECharts 6.1.0 for the bounded
+288-interval linked-chart slice after browser and real-API checks. Its on-demand bundle
+cost and local render observations are recorded; larger/product workloads need later checks.
