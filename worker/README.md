@@ -1,4 +1,4 @@
-# Price refresh worker
+# NEMLab worker
 
 The non-web Spring Boot worker polls the durable queue and runs one price refresh at a time.
 It is disabled by default. Migrate the database explicitly before enabling it; startup checks
@@ -68,7 +68,7 @@ limit, forcibly terminates the child when necessary and waits up to five seconds
 A child watchdog also exits after 240 seconds if its parent has died. The child has no database
 credentials and never writes to the database; the parent publishes validated results inside
 the existing token-fenced transaction. The five-minute claim leaves room for cleanup and the
-30-second transaction budget. This is the ingestion limit; the solver watchdog remains NEM-016.
+30-second transaction budget. Simulation execution has separate limits below.
 
 Stopping the application interrupts polling and kills the active child. The worker attempts
 to record `WORKER_STOPPED` and release the claim for retry; if the database is unavailable,
@@ -97,3 +97,49 @@ can leave a price-only temporary file for normal OS temporary-file cleanup.
 `./gradlew build` exercises actual subprocess termination and PostgreSQL job transitions.
 The packaged-worker test forces local source validation before any network call; no live OE
 access is required. See [worker evidence](../docs/project/evidence/jobs/worker-findings.md).
+
+
+## Simulation execution
+
+NEM-040 adds independently enabled polling for the simulation queue. Apply migrations through
+V3 before enabling `NEMLAB_SIMULATION_ENABLED=true`; set `NEMLAB_SIMULATION_POLL_MS` to
+1000–60000 (default 5000). Database settings are shared with price refreshes. Simulation-only
+mode needs no OE credential; both flags can be enabled together, with independent polling
+threads and queue limits. Both are disabled by default.
+
+```sh
+export NEMLAB_SIMULATION_ENABLED=true
+export NEMLAB_WORKER_ENABLED=false
+"$JAVA_HOME/bin/java" -Xmx256m -jar worker/build/libs/worker.jar
+```
+
+Submit through the internal `SimulationJobs.submit(SimulationRequest)` service for now;
+public simulation HTTP endpoints remain NEM-041. It captures exact normalised parameters,
+version metadata and a complete immutable price revision in the same transaction as job
+creation. Equivalent requests reuse the same job, including terminal jobs. Failed jobs
+are not reset by resubmission; user retry/retention policy remains a later API decision.
+
+The simulation queue admits 100 pending jobs and one running claim globally, independent
+of the refresh queue. Claims last 60 seconds. Crashes, deadlines and worker shutdown get
+at most three attempts with 5/10-second retry delays. Expiry recovers when polling resumes;
+late completion cannot publish. Invalid child output and unsupported stored versions fail
+terminally. Internal claim tokens must never appear in public response DTOs.
+
+Each simulation child has `-Xmx512m -XX:ActiveProcessorCount=2`, a cleared environment,
+and no database/provider credentials. The existing 5-second/100,000-iteration solver
+budget is cooperative. A 15-second parent deadline and child watchdog bound execution;
+termination gets up to five seconds, and an unkillable child stops polling. Heap limits
+are not total RSS/container limits. Temporary JSON files contain simulation inputs/results,
+are bounded on read, and are deleted on normal exit/failure; abrupt parent death can leave
+files for ordinary OS temporary-file cleanup.
+
+The parent checks fixed-policy dispatch, physical constraints, every accounting total and
+optimality metadata before atomically storing both results and terminal job status.
+`SUCCEEDED` means certified `OPTIMAL`; `FEASIBLE_NOT_PROVEN` and other solver outcomes
+produce `FAILED` jobs with immutable diagnostic results. Never display these as proven
+hindsight. Engine diagnostic text is internal; public error mapping belongs to NEM-041.
+Hard process failures have safe job codes and no result payload. Inputs and saved results
+remain unchanged when current source prices are corrected.
+
+See [execution evidence](../docs/project/evidence/engine/execution-findings.md) and
+[decision 016](../docs/project/decisions/016-durable-simulations.md).

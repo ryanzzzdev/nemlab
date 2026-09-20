@@ -2,7 +2,7 @@
 
 Updated: 2026-09-20
 
-Task sections own status. The index is navigation, not a second status tracker. Next: NEM-037 shared-foundation exit review, then refine NEM-016 into focused simulation API tasks. NEM-036 chart interaction proof is verified. NEM-035 typed price reads are verified. NEM-034 public navigation and shell is verified. NEM-033 repository/tooling is verified. NEM-032 delivers the formal OpenAPI contract and generated client inputs. NEM-031 stored-price read endpoints are implemented. NEM-028/NEM-029/NEM-030 complete the price-refresh jobs and operator-controls package. The price-first NEM-012 slice is implemented; M3 remains in progress. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-016 is split into NEM-039–NEM-041; NEM-039 and NEM-040 are complete; NEM-041 simulation HTTP lifecycle is next. Local M4 work proceeds at the user’s direction while the hosted CI gate remains open. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -464,13 +464,13 @@ Split into NEM-033 (repository/tooling), NEM-034 (public shell), NEM-035 (typed 
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: Backlog
+- Status: In progress
 - Depends on: [NEM-010](#nem-010), [NEM-014](#nem-014)
 - References: [Specification / decision](features/batterylab.md)
 
 ### Outcome
 
-Refine scenario validation, queued execution, immutable result storage and retrieval.
+Deliver through [NEM-039](#nem-039) request contract/validation, [NEM-040](#nem-040) durable execution/results, then [NEM-041](#nem-041) HTTP lifecycle/generated contract. Start with the accepted battery-v1 fixed-schedule versus ordered-window comparison; unrestricted hindsight stays deferred.
 
 ### Done when
 
@@ -945,7 +945,7 @@ ECharts 6.1.0 linked SVG prototype verified with exact text/table alternatives, 
 - Repository: both
 - Milestone: M3
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-011](#nem-011)–[NEM-015](#nem-015)
 - References: [M3 exit criteria](roadmap.md#m3--shared-foundation)
 
@@ -964,4 +964,109 @@ this review does not authorise a push, deployment or new hosted account.
 
 ### Completion evidence
 
-Not yet reviewed as a complete milestone.
+Reviewed 2026-09-20: [exit evidence](evidence/foundation/m3-exit-review.md) maps each criterion to implementation and recorded verification. No missing local check was identified that requires repeating the existing suites. Hosted CI execution remains unverified and neither repository has a remote; NEM-038 and BLK-007 own that explicit gap. M3 remains In progress. NEM-016 is refined into NEM-039–NEM-041. Review changes are uncommitted.
+
+
+<a id="nem-038"></a>
+
+## NEM-038 — Verify hosted foundation CI
+
+- Repository: both
+- Milestone: M3
+- Priority: Normal
+- Status: Blocked
+- Depends on: [NEM-037](#nem-037)
+- References: [BLK-007](blockers.md#blk-007), [exit review](evidence/foundation/m3-exit-review.md)
+
+### Outcome
+
+Verify the existing backend and frontend workflows on hosted CI at identified commits, then close M3 if both pass.
+
+### Done when
+
+- Repository destinations and publication are authorised before configuring remotes or pushing.
+- Both workflows complete successfully; record run URLs, commit IDs and any failures/fixes.
+- Reconcile the exit review and milestone status with those results.
+
+### Completion evidence
+
+No remotes configured and no hosted run evidence. Local checks are recorded separately; this task does not authorise publication or account creation.
+
+<a id="nem-039"></a>
+
+## NEM-039 — Simulation request contract and validation
+
+- Repository: backend
+- Milestone: M4
+- Priority: High
+- Status: Done
+- Depends on: [NEM-037](#nem-037), [NEM-010](#nem-010)
+- References: parent [NEM-016](#nem-016), [model contract](features/battery-model-contract.md)
+
+### Outcome
+
+Define and implement a transport-independent scenario request for one complete stored market day and the accepted fixed/ordered-window comparison. Reuse core model validation and capture normalised parameters, immutable price revision and model/strategy versions for reproducibility.
+
+### Done when
+
+- Specify exact numeric/time representations, field errors and bounded scenario inputs before implementing them.
+- Resolve a complete immutable price snapshot; reject unavailable or incomplete days without triggering ingestion.
+- Define stable scenario identity including the price revision and all result-affecting parameters/versions.
+- Verify invalid values/windows, equivalent normalised requests and source corrections against real storage and existing engine fixtures.
+
+### Completion evidence
+
+Implemented exact request normalisation, field errors, core model reuse, read-only immutable revision capture and versioned scenario identity. Java 25 offline build passes 116 tests (13 new cases) and 46 HTTP contract responses. See [contract](features/simulation-request-contract.md), [decision 015](decisions/015-simulation-request-boundary.md) and [evidence](evidence/engine/request-findings.md). No executable public endpoint; HTTP integration follows NEM-041. Changes are uncommitted.
+
+<a id="nem-040"></a>
+
+## NEM-040 — Durable simulation execution and immutable results
+
+- Repository: backend
+- Milestone: M4
+- Priority: High
+- Status: Done
+- Depends on: [NEM-039](#nem-039)
+- References: parent [NEM-016](#nem-016), [BatteryLab](features/batterylab.md)
+
+### Outcome
+
+Persist and execute bounded simulation jobs using the existing engine, with simulation concurrency separate from price refreshes and immutable results tied to their original inputs.
+
+### Done when
+
+- Specify migrations, deduplication, lease/retry semantics and process resource limits before implementation.
+- Enforce a hard subprocess deadline and reject stale completion after recovery.
+- Persist both strategies, solver status, dispatch, energy and independently verified accounting atomically.
+- Verify restart recovery, duplicate requests, failure/timeout, and unchanged saved inputs/results after source refresh.
+- Never present a feasible incomplete solver result as proven optimal.
+
+### Completion evidence
+
+Implemented V3 immutable inputs/results, an independent bounded simulation queue, token-fenced recovery/publication, and opt-in subprocess execution. Full Java 25 offline build passes 141 tests (25 new) and all 46 HTTP contract responses. Packaged worker execution, deadlines, watchdog, shutdown, retries and source-correction preservation are verified. See [execution evidence](evidence/engine/execution-findings.md) and [decision 016](decisions/016-durable-simulations.md). Public HTTP lifecycle remains NEM-041. Changes are uncommitted.
+
+<a id="nem-041"></a>
+
+## NEM-041 — Simulation HTTP lifecycle and generated contract
+
+- Repository: backend
+- Milestone: M4
+- Priority: High
+- Status: Ready
+- Depends on: [NEM-040](#nem-040)
+- References: parent [NEM-016](#nem-016), [API contract guide](../../api/contracts/README.md)
+
+### Outcome
+
+Expose bounded scenario submission, job status and immutable result retrieval with opaque shareable identifiers; extend the versioned contract and generated frontend inputs.
+
+### Done when
+
+- Define methods, status/error responses and compatibility rules in OpenAPI; keep operator capabilities separate.
+- Verify the actual HTTP lifecycle against PostgreSQL, including validation, unavailable data, deduplication, queue saturation, failures and unknown results.
+- Verify deterministic generated types and HTTP response-contract checks.
+- Record the frontend handoff for NEM-017 and keep launch quotas/retention decisions explicit under NEM-020.
+
+### Completion evidence
+
+Not started. Completing this slice closes NEM-016 only when all three child tasks pass.

@@ -19,11 +19,11 @@ nemlab/                         Backend project, already created
   worker/                       Non-web Boot worker; opt-in scheduling and bounded fetch processes
   docs/                         Canonical project documentation
 
-nemlab-ui/                      Confirmed frontend folder; application not created
-  apps/web/                     Public application
-  apps/admin/                   Optional later UI
-  packages/api-client/          Generated API types/client
-  packages/ui/                  Components shared when actually needed
+nemlab-ui/                      Separate frontend repository
+  apps/public/                  Public React application
+  contracts/                    Versioned OpenAPI snapshot and generated types
+  tests/                        Playwright browser checks
+  scripts/                      Contract checks and real-backend verification
 ```
 
 Dependency direction: API and worker depend on core/infrastructure; infrastructure implements interfaces defined by core; core does not depend on either runnable app or infrastructure. Package core by `marketdata`, `batterylab`, `gridreplay`, and `jobs`. Keep battery mathematics free of Spring and database concerns. Avoid cyclic module dependencies and a catch-all shared utilities module.
@@ -121,3 +121,36 @@ would use a separate application/build in this repo; none exists now.
 The current landing page needs no backend or credentials. NEM-034 implements public navigation, shared layout and methodology with React Router 8.4.0 and plain CSS; see [decision 012](decisions/012-public-navigation.md).
 NEM-035 implements the typed public price client and coverage/day table, backed by a versioned contract snapshot and verified against the real Java API. [Decision 013](decisions/013-typed-price-client.md) records client/cache choices and contract ownership. NEM-036 verifies linked charts with lazy-loaded ECharts 6.1.0, SVG rendering, shared interval/window state and native keyboard/touch controls. [Decision 014](decisions/014-linked-chart-prototype.md) records measured limits; the companion trace is explicitly synthetic, not simulation output.
 The backend remains the only owner of project-wide tracking and API contracts.
+
+
+## Simulation request preparation — NEM-039
+
+The core `SimulationRequest` normalises exact decimal parameters, mutually exclusive
+efficiency forms and ordered NEM-time windows, returning field/code validation errors.
+It reuses the existing engine models; admission limits do not widen solver proof tolerances.
+Infrastructure `ScenarioPreparation` captures one immutable stored price revision and a
+versioned SHA-256 scenario identity including normalised inputs, engine/strategy/solver
+versions and cooperative solver limits. Preparation is read-only and never queues ingestion.
+NEM-040 implements transactional persistence of the captured revision with jobs/results; NEM-041
+owns HTTP integration. See [request contract](features/simulation-request-contract.md) and
+[decision 015](decisions/015-simulation-request-boundary.md).
+
+
+## Durable simulations — NEM-040
+
+Flyway V3 adds immutable `simulation_input` and `simulation_result` records plus a mutable
+`simulation_job` lifecycle. `SimulationJobs` uses explicit 30-second transactions, a separate
+queue advisory lock, a unique scenario key and one globally running simulation. Pending
+capacity is 100; 60-second claims permit at most three attempts with 5/10-second backoff.
+Input revision and normalised request/version metadata are inserted atomically with the job.
+Completed and failed scenario keys remain deduplicated; resubmission does not reset them.
+
+An independently enabled `SimulationWorker` shares database configuration with ingestion
+but requires no OE key. Each child gets a 512 MiB heap, two active processors, a cleared
+environment and the stored 5-second/100,000-iteration solver budget. Parent and child
+watchdogs enforce 15 seconds; termination confirmation gets five seconds. The parent
+rechecks fixed dispatch, physical/accounting invariants and optimality metadata before
+an atomic immutable result/terminal-status transaction. Publication rechecks lease/token
+so expired workers cannot commit. Only OPTIMAL succeeds; unproven/failed solver outcomes
+remain diagnostic results on failed jobs. See [decision 016](decisions/016-durable-simulations.md),
+[worker setup](../../worker/README.md#simulation-execution) and [verification](evidence/engine/execution-findings.md).

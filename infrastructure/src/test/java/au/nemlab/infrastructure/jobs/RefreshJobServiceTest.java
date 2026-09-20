@@ -67,7 +67,7 @@ class RefreshJobServiceTest {
     @BeforeEach
     void reset() {
         jdbc.execute("""
-                TRUNCATE refresh_job_event, refresh_request, refresh_job,
+                TRUNCATE simulation_result, simulation_job, simulation_input, refresh_job_event, refresh_request, refresh_job,
                     price_snapshot, price_current, price_import_attempt, price_revision, price_backfill
                 """);
     }

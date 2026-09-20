@@ -48,7 +48,7 @@ Scope: establish two repositories, backend modules, frontend workspace, PostgreS
 
 Exit criteria: a clean local setup can ingest a validated day, report coverage, submit work through the API, recover an interrupted job, and display API data in the frontend. CI runs relevant checks. Repeated ingestion does not duplicate observations. Stored simulation inputs remain reproducible after source refreshes.
 
-Planning work packages: [NEM-011](backlog.md#nem-011) through [NEM-015](backlog.md#nem-015). Split these before execution.
+Planning work packages: [NEM-011](backlog.md#nem-011) through [NEM-015](backlog.md#nem-015). All implementation packages are complete; [NEM-038](backlog.md#nem-038) owns the remaining hosted CI gate.
 
 ## M4 — BatteryLab
 
@@ -56,7 +56,7 @@ Scope: one market day, one aggregate site, fixed schedule versus hindsight, sync
 
 Exit criteria: a visitor can configure a valid scenario, follow job progress, inspect both results, and reopen the same immutable result from a link. Invalid inputs, missing data, failures and timeouts have clear states. Browser workflows and numerical regression checks pass.
 
-Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). Completion is an internal milestone, not the public launch.
+Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). At the user’s direction, local M4 work proceeds while hosted CI remains outstanding for M3. NEM-039 request normalisation/input capture and NEM-040 durable execution/immutable results are verified; NEM-041 HTTP integration is next. Completion is an internal milestone, not the public launch.
 
 ## M5 — GridReplay and Admin assessment
 

@@ -27,7 +27,7 @@ def check(module):
             args += ["--server.port=0", "--server.address=127.0.0.1", "--nemlab.admin.enabled=false",
                      "--nemlab.data.enabled=false"]
         else:
-            args += ["--nemlab.worker.enabled=false"]
+            args += ["--nemlab.worker.enabled=false", "--nemlab.simulation.enabled=false"]
         process = subprocess.Popen(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         try:
             deadline = time.monotonic() + 30

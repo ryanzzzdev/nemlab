@@ -3,15 +3,12 @@ package au.nemlab.worker.refresh;
 import au.nemlab.batterylab.PriceDay;
 import au.nemlab.infrastructure.jobs.RefreshJobConfiguration;
 import au.nemlab.infrastructure.jobs.RefreshJobService;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
@@ -19,25 +16,8 @@ import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "nemlab.worker.enabled", havingValue = "true")
-@Import(RefreshJobConfiguration.class)
+@Import({RefreshJobConfiguration.class, au.nemlab.worker.WorkerDatabaseConfiguration.class})
 public class WorkerRefreshConfiguration {
-
-    @Bean
-    public DataSource dataSource(Environment environment) {
-        PGSimpleDataSource source = new PGSimpleDataSource();
-        source.setURL(required(environment, "NEMLAB_DB_URL"));
-        source.setUser(required(environment, "NEMLAB_DB_USER"));
-        source.setPassword(required(environment, "NEMLAB_DB_PASSWORD"));
-        source.setConnectTimeout(5);
-        source.setSocketTimeout(10);
-        // Read-only readiness check: migrations remain an explicit operator step.
-        try {
-            new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job WHERE false", Integer.class);
-        } catch (RuntimeException failure) {
-            throw new IllegalStateException("Worker database unavailable or migrations missing (details omitted)");
-        }
-        return source;
-    }
 
     @Bean
     public PriceFetchProcess priceFetchProcess(Environment environment) {

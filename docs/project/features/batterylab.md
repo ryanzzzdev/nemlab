@@ -75,3 +75,24 @@ NEM-036 adds an optional two-panel chart to the price view. The second panel is 
 synthetic energy, not a computed battery trajectory. Shared cursor/window selection,
 fixed-time labels, visible gaps and text/table alternatives are verified. Final multi-series
 simulation presentation remains NEM-017 after real simulation APIs exist.
+
+
+## Simulation request boundary
+
+NEM-039 implements the [request contract](simulation-request-contract.md): exact decimal
+parameters, normalised efficiency legs, ordered windows, bounded input validation and
+immutable price-revision capture. It defines stable scenario identity without fetching
+OE or creating jobs. NEM-040 now implements durable execution/results; public simulation endpoints remain
+NEM-041. This boundary is not yet a visitor-facing simulator.
+
+
+## Durable execution and saved comparison
+
+NEM-040 persists exact normalised inputs and their immutable price revision with a durable
+job. Equivalent submissions reuse the same job. The independently enabled worker runs both
+strategies in a bounded process, validates outputs and atomically stores the comparison and
+terminal status. Saved dispatch, energy, accounting, solver status and versions survive
+source corrections. Incomplete/unproven solver outcomes remain explicit diagnostic results,
+never a successful hindsight comparison. Process failures retry at most three attempts;
+resubmitting a terminal failed scenario does not reset it. Public retry policy and HTTP
+submission/status/result presentation follow in NEM-041; the real frontend remains unfinished.
