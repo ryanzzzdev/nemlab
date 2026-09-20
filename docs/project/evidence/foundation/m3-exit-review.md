@@ -51,7 +51,7 @@ hindsight. Unrestricted optimisation, full GridReplay ingestion, Admin UI, broad
 launch quotas/retention and production operations remain outside this foundation review.
 
 The architecture's stale frontend directory sketch was reconciled with the actual
-`apps/public` layout; optional packages/Admin are not present. Review records are uncommitted.
+`apps/public` layout; optional packages/Admin are not present. Review records are committed as `2b5917b`.
 
 
 Follow-up (2026-09-20): the user directed local implementation to continue. NEM-039

@@ -964,7 +964,7 @@ this review does not authorise a push, deployment or new hosted account.
 
 ### Completion evidence
 
-Reviewed 2026-09-20: [exit evidence](evidence/foundation/m3-exit-review.md) maps each criterion to implementation and recorded verification. No missing local check was identified that requires repeating the existing suites. Hosted CI execution remains unverified and neither repository has a remote; NEM-038 and BLK-007 own that explicit gap. M3 remains In progress. NEM-016 is refined into NEM-039–NEM-041. Review changes are uncommitted.
+Reviewed 2026-09-20: [exit evidence](evidence/foundation/m3-exit-review.md) maps each criterion to implementation and recorded verification. No missing local check was identified that requires repeating the existing suites. Hosted CI execution remains unverified and neither repository has a remote; NEM-038 and BLK-007 own that explicit gap. M3 remains In progress. NEM-016 is refined into NEM-039–NEM-041. Review changes are committed as `2b5917b`.
 
 
 <a id="nem-038"></a>
@@ -1016,7 +1016,7 @@ Define and implement a transport-independent scenario request for one complete s
 
 ### Completion evidence
 
-Implemented exact request normalisation, field errors, core model reuse, read-only immutable revision capture and versioned scenario identity. Java 25 offline build passes 116 tests (13 new cases) and 46 HTTP contract responses. See [contract](features/simulation-request-contract.md), [decision 015](decisions/015-simulation-request-boundary.md) and [evidence](evidence/engine/request-findings.md). No executable public endpoint; HTTP integration follows NEM-041. Changes are uncommitted.
+Implemented exact request normalisation, field errors, core model reuse, read-only immutable revision capture and versioned scenario identity. Java 25 offline build passes 116 tests (13 new cases) and 46 HTTP contract responses. See [contract](features/simulation-request-contract.md), [decision 015](decisions/015-simulation-request-boundary.md) and [evidence](evidence/engine/request-findings.md). No executable public endpoint; HTTP integration follows NEM-041. Committed as `a151677`.
 
 <a id="nem-040"></a>
 
@@ -1043,7 +1043,7 @@ Persist and execute bounded simulation jobs using the existing engine, with simu
 
 ### Completion evidence
 
-Implemented V3 immutable inputs/results, an independent bounded simulation queue, token-fenced recovery/publication, and opt-in subprocess execution. Full Java 25 offline build passes 141 tests (25 new) and all 46 HTTP contract responses. Packaged worker execution, deadlines, watchdog, shutdown, retries and source-correction preservation are verified. See [execution evidence](evidence/engine/execution-findings.md) and [decision 016](decisions/016-durable-simulations.md). Public HTTP lifecycle remains NEM-041. Changes are uncommitted.
+Implemented V3 immutable inputs/results, an independent bounded simulation queue, token-fenced recovery/publication, and opt-in subprocess execution. Full Java 25 offline build passes 141 tests (25 new) and all 46 HTTP contract responses. Packaged worker execution, deadlines, watchdog, shutdown, retries and source-correction preservation are verified. See [execution evidence](evidence/engine/execution-findings.md) and [decision 016](decisions/016-durable-simulations.md). Public HTTP lifecycle remains NEM-041. Committed as `a151677`.
 
 <a id="nem-041"></a>
 

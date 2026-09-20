@@ -1,6 +1,6 @@
 # NEM-039 — Simulation request preparation
 
-Date: 2026-09-20. Implementation and records are uncommitted.
+Date: 2026-09-20. Implementation and records committed as `a151677`.
 
 ## Delivered
 
