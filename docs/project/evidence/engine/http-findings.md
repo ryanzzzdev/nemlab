@@ -1,6 +1,6 @@
 # NEM-041 — Simulation HTTP lifecycle
 
-Date: 2026-09-21. Included with the NEM-041 implementation commit.
+Date: 2026-09-21. Backend implementation: `9395a92`; frontend contract snapshot: `762ef1d`.
 
 ## Delivered
 
@@ -45,5 +45,9 @@ new hosted or deployed end-to-end test. The first focused and final full builds 
 Commit backend contract files before syncing the frontend snapshot so provenance identifies
 an actual source commit. NEM-017 must use these typed routes for forms, progress, real result
 charts and reopening shared results; none of those browser journeys is implemented here.
-Snapshot sync verification will be recorded after the backend commit. Final public quotas,
+Frontend `npm run format` and `npm run check` pass contract comparison, formatting, strict
+TypeScript/build and all 40 desktop/mobile browser cases. Only the contract snapshots and
+provenance changed in the frontend. The initial browser launch failed because the pinned
+Chromium executable was absent from the local cache; installing the project-pinned browser
+resolved that environment issue, and the full frontend check then passed. Final public quotas,
 retention and production resource policy remain NEM-020; hosted CI remains NEM-038.
