@@ -82,3 +82,14 @@ inputs on the same supported dialect; Ajv natively supports its nullable keyword
 References: [generation and --check](https://openapi-ts.dev/cli),
 [Swagger Parser](https://apidevtools.com/swagger-parser/),
 [Ajv JSON Schema and nullable](https://ajv.js.org/json-schema).
+
+
+## Version 1.1.0 — simulation lifecycle
+
+Adds `submitSimulation`, `getSimulationStatus` and `getSimulationResult` without changing
+the price/operator operations. Request decimal fields are strings; semantic validation
+adds bounds and physical/coverage checks beyond JSON Schema. The example request and
+TypeScript consumer check document usage. Actual HTTP tests capture 200/202, validation,
+coverage, pending/failed results, queue capacity, body/media limits and storage failures.
+Regeneration must remain byte-for-byte reproducible. After committing this backend
+contract, sync the frontend snapshot with `npm run contract:sync` in the sibling repo.

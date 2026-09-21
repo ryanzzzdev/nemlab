@@ -75,7 +75,9 @@ for (const { operation } of routes) {
   assert(seen.has(operation.operationId), `No successful HTTP evidence: ${operation.operationId}`);
 }
 for (const code of ["INVALID_REQUEST", "UNAUTHORISED", "PRICE_DAY_NOT_IMPORTED",
-  "JOB_NOT_FOUND", "IDEMPOTENCY_CONFLICT", "QUEUE_FULL", "STORAGE_UNAVAILABLE"]) {
+  "JOB_NOT_FOUND", "IDEMPOTENCY_CONFLICT", "QUEUE_FULL", "STORAGE_UNAVAILABLE",
+  "PRICE_DAY_UNAVAILABLE", "PRICE_DAY_INCOMPLETE", "SIMULATION_NOT_FOUND", "RESULT_NOT_READY",
+  "SIMULATION_FAILED", "REQUEST_TOO_LARGE", "UNSUPPORTED_CONTENT_TYPE"]) {
   assert(statuses.has(code), `Missing HTTP error evidence: ${code}`);
 }
 
@@ -90,3 +92,11 @@ assert(!interval({ ...value, claimToken: "internal" }));
 assert(interval({ ...value, state: "SOURCE_NULL", price: null }));
 assert(!interval({ ...value, start: "not-an-instant" }));
 console.log(`Validated OpenAPI, ${files.length} HTTP responses, all ${routes.length} operations and error codes.`);
+
+const scenario = JSON.parse(await readFile("examples/simulation-request.json", "utf8"));
+const requestCheck = ajv.compile(api.components.schemas.SimulationRequest);
+assert(requestCheck(scenario));
+assert(!requestCheck({ ...scenario, site: { ...scenario.site, capacityMWh: 1 } }));
+assert(!requestCheck({ ...scenario, efficiency: { charge: "1", discharge: "1", roundTrip: "1" } }));
+assert(!requestCheck({ ...scenario, actor: "spoof" }));
+assert(!requestCheck({ ...scenario, windows: { ...scenario.windows, chargeEnd: 6 } }));

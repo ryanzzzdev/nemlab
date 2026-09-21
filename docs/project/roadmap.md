@@ -1,6 +1,6 @@
 # NEMLab roadmap
 
-Updated: 2026-09-20
+Updated: 2026-09-21
 
 The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
@@ -56,7 +56,7 @@ Scope: one market day, one aggregate site, fixed schedule versus hindsight, sync
 
 Exit criteria: a visitor can configure a valid scenario, follow job progress, inspect both results, and reopen the same immutable result from a link. Invalid inputs, missing data, failures and timeouts have clear states. Browser workflows and numerical regression checks pass.
 
-Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). At the user’s direction, local M4 work proceeds while hosted CI remains outstanding for M3. NEM-039 request normalisation/input capture and NEM-040 durable execution/immutable results are verified; NEM-041 HTTP integration is next. Completion is an internal milestone, not the public launch.
+Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). At the user’s direction, local M4 work proceeds while hosted CI remains outstanding for M3. NEM-039–NEM-041 complete the simulation backend package NEM-016. NEM-017 frontend delivery is Ready for refinement; no completed visitor journey is implied. Completion is an internal milestone, not the public launch.
 
 ## M5 — GridReplay and Admin assessment
 

@@ -113,11 +113,11 @@ export NEMLAB_WORKER_ENABLED=false
 "$JAVA_HOME/bin/java" -Xmx256m -jar worker/build/libs/worker.jar
 ```
 
-Submit through the internal `SimulationJobs.submit(SimulationRequest)` service for now;
-public simulation HTTP endpoints remain NEM-041. It captures exact normalised parameters,
+Submit through the [public simulation API](../api/README.md#public-simulation-lifecycle),
+which uses `SimulationJobs.submit(SimulationRequest)`. It captures exact normalised parameters,
 version metadata and a complete immutable price revision in the same transaction as job
 creation. Equivalent requests reuse the same job, including terminal jobs. Failed jobs
-are not reset by resubmission; user retry/retention policy remains a later API decision.
+are not reset by resubmission; the public API preserves that rule. Retention remains launch work.
 
 The simulation queue admits 100 pending jobs and one running claim globally, independent
 of the refresh queue. Claims last 60 seconds. Crashes, deadlines and worker shutdown get
@@ -137,7 +137,7 @@ The parent checks fixed-policy dispatch, physical constraints, every accounting 
 optimality metadata before atomically storing both results and terminal job status.
 `SUCCEEDED` means certified `OPTIMAL`; `FEASIBLE_NOT_PROVEN` and other solver outcomes
 produce `FAILED` jobs with immutable diagnostic results. Never display these as proven
-hindsight. Engine diagnostic text is internal; public error mapping belongs to NEM-041.
+hindsight. Engine diagnostic text is internal; NEM-041 maps public errors without exposing this text.
 Hard process failures have safe job codes and no result payload. Inputs and saved results
 remain unchanged when current source prices are corrected.
 

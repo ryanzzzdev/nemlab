@@ -1,8 +1,8 @@
 # NEMLab backlog
 
-Updated: 2026-09-20
+Updated: 2026-09-21
 
-Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-016 is split into NEM-039–NEM-041; NEM-039 and NEM-040 are complete; NEM-041 simulation HTTP lifecycle is next. Local M4 work proceeds at the user’s direction while the hosted CI gate remains open. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-016 is split into NEM-039–NEM-041; NEM-039–NEM-041 complete NEM-016. Next: refine NEM-017 into focused BatteryLab frontend tasks. Local M4 work proceeds at the user’s direction while the hosted CI gate remains open. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -464,7 +464,7 @@ Split into NEM-033 (repository/tooling), NEM-034 (public shell), NEM-035 (typed 
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: In progress
+- Status: Done
 - Depends on: [NEM-010](#nem-010), [NEM-014](#nem-014)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -480,7 +480,7 @@ Deliver through [NEM-039](#nem-039) request contract/validation, [NEM-040](#nem-
 
 ### Completion evidence
 
-Refined 2026-09-20 during NEM-037. NEM-039 request preparation and NEM-040 durable execution/results are complete; NEM-041 HTTP integration is Ready. The user directed local implementation to continue while the separate M3 hosted CI gate remains open.
+Refined 2026-09-20 during NEM-037. NEM-039 request preparation, NEM-040 durable execution/results and NEM-041 HTTP integration are complete. The user directed local implementation to continue while the separate M3 hosted CI gate remains open.
 
 <a id="nem-017"></a>
 
@@ -489,7 +489,7 @@ Refined 2026-09-20 during NEM-037. NEM-039 request preparation and NEM-040 durab
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-015](#nem-015), [NEM-016](#nem-016)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -1052,7 +1052,7 @@ Implemented V3 immutable inputs/results, an independent bounded simulation queue
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-040](#nem-040)
 - References: parent [NEM-016](#nem-016), [API contract guide](../../api/contracts/README.md)
 
@@ -1069,4 +1069,4 @@ Expose bounded scenario submission, job status and immutable result retrieval wi
 
 ### Completion evidence
 
-Not started. Completing this slice closes NEM-016 only when all three child tasks pass.
+Implemented opt-in public submission/status/result endpoints with strict decimal-string JSON, safe DTOs, bounded bodies, durable deduplication and explicit pending/failure states. OpenAPI 1.1.0 and deterministic TypeScript inputs are verified by 94 actual HTTP responses across ten operations. Full backend build passes 150 tests and packaged startup checks. All three child tasks now pass, completing NEM-016. See [evidence](evidence/engine/http-findings.md) and [decision 017](decisions/017-simulation-http-contract.md). Frontend snapshot handoff follows the backend commit; the visitor workflow remains NEM-017.

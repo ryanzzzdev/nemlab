@@ -82,8 +82,7 @@ simulation presentation remains NEM-017 after real simulation APIs exist.
 NEM-039 implements the [request contract](simulation-request-contract.md): exact decimal
 parameters, normalised efficiency legs, ordered windows, bounded input validation and
 immutable price-revision capture. It defines stable scenario identity without fetching
-OE or creating jobs. NEM-040 now implements durable execution/results; public simulation endpoints remain
-NEM-041. This boundary is not yet a visitor-facing simulator.
+OE or creating jobs. NEM-040 now implements durable execution/results; NEM-041 now exposes public simulation endpoints. The frontend is not yet a visitor-facing simulator.
 
 
 ## Durable execution and saved comparison
@@ -94,5 +93,15 @@ strategies in a bounded process, validates outputs and atomically stores the com
 terminal status. Saved dispatch, energy, accounting, solver status and versions survive
 source corrections. Incomplete/unproven solver outcomes remain explicit diagnostic results,
 never a successful hindsight comparison. Process failures retry at most three attempts;
-resubmitting a terminal failed scenario does not reset it. Public retry policy and HTTP
-submission/status/result presentation follow in NEM-041; the real frontend remains unfinished.
+resubmitting a terminal failed scenario does not reset it. NEM-041 exposes HTTP submission/status/results while retaining terminal-job deduplication;
+there is no public retry-reset operation. The real frontend remains unfinished.
+
+
+## Public simulation API
+
+NEM-041 completes the backend lifecycle. Visitors can submit a valid scenario via HTTP,
+poll its opaque-ID status URL, and reopen the saved proven result. Pending/failed states,
+validation errors and unavailable coverage are explicit; worker tokens and raw diagnostics
+stay private. The [API guide](../../../api/README.md#public-simulation-lifecycle) defines
+transport/error semantics. Forms, progress presentation, real result charts and shared-link
+browser journeys remain NEM-017; the existing chart companion is still synthetic.

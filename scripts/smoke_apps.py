@@ -25,7 +25,7 @@ def check(module):
         args = [JAVA, "-jar", str(jar(module))]
         if module == "api":
             args += ["--server.port=0", "--server.address=127.0.0.1", "--nemlab.admin.enabled=false",
-                     "--nemlab.data.enabled=false"]
+                     "--nemlab.data.enabled=false", "--nemlab.simulation-api.enabled=false"]
         else:
             args += ["--nemlab.worker.enabled=false", "--nemlab.simulation.enabled=false"]
         process = subprocess.Popen(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)

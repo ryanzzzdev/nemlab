@@ -177,3 +177,51 @@ cover these seven price-read and operator operations. `:api:checkContract` check
 specification, generated types and actual HTTP integration-test responses. Install
 its locked Node tooling before running the backend build. Runtime applications do
 not depend on Node or serve the specification automatically.
+
+
+## Public simulation lifecycle
+
+Set `NEMLAB_SIMULATION_API_ENABLED=true` and database settings after applying migrations
+through V3. This feature is independent of `NEMLAB_DATA_ENABLED`, operator controls and
+`NEMLAB_SIMULATION_ENABLED` on the worker. An enabled API can enqueue work while the worker
+is offline; jobs stay queued until polling resumes. The feature defaults off.
+
+| Request | Behaviour |
+| --- | --- |
+| `POST /api/v1/simulations` | Accept JSON scenario; 202 for pending work, 200 for an existing terminal job. Location points to status; pending responses include Retry-After: 2. |
+| `GET /api/v1/simulations/{id}` | Read state, attempt count, safe failure code and relative status/result links. |
+| `GET /api/v1/simulations/{id}/result` | Read saved proven comparison, original exact inputs/prices, revision/version metadata, both dispatch/accounting series and explicit units. |
+
+Use the [illustrative JSON request](contracts/examples/simulation-request.json):
+
+```sh
+curl -i -H 'Content-Type: application/json' \
+  --data-binary @api/contracts/examples/simulation-request.json \
+  http://127.0.0.1:8080/api/v1/simulations
+```
+
+This fixture is an example, not a configured site preset or a promise that its day has been
+imported. The selected completed day must already have complete stored prices. Submission
+never fetches OE. See the [request contract](../docs/project/features/simulation-request-contract.md)
+for physical limits and fixed UTC+10 windows. Decimal quantities must be JSON strings;
+window minutes must be integers. Bodies are limited to 16384 bytes. Unknown/duplicate
+fields, trailing JSON, numeric coercion and ambiguous efficiency choices are rejected.
+
+Errors include field/reason details for 400 invalid requests, 409 unavailable/incomplete
+prices, 404 unknown simulations, 409 RESULT_NOT_READY or SIMULATION_FAILED, 413 oversized
+bodies, 415 unsupported content, 429 queue capacity (Retry-After: 5), and safe 503 storage
+failure. All lifecycle responses use Cache-Control: no-store. Claim tokens, leases,
+internal scenario keys and raw solver diagnostic text are excluded from public DTOs.
+
+Identical normalised inputs and the same captured price revision reuse the job across all
+states. No Idempotency-Key is needed; resubmitting a terminal failure does not reset its
+attempts. Source corrections create a distinct scenario while old results retain their
+original prices. Internal transient retries are bounded; there is no public retry-reset
+or cancellation endpoint yet. A feasible-but-unproven solver result remains a failed job
+and cannot be fetched as a successful comparison.
+
+Only the input/price decimals are exact strings. Dispatch and accounting are unrounded
+engine doubles, annotated with MW, MWh, AUD and AUD/MWh units; formatting belongs to the
+frontend. Saved comparison links use opaque UUIDs. Retention, public rate limits and
+production deployment remain launch work. The [OpenAPI 1.1 contract](contracts/openapi.json)
+and generated types define the transport schema.

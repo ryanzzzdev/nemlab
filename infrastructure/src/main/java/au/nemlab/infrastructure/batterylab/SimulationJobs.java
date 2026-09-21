@@ -87,6 +87,10 @@ public final class SimulationJobs {
         return jdbc.query("SELECT * FROM simulation_job WHERE id=?", MAPPER, id).stream().findFirst();
     }
 
+    public UUID priceRevision(UUID id) {
+        return jdbc.queryForObject("SELECT revision_id FROM simulation_input WHERE id=?", UUID.class, id);
+    }
+
     public Input input(UUID id) {
         return jdbc.queryForObject("SELECT * FROM simulation_input WHERE id=?", (row, n) -> new Input(
                 row.getString("scenario_key"), json.readValue(row.getString("request"), SimulationRequest.class),

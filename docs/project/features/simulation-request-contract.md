@@ -1,6 +1,6 @@
 # Simulation request contract v1
 
-Date: 2026-09-20. NEM-039 implementation contract; transport-independent, not yet an HTTP API.
+Date: 2026-09-20. Core contract implemented in NEM-039; NEM-041 exposes its HTTP boundary.
 
 One request selects a region and completed NEM market day on/after 2021-10-01, an aggregate
 site, efficiency, costs and one ordered charge/discharge window. All fields are required
@@ -27,7 +27,7 @@ ordered, nonoverlapping windows. No wrap or daylight-saving conversion is allowe
 
 Validation fails with a field path and stable code (REQUIRED, OUT_OF_RANGE,
 DECIMAL_LIMIT, INVALID_BOUNDS, INVALID_WINDOWS, AMBIGUOUS_EFFICIENCY). The first error is
-returned; parsing malformed decimal/date/enum text belongs to the future HTTP adapter.
+returned; the HTTP adapter handles malformed decimal/date/enum text.
 Unknown or incomplete stored data produces PRICE_DAY_UNAVAILABLE or PRICE_DAY_INCOMPLETE.
 Neither condition fetches OE or submits refresh work.
 
@@ -44,3 +44,19 @@ Snapshot row IDs, retrieval timestamps, input scale and chosen efficiency input 
 excluded. Changed price revisions or result-affecting inputs must yield different keys.
 A stable key identifies inputs, not a guarantee of identical wall-clock solver termination.
 No execution options are supplied by the client. The ordered-comparison-v1 execution profile now binds a 512 MiB child heap, two active processors and a 15-second hard deadline under NEM-040.
+
+
+## HTTP mapping — NEM-041
+
+OpenAPI 1.1.0 exposes POST /api/v1/simulations and GET status/result resources by opaque
+UUID. The request body uses strings for decimal values and integers for minutes. JSON
+bodies must be application/json and at most 16384 bytes; unknown fields, duplicate keys,
+trailing documents, explicit null efficiency values and numeric coercion are invalid.
+Either provide both efficiency legs or roundTrip, omitting the alternative properties.
+Core field/reason errors become 400 responses; absent/incomplete price data becomes 409.
+
+Pending submission returns 202 with Location/Retry-After; a terminal duplicate returns 200.
+The same scenario is deduplicated even after failure and resubmission does not reset it.
+GET result returns only a proven comparison (200), with explicit 409 pending/failed states.
+Saved input/price decimals remain exact strings and dispatch/accounting remain unrounded
+numbers. See [API setup](../../../api/README.md#public-simulation-lifecycle).

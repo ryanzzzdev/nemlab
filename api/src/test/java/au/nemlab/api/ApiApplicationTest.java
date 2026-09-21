@@ -13,6 +13,21 @@ class ApiApplicationTest {
     int port;
 
     @Test
+    void simulationRoutesAreDisabledByDefault() throws Exception {
+        try (var client = HttpClient.newHttpClient()) {
+            String base = "http://127.0.0.1:" + port + "/api/v1/simulations";
+            var post = client.send(HttpRequest.newBuilder(URI.create(base))
+                    .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{}")).build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals(404, post.statusCode());
+            for (String suffix : new String[] { "/00000000-0000-0000-0000-000000000000", "/00000000-0000-0000-0000-000000000000/result" }) {
+                var get = client.send(HttpRequest.newBuilder(URI.create(base + suffix)).build(), HttpResponse.BodyHandlers.ofString());
+                assertEquals(404, get.statusCode());
+            }
+        }
+    }
+
+    @Test
     void healthIsAvailableButInternalConfigurationIsNotExposed() throws Exception {
         try (var client = HttpClient.newHttpClient()) {
             var health = client.send(

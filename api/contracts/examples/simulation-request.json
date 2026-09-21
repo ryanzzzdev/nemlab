@@ -1,0 +1,17 @@
+{
+  "region": "NSW1",
+  "day": "2023-10-01",
+  "site": {
+    "capacityMWh": "1",
+    "minimumMWh": "0",
+    "maximumMWh": "1",
+    "initialMWh": "0",
+    "chargeMW": "12",
+    "dischargeMW": "12",
+    "importLimitMW": "12",
+    "exportLimitMW": "12"
+  },
+  "efficiency": { "roundTrip": "1" },
+  "costs": { "importFee": "0", "exportFee": "0", "degradationPerExportedMWh": "0" },
+  "windows": { "chargeStart": 0, "chargeEnd": 5, "dischargeStart": 5, "dischargeEnd": 10 }
+}

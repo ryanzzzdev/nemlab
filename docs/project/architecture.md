@@ -1,7 +1,7 @@
 # NEMLab architecture
 
-Updated: 2026-09-20
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation request normalisation and immutable price-input capture are implemented; durable simulation execution/results are implemented; simulation HTTP APIs, GridReplay APIs and frontend product integration remain planned.
+Updated: 2026-09-21
+Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation request normalisation and immutable price-input capture are implemented; durable simulation execution/results are implemented; simulation HTTP APIs are implemented; GridReplay APIs and frontend product integration remain planned.
 
 ## Agreed boundaries
 
@@ -154,3 +154,20 @@ an atomic immutable result/terminal-status transaction. Publication rechecks lea
 so expired workers cannot commit. Only OPTIMAL succeeds; unproven/failed solver outcomes
 remain diagnostic results on failed jobs. See [decision 016](decisions/016-durable-simulations.md),
 [worker setup](../../worker/README.md#simulation-execution) and [verification](evidence/engine/execution-findings.md).
+
+
+## Simulation HTTP lifecycle — NEM-041
+
+`NEMLAB_SIMULATION_API_ENABLED` independently enables public POST submission and GET
+status/result resources under `/api/v1/simulations`. JSON bodies are bounded at 16384
+bytes with strict decimal strings, integer window minutes, known fields, unique keys
+and one document. NEM-039 validation and NEM-040 queue semantics are reused. Pending
+submissions return 202; terminal duplicates return 200 without resetting work.
+
+Public DTOs omit tokens, leases, internal scenario keys and raw solver diagnostics.
+Only successful OPTIMAL comparisons have a public result; pending/failed runs return
+409. Exact normalised inputs/prices, immutable revision/version metadata and unrounded
+engine dispatch/accounting are returned with units/time boundaries. OpenAPI 1.1.0 adds
+three operations and generated TypeScript inputs without changing price/operator schemas.
+See [decision 017](decisions/017-simulation-http-contract.md), [API setup](../../api/README.md#public-simulation-lifecycle)
+and [verification](evidence/engine/http-findings.md).

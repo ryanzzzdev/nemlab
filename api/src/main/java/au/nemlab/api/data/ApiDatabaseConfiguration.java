@@ -13,7 +13,7 @@ import javax.sql.DataSource;
 
 /** One database configuration shared by independently enabled reads and operator controls. */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnExpression("${nemlab.admin.enabled:false} or ${nemlab.data.enabled:false}")
+@ConditionalOnExpression("${nemlab.admin.enabled:false} or ${nemlab.data.enabled:false} or ${nemlab.simulation-api.enabled:false}")
 @Import(RefreshJobConfiguration.class)
 public class ApiDatabaseConfiguration {
     @Bean
@@ -28,6 +28,8 @@ public class ApiDatabaseConfiguration {
             var jdbc = new JdbcTemplate(source);
             jdbc.queryForObject("SELECT count(*) FROM refresh_job WHERE false", Integer.class);
             jdbc.queryForObject("SELECT count(*) FROM price_current WHERE false", Integer.class);
+            if (environment.getProperty("nemlab.simulation-api.enabled", Boolean.class, false))
+                jdbc.queryForObject("SELECT count(*) FROM simulation_job WHERE false", Integer.class);
         } catch (RuntimeException failure) {
             throw new IllegalStateException("API database unavailable or migrations missing (details omitted)");
         }
