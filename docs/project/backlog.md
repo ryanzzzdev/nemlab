@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-045: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts and the saved-result journey; M4’s local exit criteria are met. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-045: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts and the saved-result journey; M4’s original local exit criteria are met, but NEM-046 adds visitor-triggered price refresh as agreed BatteryLab scope, so M4 is in progress again until it lands. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -58,6 +58,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-043 — Battery scenario form and simulation lifecycle](#nem-043)
 - [NEM-044 — Simulation comparison and linked result charts](#nem-044)
 - [NEM-045 — Saved-result journey and BatteryLab acceptance](#nem-045)
+- [NEM-046 — Visitor-triggered price refresh](#nem-046)
 
 
 <a id="nem-001"></a>
@@ -1181,3 +1182,35 @@ Complete saved-result sharing/reopening, methodology and the end-to-end BatteryL
 ### Completion evidence
 
 Implemented `/batterylab?simulation=<uuid>` reopening: a stored result writes its opaque job ID into the page address, and a keyboard-accessible "Copy result link" action copies the locally constructed URL. Opening the link reads job status then the immutable result — no resubmission — restores the stored scenario inputs into the form, and renders the identical comparison; the embedded price snapshot is unaffected by later source revisions. Links to queued/running jobs resume monitoring; failed jobs report their safe failure code, and malformed or unknown identifiers explain recovery while leaving the form usable. Editing any input detaches the link. A collapsed methodology summary accompanies the result. Frontend contract/format/TypeScript/build checks and 84 desktop/mobile Chromium cases pass (8 new: reload restoration, reopenable copy link, pending-job resume, missing/failed/malformed recovery). Six live browser cases pass against disposable PostgreSQL with the real API and worker, covering submit→result→reload-restore, incomplete-day rejection and unknown-link recovery; the live screenshot was reviewed. Acceptance review: NEM-017 done-when satisfied (task split, complete-and-reopen journey with clear units/breakdown/explanations, accessible states and backend-agreeing values); M4 exit criteria satisfied locally (valid scenario → progress → both results → immutable reopen; invalid input, missing data, failure and paused-checking states are explicit; browser and numerical checks pass). Hosted CI remains a separate open gate under NEM-038; public launch gates remain NEM-020. Committed as `a5c3067` (frontend); records accompany this update.
+
+<a id="nem-046"></a>
+
+## NEM-046 — Visitor-triggered price refresh
+
+- Repository: both
+- Milestone: M4
+- Priority: High
+- Status: Ready
+- Depends on: None
+- References: parents [NEM-016](#nem-016) and [NEM-017](#nem-017), [durable queue decision](decisions/009-durable-refresh-queue.md), [HTTP contract decision](decisions/017-simulation-http-contract.md)
+
+### Outcome
+
+When a visitor submits a scenario for an eligible market day that lacks a complete stored price revision, the public simulation API enqueues a deduplicated price-refresh job for that region/day and returns a distinguishable pending-data state instead of only `PRICE_DAY_UNAVAILABLE`. The frontend explains the fetch delay and resumes the normal simulation lifecycle once the day is imported.
+
+### Done when
+
+- Eligible missing or incomplete days (valid region, completed fixed-UTC+10 market day on/after 2021-10-01) enqueue a refresh job; ineligible days still fail validation without enqueueing.
+- Visitor submissions cannot duplicate fetches for the same day: request keys deduplicate against scheduled, operator and earlier visitor jobs, and a terminal visitor-triggered job has a defined re-request path.
+- The HTTP contract exposes the pending-data outcome with a version bump and regenerated frontend inputs.
+- Anonymous enqueueing is bounded: an explicit abuse limit (for example a separate visitor pending cap or rate limit) is chosen, implemented and recorded so visitors cannot exhaust the 100-job queue or OE quota.
+- The frontend shows the pending state, resumes checking until data arrives or the refresh fails, then continues the normal lifecycle; refresh failure surfaces a clear safe state.
+- Verified end to end against real API/worker/PostgreSQL, including the pending and refresh-failure browser paths.
+
+### Completion evidence
+
+Not yet implemented.
+
+### Notes
+
+Agreed with the user on 2026-09-24 and required before BatteryLab/M4 is treated as done; the milestone record reflects the reopened scope. The rejected alternative is a synchronous OE fetch inside the API request: it would hold a credential the API deliberately lacks, cannot fit fetch latency/retries inside a request, and loses crash-safe dedup. Open implementation choices: the visitor request-key namespace, the concrete abuse limit, and how a terminal visitor-triggered job admits a later retry (a fresh key or an explicit reset). Reusing the durable queue keeps provider calls inside the existing bounded claim/fetch/commit path.

@@ -75,6 +75,12 @@ and displays source, units and revision metadata. Loading, unavailable coverage 
 errors are explicit. This read-only view neither imports data nor runs the battery engine;
 the simulator and chart journey remain future work.
 
+NEM-046 (scoped, not yet implemented) changes missing-coverage behaviour for the simulator:
+an eligible submitted day without a complete stored revision enqueues a deduplicated price
+refresh and returns a pending-data state that resumes the lifecycle once the day arrives,
+rather than ending at unavailable coverage. Ineligible days keep the explicit rejection;
+the visitor-triggered abuse limit is decided within the task.
+
 ## Chart interaction proof
 
 NEM-036 adds an optional two-panel chart to the price view. The second panel is explicitly
