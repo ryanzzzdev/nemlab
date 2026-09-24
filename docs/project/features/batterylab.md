@@ -124,3 +124,18 @@ power, stored energy and cumulative margin under one cursor and window control, 
 interval table as the exact text alternative. Hindsight is labelled a benchmark, not a
 forecast. Charts plot approximate numbers; tables and readouts keep stored values.
 Reopening a saved result by link remains NEM-045.
+
+## Saved-result journey
+
+NEM-045 makes a finished scenario reopenable. A stored result writes its opaque job
+ID into the page address (`/batterylab?simulation=<uuid>`), and a keyboard-accessible
+"Copy result link" action copies that locally constructed URL. Opening the link reads
+job status then the immutable result — never resubmitting — restores the stored
+scenario inputs into the form and renders the identical comparison; the embedded
+price snapshot is unaffected by later source revisions. Links to queued or running
+jobs resume monitoring; failed jobs report their safe failure code, and malformed or
+unknown identifiers explain the recovery while leaving the form usable. Editing any
+input detaches the link so a reload cannot silently resurrect an old result. A
+collapsed methodology summary accompanies the comparison. The full journey —
+submit, reopen, incomplete-day and unknown/failed recovery — is verified against the
+real API, worker and PostgreSQL in the live browser suite.

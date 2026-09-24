@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 is split into NEM-042–NEM-045, beginning with product layouts and appearance, followed by the simulation form/lifecycle. Local M4 work proceeds at the user’s direction while the hosted CI gate remains open. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-045: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts and the saved-result journey; M4’s local exit criteria are met. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -493,7 +493,7 @@ Refined 2026-09-20 during NEM-037. NEM-039 request preparation, NEM-040 durable 
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: In progress
+- Status: Done
 - Depends on: [NEM-015](#nem-015), [NEM-016](#nem-016)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -509,7 +509,7 @@ Refine forms, comparison views, synchronised charts, methodology and shareable r
 
 ### Completion evidence
 
-Split into NEM-042–NEM-045. NEM-042 established product layouts and shared appearance, NEM-043 the scenario form and lifecycle, and NEM-044 the stored comparison and linked charts. NEM-045 owns the saved-result journey and acceptance review; until then a completed scenario cannot be reopened by link.
+Delivered as NEM-042–NEM-045. NEM-042 established product layouts and shared appearance, NEM-043 the scenario form and lifecycle, NEM-044 the stored comparison and linked charts, and NEM-045 the saved-result journey and acceptance review. A visitor configures an exact scenario, follows job progress, inspects both strategies with clear units and financial breakdown, copies a result link and reopens the identical immutable result — including after reload. All 84 desktop/mobile Chromium cases and 6 live API/worker/PostgreSQL cases pass; chart values and totals agree with stored backend accounting. See [NEM-045](#nem-045) evidence for the acceptance review.
 
 <a id="nem-018"></a>
 
@@ -1163,7 +1163,7 @@ Implemented the result section: margin stat cards, derived explanation sentences
 - Repository: both
 - Milestone: M4
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-044](#nem-044)
 - References: parent [NEM-017](#nem-017), [M4](roadmap.md#m4--batterylab)
 
@@ -1177,3 +1177,7 @@ Complete saved-result sharing/reopening, methodology and the end-to-end BatteryL
 - Share actions and navigation preserve scenario meaning and remain keyboard accessible.
 - Full browser journey runs against the real API/worker/PostgreSQL, including unavailable data and failures; accounting/chart agreement is verified.
 - Review all NEM-017 and M4 exit criteria, keeping hosted CI and public launch gates separate.
+
+### Completion evidence
+
+Implemented `/batterylab?simulation=<uuid>` reopening: a stored result writes its opaque job ID into the page address, and a keyboard-accessible "Copy result link" action copies the locally constructed URL. Opening the link reads job status then the immutable result — no resubmission — restores the stored scenario inputs into the form, and renders the identical comparison; the embedded price snapshot is unaffected by later source revisions. Links to queued/running jobs resume monitoring; failed jobs report their safe failure code, and malformed or unknown identifiers explain recovery while leaving the form usable. Editing any input detaches the link. A collapsed methodology summary accompanies the result. Frontend contract/format/TypeScript/build checks and 84 desktop/mobile Chromium cases pass (8 new: reload restoration, reopenable copy link, pending-job resume, missing/failed/malformed recovery). Six live browser cases pass against disposable PostgreSQL with the real API and worker, covering submit→result→reload-restore, incomplete-day rejection and unknown-link recovery; the live screenshot was reviewed. Acceptance review: NEM-017 done-when satisfied (task split, complete-and-reopen journey with clear units/breakdown/explanations, accessible states and backend-agreeing values); M4 exit criteria satisfied locally (valid scenario → progress → both results → immutable reopen; invalid input, missing data, failure and paused-checking states are explicit; browser and numerical checks pass). Hosted CI remains a separate open gate under NEM-038; public launch gates remain NEM-020. Committed as `a5c3067` (frontend); records accompany this update.

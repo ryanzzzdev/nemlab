@@ -11,7 +11,7 @@ M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.m
 | M1 — OE validation | Evidence for supported inputs and coverage | Complete | None |
 | M2 — Battery-engine proof | Correct, reproducible strategies and feasible solver | Complete | M1 price gate; synthetic design can proceed alongside M1 |
 | M3 — Shared foundation | Ingestion, jobs, persistence, API and frontend shells | In progress | M1 and M2 |
-| M4 — BatteryLab | Complete simulation experience | In progress | M3 local foundation; hosted CI gate still open |
+| M4 — BatteryLab | Complete simulation experience | Complete | M3 local foundation; hosted CI remains a separate open gate |
 | M5 — GridReplay and Admin assessment | Replay experience and an explicit Admin scope decision | Planned | M4 and validated grid inputs |
 | M6 — Launch | Verified, operable release of both products | Planned | M5 |
 
@@ -56,7 +56,7 @@ Scope: one market day, one aggregate site, fixed schedule versus hindsight, sync
 
 Exit criteria: a visitor can configure a valid scenario, follow job progress, inspect both results, and reopen the same immutable result from a link. Invalid inputs, missing data, failures and timeouts have clear states. Browser workflows and numerical regression checks pass.
 
-Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). At the user’s direction, local M4 work proceeds while hosted CI remains outstanding for M3. NEM-039–NEM-041 complete the simulation backend package NEM-016. NEM-017 frontend delivery is split into NEM-042–NEM-045: product layout/appearance, scenario form/lifecycle, comparison/charts and saved-result acceptance. No completed visitor journey is implied. Completion is an internal milestone, not the public launch.
+Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). NEM-039–NEM-041 completed the simulation backend package NEM-016; NEM-042–NEM-045 delivered the NEM-017 visitor experience. The exit criteria pass locally, verified by mocked browser suites and a live API/worker/PostgreSQL journey ending in an immutable result reopen. Completion is an internal milestone, not the public launch: hosted CI remains open under NEM-038 and launch gates under NEM-020.
 
 ## M5 — GridReplay and Admin assessment
 

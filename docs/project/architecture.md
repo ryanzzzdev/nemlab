@@ -130,6 +130,8 @@ NEM-043 adds a separate typed simulation client for POST submission and UUID-bas
 
 NEM-044 renders the stored comparison in a `ResultView` section: stat cards, derived explanations, financial breakdown and an exact-value interval table, plus a lazily loaded `ResultCharts` bundle that draws four linked panels (price, grid-side power, stored energy, cumulative margin) with one cursor/window selection, operating-window and negative-price bands, and energy bounds. Displayed totals come from the stored accounting; client-side cumulative margin recomputes the same formula per interval for the trace only. Failed chart chunk loads leave the tables available. Saved-route reopening remains NEM-045.
 
+NEM-045 makes results reopenable through a `?simulation=<uuid>` search parameter on the BatteryLab route. A stored result writes its job ID into the address via `useSearchParams`; a `restore` path shares the same status→result monitoring loop as submission but never POSTs, and repopulates the form from the immutable stored inputs. The share action builds the URL locally from `window.location.origin` — response-provided links are still never followed. Malformed identifiers fail client-side, unknown IDs surface the API's 404 recovery, failed jobs show their safe failure code, and pending jobs resume polling. Editing inputs clears the parameter along with stale job/result state.
+
 
 ## Simulation request preparation — NEM-039
 
