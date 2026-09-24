@@ -111,3 +111,16 @@ validation errors and unavailable coverage are explicit; worker tokens and raw d
 stay private. The [API guide](../../../api/README.md#public-simulation-lifecycle) defines
 transport/error semantics. Forms, progress presentation, real result charts and shared-link
 browser journeys remain NEM-017; the existing chart companion is still synthetic.
+
+
+## Result comparison and linked charts
+
+NEM-044 presents the stored result. Margin stat cards, plain-language explanations
+(interval counts, weighted-average prices, the fixed policy's limiting reason, the
+hindsight advantage and the solver's dual bound) and a financial breakdown table show
+per-strategy imported/exported energy, charging cost (credit when negative), revenue,
+fees, degradation and physical losses. A lazy four-panel chart links price, grid-side
+power, stored energy and cumulative margin under one cursor and window control, with the
+interval table as the exact text alternative. Hindsight is labelled a benchmark, not a
+forecast. Charts plot approximate numbers; tables and readouts keep stored values.
+Reopening a saved result by link remains NEM-045.

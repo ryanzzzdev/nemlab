@@ -128,6 +128,8 @@ NEM-043 implements the accepted revision after UI review (2026-09-24): center bo
 
 NEM-043 adds a separate typed simulation client for POST submission and UUID-based GET status/result reads. URLs are constructed locally, never followed from response links; cookies/credentials are omitted, redirects rejected, and requests time out after 15 seconds. The form preserves decimal strings, uses fixed-scale BigInt for exact bound comparisons, and checks complete stored prices before submission. The server remains authoritative. A component-owned AbortController cancels monitoring on stop/unmount, with inputs locked while busy and prior job/result cleared on edits. Polling honors bounded Retry-After and pauses after 60 waits; resuming uses the same job ID and POST is never automatically retried. Validated stored result payloads are retained for NEM-044 presentation. Saved-route reopening remains NEM-045.
 
+NEM-044 renders the stored comparison in a `ResultView` section: stat cards, derived explanations, financial breakdown and an exact-value interval table, plus a lazily loaded `ResultCharts` bundle that draws four linked panels (price, grid-side power, stored energy, cumulative margin) with one cursor/window selection, operating-window and negative-price bands, and energy bounds. Displayed totals come from the stored accounting; client-side cumulative margin recomputes the same formula per interval for the trace only. Failed chart chunk loads leave the tables available. Saved-route reopening remains NEM-045.
+
 
 ## Simulation request preparation — NEM-039
 

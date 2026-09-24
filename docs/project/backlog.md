@@ -509,7 +509,7 @@ Refine forms, comparison views, synchronised charts, methodology and shareable r
 
 ### Completion evidence
 
-Split into NEM-042–NEM-045. NEM-042 establishes product layouts and shared appearance; subsequent tasks deliver the real simulation journey. No complete visitor simulation workflow yet.
+Split into NEM-042–NEM-045. NEM-042 established product layouts and shared appearance, NEM-043 the scenario form and lifecycle, and NEM-044 the stored comparison and linked charts. NEM-045 owns the saved-result journey and acceptance review; until then a completed scenario cannot be reopened by link.
 
 <a id="nem-018"></a>
 
@@ -1137,7 +1137,7 @@ Implemented the exact-decimal scenario form, complete-day checks, bounded public
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-043](#nem-043)
 - References: parent [NEM-017](#nem-017), [BatteryLab](features/batterylab.md)
 
@@ -1152,6 +1152,10 @@ Display real fixed/hindsight comparisons, financial breakdown and synchronised p
 - Hindsight is explained as a benchmark, exact values remain available, and no synthetic prototype trace is confused with results.
 - Browser checks cover positive/negative-price cases, strategy comparison and responsive result layouts.
 
+### Completion evidence
+
+Implemented the result section: margin stat cards, derived explanation sentences, financial breakdown and a 288-row interval detail table with exact stored price strings, plus a lazy four-panel ECharts view (price, grid-side power, stored energy, cumulative margin) sharing one cursor, window zoom and slider across desktop and mobile in both themes. Operating windows and negative-price runs are shaded; energy bounds are marked. Cumulative margin mirrors the backend accounting formula and ends at the stored margin. Frontend contract/format/TypeScript/build checks and 76 desktop/mobile Chromium cases pass (10 new: totals/breakdown agreement, shared cursor in light and dark, 320px layout, chart-load failure fallback). Desktop/mobile light and desktop dark screenshots reviewed. A live API/worker/PostgreSQL case now asserts the comparison renders from a worker-produced result. Saved-link reopening remains NEM-045; the lazy ECharts bundle warning and hosted CI gate remain. Committed as `6f3cb60` (frontend); records accompany this update.
+
 <a id="nem-045"></a>
 
 ## NEM-045 — Saved-result journey and BatteryLab acceptance
@@ -1159,7 +1163,7 @@ Display real fixed/hindsight comparisons, financial breakdown and synchronised p
 - Repository: both
 - Milestone: M4
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-044](#nem-044)
 - References: parent [NEM-017](#nem-017), [M4](roadmap.md#m4--batterylab)
 
