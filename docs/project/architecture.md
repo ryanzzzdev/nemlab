@@ -122,6 +122,8 @@ The current landing page needs no backend or credentials. NEM-034 implements pub
 NEM-035 implements the typed public price client and coverage/day table, backed by a versioned contract snapshot and verified against the real Java API. [Decision 013](decisions/013-typed-price-client.md) records client/cache choices and contract ownership. NEM-036 verifies linked charts with lazy-loaded ECharts 6.1.0, SVG rendering, shared interval/window state and native keyboard/touch controls. [Decision 014](decisions/014-linked-chart-prototype.md) records measured limits; the companion trace is explicitly synthetic, not simulation output.
 The backend remains the only owner of project-wide tracking and API contracts.
 
+NEM-042 adds centered BatteryLab/full-width GridReplay layouts and a shared appearance provider. CSS semantic colors and native control color schemes support Light/Dark/Auto, restored before first paint with a same-origin script. ECharts responds to the resolved theme while preserving selected interval/window. Preferences persist locally, sync across tabs and fall back to in-memory state when storage is unavailable. See [decision 018](decisions/018-product-layouts-and-appearance.md).
+
 
 ## Simulation request preparation — NEM-039
 

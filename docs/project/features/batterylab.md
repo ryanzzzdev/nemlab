@@ -5,6 +5,8 @@ Status: Proposed detailed specification; BatteryLab's place before GridReplay is
 
 ## Visitor outcome
 
+Accepted visual direction (2026-09-24): a centered 1160px workspace with a scenario-side column, compact result cards and teal accents, taking the light mock as the reference. Shared Light/Dark/Auto applies to this and the GridReplay page; Auto follows the device. See [decision 018](../decisions/018-product-layouts-and-appearance.md). NEM-042 establishes the layout with existing stored-price exploration; the scenario form and actual comparison remain NEM-043–NEM-045.
+
 Configure a battery for a historical market day and understand its simulated energy-trading margin under a fixed schedule and perfect hindsight. Working audience assumption: energy-curious visitors and employers evaluating the engineering; specialised investment workflows are deferred.
 
 ## First complete journey

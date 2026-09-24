@@ -1,8 +1,8 @@
 # NEMLab backlog
 
-Updated: 2026-09-21
+Updated: 2026-09-24
 
-Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-016 is split into NEM-039–NEM-041; NEM-039–NEM-041 complete NEM-016. Next: refine NEM-017 into focused BatteryLab frontend tasks. Local M4 work proceeds at the user’s direction while the hosted CI gate remains open. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 is split into NEM-042–NEM-045, beginning with product layouts and appearance, followed by the simulation form/lifecycle. Local M4 work proceeds at the user’s direction while the hosted CI gate remains open. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -54,6 +54,10 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-039 — Simulation request contract and validation](#nem-039)
 - [NEM-040 — Durable simulation execution and immutable results](#nem-040)
 - [NEM-041 — Simulation HTTP lifecycle and generated contract](#nem-041)
+- [NEM-042 — Product layouts and shared appearance](#nem-042)
+- [NEM-043 — Battery scenario form and simulation lifecycle](#nem-043)
+- [NEM-044 — Simulation comparison and linked result charts](#nem-044)
+- [NEM-045 — Saved-result journey and BatteryLab acceptance](#nem-045)
 
 
 <a id="nem-001"></a>
@@ -489,7 +493,7 @@ Refined 2026-09-20 during NEM-037. NEM-039 request preparation, NEM-040 durable 
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Ready
+- Status: In progress
 - Depends on: [NEM-015](#nem-015), [NEM-016](#nem-016)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -505,7 +509,7 @@ Refine forms, comparison views, synchronised charts, methodology and shareable r
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Split into NEM-042–NEM-045. NEM-042 establishes product layouts and shared appearance; subsequent tasks deliver the real simulation journey. No complete visitor simulation workflow yet.
 
 <a id="nem-018"></a>
 
@@ -1070,3 +1074,95 @@ Expose bounded scenario submission, job status and immutable result retrieval wi
 ### Completion evidence
 
 Implemented opt-in public submission/status/result endpoints with strict decimal-string JSON, safe DTOs, bounded bodies, durable deduplication and explicit pending/failure states. OpenAPI 1.1.0 and deterministic TypeScript inputs are verified by 94 actual HTTP responses across ten operations. Full backend build passes 150 tests and packaged startup checks. All three child tasks now pass, completing NEM-016. See [evidence](evidence/engine/http-findings.md) and [decision 017](decisions/017-simulation-http-contract.md). Committed as `9395a92` (backend) and `762ef1d` (frontend snapshot). Frontend contract/format/type/build checks and all 40 browser cases pass; the visitor workflow remains NEM-017.
+
+<a id="nem-042"></a>
+
+## NEM-042 — Product layouts and shared appearance
+
+- Repository: frontend
+- Milestone: M4
+- Priority: High
+- Status: Done
+- Depends on: [NEM-015](#nem-015)
+- References: parent [NEM-017](#nem-017), [decision 018](decisions/018-product-layouts-and-appearance.md)
+
+### Outcome
+
+Establish the real app's visual foundation from the accepted mock direction: centered BatteryLab, full-width GridReplay and a shared light/dark/auto preference.
+
+### Done when
+
+- Both product routes retain distinct layouts and accents in both palettes, without presenting mock data as real results.
+- Appearance persists across reload/navigation, follows device changes in Auto, and remains usable with blocked storage.
+- Existing price/chart interactions, keyboard navigation and 320px layouts remain usable; chart appearance changes preserve selection.
+- Frontend checks pass and desktop/mobile screenshots are visually reviewed.
+
+### Completion evidence
+
+Frontend commit `362f1f4` implements mock-inspired product layouts, persistent Light/Dark/Auto appearance, storage fallback/cross-tab updates, and theme-aware charts preserving selection. Contract, formatting, TypeScript, production build and all 46 desktop/mobile Chromium cases pass. Desktop/mobile light BatteryLab, dark GridReplay and dark chart screenshots were visually reviewed, including a corrected mobile heading. The existing lazy ECharts bundle size warning remains. No simulation/replay integration or hosted CI result is implied. Next: NEM-043.
+
+<a id="nem-043"></a>
+
+## NEM-043 — Battery scenario form and simulation lifecycle
+
+- Repository: frontend
+- Milestone: M4
+- Priority: High
+- Status: Ready
+- Depends on: [NEM-042](#nem-042), [NEM-041](#nem-041)
+- References: parent [NEM-017](#nem-017), [request contract](features/simulation-request-contract.md), [HTTP contract](decisions/017-simulation-http-contract.md)
+
+### Outcome
+
+Replace the scenario guide with an accessible real form and connect submission, polling and terminal states to the public API.
+
+### Done when
+
+- All required site, efficiency, cost and ordered-window inputs have units, illustrative defaults and accessible field errors; preserve exact decimal strings and fixed NEM-time semantics.
+- Coverage is checked, invalid/incomplete scenarios are explained, and submissions cannot race or display stale status for a different scenario.
+- A separate bounded simulation client handles queued/running/succeeded/failed, safe validation errors, queue limits and unavailable services without operator capabilities.
+- Browser checks cover validation, deduplicated submissions, cancellation/unmount and lifecycle failures; successful result payload is ready for NEM-044.
+
+<a id="nem-044"></a>
+
+## NEM-044 — Simulation comparison and linked result charts
+
+- Repository: frontend
+- Milestone: M4
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-043](#nem-043)
+- References: parent [NEM-017](#nem-017), [BatteryLab](features/batterylab.md)
+
+### Outcome
+
+Display real fixed/hindsight comparisons, financial breakdown and synchronised price, power, stored-energy and cumulative-margin charts in the accepted layout.
+
+### Done when
+
+- Totals, units, signs, losses and constraints agree with saved backend results and independent accounting fixtures.
+- Four charts share cursor/window controls with keyboard/touch and text/table alternatives in both themes.
+- Hindsight is explained as a benchmark, exact values remain available, and no synthetic prototype trace is confused with results.
+- Browser checks cover positive/negative-price cases, strategy comparison and responsive result layouts.
+
+<a id="nem-045"></a>
+
+## NEM-045 — Saved-result journey and BatteryLab acceptance
+
+- Repository: both
+- Milestone: M4
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-044](#nem-044)
+- References: parent [NEM-017](#nem-017), [M4](roadmap.md#m4--batterylab)
+
+### Outcome
+
+Complete saved-result sharing/reopening, methodology and the end-to-end BatteryLab acceptance review.
+
+### Done when
+
+- Direct links and reloads restore the immutable inputs/results, including after source-price corrections; missing/failed results offer clear recovery.
+- Share actions and navigation preserve scenario meaning and remain keyboard accessible.
+- Full browser journey runs against the real API/worker/PostgreSQL, including unavailable data and failures; accounting/chart agreement is verified.
+- Review all NEM-017 and M4 exit criteria, keeping hosted CI and public launch gates separate.

@@ -47,6 +47,8 @@ The [grid gate](../evidence/oe-validation/grid-gate.md) supports an observation-
 
 A static mock-data page at [docs/demos/gridreplay/index.html](../../demos/gridreplay/index.html) sketches the catalogue, filters, synchronised replay cursor and catalogue→replay→BatteryLab navigation for discussion. It runs a seeded synthetic NSW1 generator with no backend; the detector parameters, thresholds and provisional renewable/ramp definitions shown are illustrative, not accepted definitions, and the page is not a design commitment for NEM-018.
 
+On 2026-09-24 the user selected this mock as the visual reference: full-width layout, compact catalogue/panels and amber accents, with the dark palette as reference. This supersedes the visual-design caveat above, but does not accept the illustrative detector definitions. [Decision 018](../decisions/018-product-layouts-and-appearance.md) adds shared Light/Dark/Auto support; explicit preferences apply consistently across products and Auto follows the device. NEM-042 adds the full-width empty-state shell; catalogue/replay integration remains NEM-018.
+
 ## Public shell implementation
 
 NEM-034 adds a `/gridreplay` overview in the separate frontend, with explicit unfinished-feature
