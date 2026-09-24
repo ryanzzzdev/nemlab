@@ -222,5 +222,6 @@ The backend activation instruction now lives in `nemlab/AGENTS.md`. When the fro
 - Never include API keys, credentials, or unsanitised sensitive responses in project documents or evidence.
 - Update only documents affected by the work. A small task should not require editing every file.
 - Treat documents as durable project memory; reconcile them with code and new evidence rather than assuming they are always current.
+- Known gap (2026-09-20): NEM-009, NEM-011 and NEM-012 completion evidence in `backlog.md` still says "Changes are uncommitted" although that work is committed in earlier history, and `evidence/jobs/findings.md`/`worker-findings.md` carry similar stale notes. Attributing each to its commit needs history archaeology; reconcile them when the records are next touched or when the mapping is checked against `git log`.
 
 If we adopt GitHub Issues/Projects or Linear later, migrate task status and task records there and stop using the Markdown backlog as a second tracker. Retain specifications, architecture, decisions, and operational documentation in Git, linking to the external tasks. Update this guide to make the new ownership explicit.

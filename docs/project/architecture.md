@@ -124,6 +124,10 @@ The backend remains the only owner of project-wide tracking and API contracts.
 
 NEM-042 adds centered BatteryLab/full-width GridReplay layouts and a shared appearance provider. CSS semantic colors and native control color schemes support Light/Dark/Auto, restored before first paint with a same-origin script. ECharts responds to the resolved theme while preserving selected interval/window. Preferences persist locally, sync across tabs and fall back to in-memory state when storage is unavailable. See [decision 018](decisions/018-product-layouts-and-appearance.md).
 
+NEM-043 implements the accepted revision after UI review (2026-09-24): center both product workspaces, cap BatteryLab at 1160px and GridReplay at 1440px, and use the same centered 1160px header/navigation container including gutters. The full-width GridReplay description above records NEM-042 history. Appearance behavior is unchanged.
+
+NEM-043 adds a separate typed simulation client for POST submission and UUID-based GET status/result reads. URLs are constructed locally, never followed from response links; cookies/credentials are omitted, redirects rejected, and requests time out after 15 seconds. The form preserves decimal strings, uses fixed-scale BigInt for exact bound comparisons, and checks complete stored prices before submission. The server remains authoritative. A component-owned AbortController cancels monitoring on stop/unmount, with inputs locked while busy and prior job/result cleared on edits. Polling honors bounded Retry-After and pauses after 60 waits; resuming uses the same job ID and POST is never automatically retried. Validated stored result payloads are retained for NEM-044 presentation. Saved-route reopening remains NEM-045.
+
 
 ## Simulation request preparation — NEM-039
 

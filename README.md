@@ -17,6 +17,7 @@ This is the backend project and the home of shared project documentation. The Ja
 - [GridReplay static demo](docs/demos/gridreplay/index.html) — mocked-data preview of the event catalogue and replay
 - [Admin](docs/project/features/admin.md)
 - [Decision records](docs/project/decisions/)
+- [Running locally](docs/project/running-locally.md)
 - [Documentation workflow](docs/project/documentation-guide.md)
 - [Work journal](docs/project/journal/)
 - [Original project ideas](docs/initial-ideas/nemlab-project-ideas.md)

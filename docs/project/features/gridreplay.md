@@ -51,6 +51,8 @@ On 2026-09-24 the user selected this mock as the visual reference: full-width la
 
 ## Public shell implementation
 
+NEM-043 implements the accepted layout revision after reviewing the real pages (2026-09-24): GridReplay uses a centered workspace capped at 1440px, with the same centered header/navigation as BatteryLab and consistent responsive gutters. This supersedes the full-width choice above; the mock's panel style, amber accents and theme support remain. See [decision 018](../decisions/018-product-layouts-and-appearance.md).
+
 NEM-034 adds a `/gridreplay` overview in the separate frontend, with explicit unfinished-feature
 copy and a methodology link. It contains no data, controls or calculated results. The
 full product journey and acceptance criteria above remain future work.

@@ -11,6 +11,8 @@ Configure a battery for a historical market day and understand its simulated ene
 
 ## First complete journey
 
+NEM-043 implements the accepted layout revision after UI review: BatteryLab keeps its 1160px centered workspace, both products share aligned header/navigation, and GridReplay is centered with a wider 1440px cap. See [decision 018](../decisions/018-product-layouts-and-appearance.md).
+
 Choose an available region/day, adjust site inputs, submit the scenario, follow job status, and compare results. Inspect price, charging/discharging power, stored energy and cumulative margin with a shared cursor. Open the financial breakdown and methodology, then share a link that reproduces the saved inputs/results.
 
 Use a curated example to make the first result understandable without configuring every advanced field. Illustrative defaults are in the engine contract; final launch presets and initial dates remain UI/coverage choices; do not turn illustrative values into recommended real-world assumptions.
@@ -64,6 +66,8 @@ copy and a methodology link. It contains no data, controls or calculated results
 full product journey and acceptance criteria above remain future work.
 
 ## Stored-price exploration implementation
+
+NEM-043 adds a real aggregate-site scenario form alongside the separate price explorer. It offers round-trip or separate-leg efficiency, exact decimal costs/energy/power, ordered five-minute windows including 24:00, field validation and complete-day coverage checks. Submission progresses through queued/running/succeeded/failed states and retrieves the stored result. Inputs stay locked during monitoring; stop/resume affects browser checking only. Editing inputs clears stale progress/results. Equivalent submissions reuse terminal jobs, including failed jobs. Detailed comparison/charts and saved-link reopening remain NEM-044–NEM-045. A disconnected API produces a clear error, not synthetic results.
 
 NEM-035 adds a bounded region/completed-day price view to the BatteryLab page. It reads
 coverage before loading the 288 intervals, preserves exact decimal strings and gap states,

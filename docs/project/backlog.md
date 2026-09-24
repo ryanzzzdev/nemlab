@@ -1108,7 +1108,7 @@ Frontend commit `362f1f4` implements mock-inspired product layouts, persistent L
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-042](#nem-042), [NEM-041](#nem-041)
 - References: parent [NEM-017](#nem-017), [request contract](features/simulation-request-contract.md), [HTTP contract](decisions/017-simulation-http-contract.md)
 
@@ -1116,12 +1116,19 @@ Frontend commit `362f1f4` implements mock-inspired product layouts, persistent L
 
 Replace the scenario guide with an accessible real form and connect submission, polling and terminal states to the public API.
 
+Also applies the accepted centered-layout revision in [decision 018](decisions/018-product-layouts-and-appearance.md): BatteryLab capped at 1160px, GridReplay at 1440px, with the same centered header/navigation and responsive gutters. This follow-up supersedes NEM-042's full-width GridReplay choice without changing its historical completion evidence.
+
 ### Done when
 
+- Verify centered workspace caps and consistent header alignment at wide desktop widths; both routes remain usable at 320px and in both themes. Update the existing full-width browser expectation and review screenshots.
 - All required site, efficiency, cost and ordered-window inputs have units, illustrative defaults and accessible field errors; preserve exact decimal strings and fixed NEM-time semantics.
 - Coverage is checked, invalid/incomplete scenarios are explained, and submissions cannot race or display stale status for a different scenario.
 - A separate bounded simulation client handles queued/running/succeeded/failed, safe validation errors, queue limits and unavailable services without operator capabilities.
 - Browser checks cover validation, deduplicated submissions, cancellation/unmount and lifecycle failures; successful result payload is ready for NEM-044.
+
+### Completion evidence
+
+Implemented the exact-decimal scenario form, complete-day checks, bounded public simulation client and queued/running/terminal lifecycle with stop/resume and stale-state clearing. Both products now use the accepted centered layouts. Frontend contract/format/TypeScript/build checks and 66 desktop/mobile Chromium cases pass. Four additional browser cases pass against a disposable PostgreSQL database and real API/worker, including worker-produced result retrieval and terminal deduplication. Desktop/mobile screenshots reviewed. Detailed comparison/charts remain NEM-044; saved-link reopening remains NEM-045. The existing lazy ECharts bundle warning and hosted CI gate remain. Implementation and documentation are pending local commit.
 
 <a id="nem-044"></a>
 
@@ -1130,7 +1137,7 @@ Replace the scenario guide with an accessible real form and connect submission, 
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-043](#nem-043)
 - References: parent [NEM-017](#nem-017), [BatteryLab](features/batterylab.md)
 
