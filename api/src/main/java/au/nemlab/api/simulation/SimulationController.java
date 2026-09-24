@@ -2,6 +2,7 @@ package au.nemlab.api.simulation;
 
 import au.nemlab.batterylab.*;
 import au.nemlab.infrastructure.batterylab.*;
+import au.nemlab.infrastructure.jobs.RefreshJobService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.*;
@@ -15,8 +16,12 @@ import java.util.*;
 @RequestMapping("/api/v1/simulations")
 public class SimulationController {
     private final SimulationJobs jobs;
+    private final RefreshJobService refreshes;
 
-    public SimulationController(SimulationJobs jobs) { this.jobs = jobs; }
+    public SimulationController(SimulationJobs jobs, RefreshJobService refreshes) {
+        this.jobs = jobs;
+        this.refreshes = refreshes;
+    }
 
     public record JobResponse(UUID id, SimulationJobs.Status status, int attempts, String failureCode,
             String statusUrl, String resultUrl) { }
@@ -35,7 +40,18 @@ public class SimulationController {
             throw new UnsupportedContent();
         byte[] body = request.getInputStream().readNBytes(16_385);
         if (body.length > 16_384) throw new TooLarge();
-        UUID id = jobs.submit(SimulationJson.parse(body));
+        SimulationRequest parsed = SimulationJson.parse(body);
+        UUID id;
+        try {
+            id = jobs.submit(parsed);
+        } catch (SimulationRequest.Invalid invalid) {
+            // A coverage failure means the day itself is valid but unfetched; eligible days
+            // trigger a bounded, deduplicated visitor refresh rather than a dead end.
+            if (!invalid.code().equals("PRICE_DAY_UNAVAILABLE") && !invalid.code().equals("PRICE_DAY_INCOMPLETE"))
+                throw invalid;
+            refreshes.submitVisitor(parsed.region(), parsed.day());
+            throw new PendingData();
+        }
         var job = jobs.find(id).orElseThrow(NotFound::new);
         boolean pending = job.status() == SimulationJobs.Status.QUEUED || job.status() == SimulationJobs.Status.RUNNING;
         var response = ResponseEntity.status(pending ? 202 : 200).cacheControl(CacheControl.noStore())
@@ -102,4 +118,5 @@ public class SimulationController {
     static final class Failed extends RuntimeException { }
     static final class TooLarge extends RuntimeException { }
     static final class UnsupportedContent extends RuntimeException { }
+    static final class PendingData extends RuntimeException { }
 }

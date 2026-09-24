@@ -3,6 +3,8 @@ package au.nemlab.api.simulation;
 import au.nemlab.api.ContractCapture;
 import au.nemlab.batterylab.*;
 import au.nemlab.infrastructure.batterylab.SimulationJobs;
+import au.nemlab.infrastructure.jobs.RefreshJob;
+import au.nemlab.infrastructure.jobs.RefreshJobService;
 import au.nemlab.infrastructure.prices.*;
 import org.junit.jupiter.api.*;
 import org.postgresql.ds.PGSimpleDataSource;
@@ -33,6 +35,7 @@ class SimulationHttpTest {
     static final PostgreSQLContainer POSTGRES = start();
     @LocalServerPort int port;
     @Autowired SimulationJobs jobs;
+    @Autowired RefreshJobService refreshes;
     @Autowired PriceStore prices;
     @Autowired DataSource source;
 
@@ -143,16 +146,68 @@ class SimulationHttpTest {
     }
 
     @Test
-    void missingAndIncompletePricesDoNotTriggerIngestion() throws Exception {
-        assertEquals("PRICE_DAY_UNAVAILABLE", json(call("POST", PATH, body())).get("code").asString());
-        for (var kind : List.of(PriceBatch.Kind.MISSING, PriceBatch.Kind.SOURCE_NULL)) {
-            save("-30", kind, AT);
-            var response = call("POST", PATH, body());
-            assertEquals(409, response.statusCode());
-            assertEquals("PRICE_DAY_INCOMPLETE", json(response).get("code").asString());
-        }
+    void eligibleDaysWithoutStoredPricesEnqueueOneVisitorRefresh() throws Exception {
+        var pending = call("POST", PATH, body());
+        assertEquals(409, pending.statusCode());
+        assertEquals("PRICE_REFRESH_PENDING", json(pending).get("code").asString());
+        assertEquals("30", pending.headers().firstValue("Retry-After").orElseThrow());
+        assertEquals(1, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+        assertEquals("visitor-price-v1:NSW1:2023-10-01", new JdbcTemplate(source)
+                .queryForObject("SELECT request_key FROM refresh_request", String.class));
+        // Repeated submissions deduplicate onto the same active job.
+        assertEquals("PRICE_REFRESH_PENDING", json(call("POST", PATH, body())).get("code").asString());
+        assertEquals(1, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
         assertEquals(0, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM simulation_job", Integer.class));
-        assertEquals(0, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+        // Once the fetch commits a complete revision the submission proceeds normally.
+        RefreshJob claim = refreshes.claim().orElseThrow();
+        refreshes.complete(claim.id(), claim.claimToken(), fetch(DAY));
+        var submitted = call("POST", PATH, body());
+        assertEquals(202, submitted.statusCode());
+        assertEquals(1, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM simulation_job", Integer.class));
+    }
+
+    @Test
+    void incompleteDaysAlsoTriggerRefreshButIneligibleDaysNeverDo() throws Exception {
+        save("-30", PriceBatch.Kind.MISSING, AT);
+        var pending = call("POST", PATH, body());
+        assertEquals(409, pending.statusCode());
+        assertEquals("PRICE_REFRESH_PENDING", json(pending).get("code").asString());
+        assertEquals(1, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+        for (String bad : List.of("2020-01-01", "2200-01-01")) {
+            var response = call("POST", PATH, body().replace("2023-10-01", bad));
+            assertEquals(400, response.statusCode());
+            assertEquals("INVALID_REQUEST", json(response).get("code").asString());
+        }
+        assertEquals(1, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+    }
+
+    @Test
+    void visitorRefreshesRetryAfterFailureThenReportExhaustion() throws Exception {
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            assertEquals("PRICE_REFRESH_PENDING", json(call("POST", PATH, body())).get("code").asString());
+            RefreshJob claim = refreshes.claim().orElseThrow();
+            refreshes.failPermanently(claim.id(), claim.claimToken(), "HTTP_401");
+            assertEquals(attempt, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+        }
+        var exhausted = call("POST", PATH, body());
+        assertEquals(409, exhausted.statusCode());
+        assertEquals("PRICE_REFRESH_FAILED", json(exhausted).get("code").asString());
+        assertEquals(3, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+        assertEquals(0, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM simulation_job", Integer.class));
+    }
+
+    @Test
+    void visitorFetchesCannotSaturateTheSharedQueue() throws Exception {
+        for (int i = 1; i <= 10; i++) {
+            var response = call("POST", PATH, body().replace("2023-10-01", "2023-10-" + String.format("%02d", i)));
+            assertEquals("PRICE_REFRESH_PENDING", json(response).get("code").asString());
+        }
+        assertEquals(10, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
+        var limited = call("POST", PATH, body().replace("2023-10-01", "2023-10-15"));
+        assertEquals(429, limited.statusCode());
+        assertEquals("VISITOR_REFRESH_LIMIT", json(limited).get("code").asString());
+        assertEquals("60", limited.headers().firstValue("Retry-After").orElseThrow());
+        assertEquals(10, new JdbcTemplate(source).queryForObject("SELECT count(*) FROM refresh_job", Integer.class));
     }
 
     @Test
@@ -217,6 +272,13 @@ class SimulationHttpTest {
     void complete(SimulationJobs.Job claim) {
         var input = jobs.input(claim.id());
         jobs.complete(claim.id(), claim.token(), SimulationComparison.run(input.parameters(), input.prices(), input.versions().limits()));
+    }
+
+    static PriceSource.Fetch fetch(LocalDate day) {
+        var slots = new ArrayList<>(Collections.nCopies(288,
+                new PriceBatch.Slot(PriceBatch.Kind.VALUE, BigDecimal.ONE)));
+        return new PriceSource.Fetch(new PriceBatch(PriceDay.Region.NSW1, day, slots),
+                AT, PriceBatch.hash("visitor-fetch"), "test");
     }
 
     void save(String first, PriceBatch.Kind gap, Instant at) {

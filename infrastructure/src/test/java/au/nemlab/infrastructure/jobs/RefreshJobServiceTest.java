@@ -273,6 +273,52 @@ class RefreshJobServiceTest {
         assertEquals(100, count("price_backfill"));
     }
 
+    @Test
+    void visitorRequestsDeduplicateOntoAnyActiveJobForTheDay() {
+        UUID scheduled = jobs.submit("daily-price-v1:" + REGION + ":" + DAY, REGION, DAY, "scheduler");
+        assertEquals(scheduled, jobs.submitVisitor(REGION, DAY));
+        assertEquals(scheduled, jobs.submitVisitor(REGION, DAY));
+        assertEquals(1, count("refresh_job"));
+        // Visitor interest is recorded once against the existing job alongside the scheduler key.
+        assertEquals(2, count("refresh_request"));
+    }
+
+    @Test
+    void visitorRequestsRetryTerminalJobsThenExhaust() {
+        UUID first = jobs.submitVisitor(REGION, DAY);
+        RefreshJob firstClaim = jobs.claim().orElseThrow();
+        jobs.complete(first, firstClaim.claimToken(), sample(false));
+        assertEquals(RefreshJob.Status.SUCCEEDED, jobs.find(first).orElseThrow().status());
+        // A later request for a day whose coverage vanished starts a fresh job under a new key.
+        jdbc.execute("DELETE FROM price_current");
+        UUID second = jobs.submitVisitor(REGION, DAY);
+        assertNotEquals(first, second);
+        RefreshJob secondClaim = jobs.claim().orElseThrow();
+        jobs.failPermanently(second, secondClaim.claimToken(), "HTTP_401");
+        UUID third = jobs.submitVisitor(REGION, DAY);
+        assertNotEquals(second, third);
+        RefreshJob thirdClaim = jobs.claim().orElseThrow();
+        jobs.failPermanently(third, thirdClaim.claimToken(), "HTTP_401");
+        // Three visitor attempts per day bound the re-request path.
+        assertThrows(RefreshJobService.RefreshAttemptsExhausted.class,
+                () -> jobs.submitVisitor(REGION, DAY));
+        assertEquals(3, count("refresh_job"));
+    }
+
+    @Test
+    void visitorPendingCapIsSeparateFromTheSharedQueue() {
+        for (int index = 0; index < 10; index++) {
+            jobs.submitVisitor(REGION, DAY.plusDays(index));
+        }
+        assertThrows(RefreshJobService.VisitorLimited.class,
+                () -> jobs.submitVisitor(REGION, DAY.plusDays(10)));
+        assertEquals(10, count("refresh_job"));
+        // Operator and scheduler submissions still share the wider 100-job bound.
+        UUID operator = jobs.submit("operator-day", REGION, DAY.plusDays(11), "operator-alice");
+        assertNotNull(operator);
+        assertEquals(11, count("refresh_job"));
+    }
+
     private static PriceSource.Fetch sample(boolean incomplete) {
         var slots = new ArrayList<>(Collections.nCopies(288,
                 new PriceBatch.Slot(PriceBatch.Kind.VALUE, new BigDecimal("42.5"))));

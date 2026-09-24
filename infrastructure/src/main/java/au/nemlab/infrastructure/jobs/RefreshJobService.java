@@ -24,6 +24,10 @@ public class RefreshJobService {
     private static final int MAX_PENDING_JOBS = 100;
     private static final int MAX_ATTEMPTS = 3;
     private static final int LEASE_SECONDS = 300;
+    /** Anonymous fetches stay a minority of the shared queue and retry a bounded number of times per day. */
+    private static final int MAX_VISITOR_PENDING = 10;
+    private static final int MAX_VISITOR_ATTEMPTS = 3;
+    private static final String VISITOR_KEY_PREFIX = "visitor-price-v1:";
 
     // Serialises short queue transitions across processes, not network requests.
     private static final long QUEUE_LOCK = 735_028L;
@@ -72,10 +76,7 @@ public class RefreshJobService {
             return job.id();
         }
 
-        Optional<RefreshJob> active = jdbc.query("""
-                SELECT * FROM refresh_job
-                WHERE region = ? AND market_day = ? AND status IN ('QUEUED', 'RUNNING')
-                """, JOB_MAPPER, region.name(), day).stream().findFirst();
+        Optional<RefreshJob> active = activeFor(region, day);
         UUID jobId;
         if (active.isPresent()) {
             jobId = active.get().id();
@@ -96,6 +97,53 @@ public class RefreshJobService {
         jdbc.update("INSERT INTO refresh_request(request_key, job_id) VALUES (?, ?)", requestKey, jobId);
         event(jobId, actor, active.isPresent() ? "DEDUPLICATED" : "SUBMITTED", null);
         return jobId;
+    }
+
+    /**
+     * Enqueue a price fetch triggered by an anonymous visitor submission. Keys are
+     * deterministic per region/day, so repeat polls deduplicate onto any active job
+     * regardless of origin. After a terminal outcome the next request starts a fresh
+     * job under a suffixed key, up to MAX_VISITOR_ATTEMPTS per day.
+     */
+    public UUID submitVisitor(PriceDay.Region region, LocalDate day) {
+        if (region == null || day == null) {
+            throw new IllegalArgumentException("Region and completed market day are required");
+        }
+        String base = VISITOR_KEY_PREFIX + region + ":" + day;
+        lockQueue();
+        int used = jdbc.queryForObject(
+                "SELECT count(*) FROM refresh_request WHERE request_key LIKE ?",
+                Integer.class, base + "%");
+        Optional<RefreshJob> active = activeFor(region, day);
+        if (used == 0) {
+            if (active.isEmpty()) checkVisitorPending();
+            return submit(base, region, day, "visitor");
+        }
+        if (active.isPresent()) {
+            event(active.get().id(), "visitor", "DUPLICATE_REQUEST", null);
+            return active.get().id();
+        }
+        if (used >= MAX_VISITOR_ATTEMPTS) throw new RefreshAttemptsExhausted();
+        checkVisitorPending();
+        return submit(base + ":r" + (used + 1), region, day, "visitor");
+    }
+
+    private Optional<RefreshJob> activeFor(PriceDay.Region region, LocalDate day) {
+        return jdbc.query("""
+                SELECT * FROM refresh_job
+                WHERE region = ? AND market_day = ? AND status IN ('QUEUED', 'RUNNING')
+                """, JOB_MAPPER, region.name(), day).stream().findFirst();
+    }
+
+    private void checkVisitorPending() {
+        Integer pending = jdbc.queryForObject("""
+                SELECT count(DISTINCT job.id) FROM refresh_job job
+                JOIN refresh_request request ON request.job_id = job.id
+                WHERE job.status IN ('QUEUED', 'RUNNING') AND request.request_key LIKE ?
+                """, Integer.class, VISITOR_KEY_PREFIX + "%");
+        if (pending != null && pending >= MAX_VISITOR_PENDING) {
+            throw new VisitorLimited();
+        }
     }
 
     /** Initially permits one running ingestion globally, including multiple worker processes. */
@@ -234,6 +282,18 @@ public class RefreshJobService {
     public static class QueueFull extends IllegalStateException {
         public QueueFull() {
             super("Refresh queue is full; wait for existing jobs");
+        }
+    }
+
+    public static class VisitorLimited extends IllegalStateException {
+        public VisitorLimited() {
+            super("Too many visitor-triggered fetches are pending");
+        }
+    }
+
+    public static class RefreshAttemptsExhausted extends IllegalStateException {
+        public RefreshAttemptsExhausted() {
+            super("Visitor-triggered fetches for this day have been exhausted");
         }
     }
 

@@ -2,6 +2,7 @@ package au.nemlab.api.simulation;
 
 import au.nemlab.batterylab.SimulationRequest;
 import au.nemlab.infrastructure.batterylab.SimulationJobs;
+import au.nemlab.infrastructure.jobs.RefreshJobService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.*;
@@ -27,10 +28,27 @@ public class SimulationErrors {
         return error(400, "INVALID_REQUEST", "Use the documented JSON fields and identifiers", "request", "INVALID_FORMAT");
     }
 
-    @ExceptionHandler(SimulationJobs.QueueFull.class)
+    @ExceptionHandler({SimulationJobs.QueueFull.class, RefreshJobService.QueueFull.class})
     public ResponseEntity<Error> full() {
         return ResponseEntity.status(429).cacheControl(CacheControl.noStore()).header("Retry-After", "5")
                 .body(new Error("QUEUE_FULL", "Wait for pending simulations to finish", "request", "QUEUE_FULL"));
+    }
+
+    @ExceptionHandler(SimulationController.PendingData.class)
+    public ResponseEntity<Error> pendingData() {
+        return ResponseEntity.status(409).cacheControl(CacheControl.noStore()).header("Retry-After", "30")
+                .body(new Error("PRICE_REFRESH_PENDING", "Stored prices for this day are being fetched", "day", "PRICE_REFRESH_PENDING"));
+    }
+
+    @ExceptionHandler(RefreshJobService.RefreshAttemptsExhausted.class)
+    public ResponseEntity<Error> refreshExhausted() {
+        return error(409, "PRICE_REFRESH_FAILED", "Stored prices could not be fetched for this day; try again later", "day", "PRICE_REFRESH_FAILED");
+    }
+
+    @ExceptionHandler(RefreshJobService.VisitorLimited.class)
+    public ResponseEntity<Error> visitorLimited() {
+        return ResponseEntity.status(429).cacheControl(CacheControl.noStore()).header("Retry-After", "60")
+                .body(new Error("VISITOR_REFRESH_LIMIT", "Too many price fetches are pending", "request", "VISITOR_REFRESH_LIMIT"));
     }
 
     @ExceptionHandler(SimulationController.NotFound.class)
