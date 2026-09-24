@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-045: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts and the saved-result journey; M4’s original local exit criteria are met, but NEM-046 adds visitor-triggered price refresh as agreed BatteryLab scope, so M4 is in progress again until it lands. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
+Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-046: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts, the saved-result journey and visitor-triggered price refresh; M4’s local exit criteria are met. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
@@ -510,7 +510,7 @@ Refine forms, comparison views, synchronised charts, methodology and shareable r
 
 ### Completion evidence
 
-Delivered as NEM-042–NEM-045. NEM-042 established product layouts and shared appearance, NEM-043 the scenario form and lifecycle, NEM-044 the stored comparison and linked charts, and NEM-045 the saved-result journey and acceptance review. A visitor configures an exact scenario, follows job progress, inspects both strategies with clear units and financial breakdown, copies a result link and reopens the identical immutable result — including after reload. All 84 desktop/mobile Chromium cases and 6 live API/worker/PostgreSQL cases pass; chart values and totals agree with stored backend accounting. See [NEM-045](#nem-045) evidence for the acceptance review.
+Delivered as NEM-042–NEM-046. NEM-042 established product layouts and shared appearance, NEM-043 the scenario form and lifecycle, NEM-044 the stored comparison and linked charts, NEM-045 the saved-result journey and acceptance review, and NEM-046 visitor-triggered price refresh for eligible uncovered days. A visitor configures an exact scenario, follows job progress, inspects both strategies with clear units and financial breakdown, copies a result link and reopens the identical immutable result — including after reload. All 88 desktop/mobile Chromium cases and 6 live API/worker/PostgreSQL cases pass; chart values and totals agree with stored backend accounting. See [NEM-045](#nem-045) and [NEM-046](#nem-046) evidence for the acceptance review.
 
 <a id="nem-018"></a>
 
@@ -1190,7 +1190,7 @@ Implemented `/batterylab?simulation=<uuid>` reopening: a stored result writes it
 - Repository: both
 - Milestone: M4
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: None
 - References: parents [NEM-016](#nem-016) and [NEM-017](#nem-017), [durable queue decision](decisions/009-durable-refresh-queue.md), [HTTP contract decision](decisions/017-simulation-http-contract.md)
 
@@ -1209,8 +1209,8 @@ When a visitor submits a scenario for an eligible market day that lacks a comple
 
 ### Completion evidence
 
-Not yet implemented.
+Implemented end to end. `RefreshJobService.submitVisitor` enqueues under deterministic `visitor-price-v1:REGION:DAY` keys with `:rN` retry suffixes, deduplicates onto any active job for the day (scheduled, operator or visitor), allows at most three visitor attempts per day and ten pending visitor jobs globally; the shared 100-job cap still bounds the whole queue. `SimulationController` converts eligible-day coverage failures (`PRICE_DAY_*`, which imply a normalised eligible day) into 409 `PRICE_REFRESH_PENDING` with `Retry-After: 30`; per-day exhaustion maps to 409 `PRICE_REFRESH_FAILED`, the visitor cap to 429 `VISITOR_REFRESH_LIMIT` with `Retry-After: 60`. Ineligible days still fail validation (400) without enqueueing. The contract is 1.2.0; `PRICE_DAY_UNAVAILABLE`/`PRICE_DAY_INCOMPLETE` are removed as unreachable. The frontend dropped its coverage pre-check — POST is the trigger — and retries pending/limited submissions after `Retry-After` up to a bounded attempt count, then pauses with an explicit resumable message; `PRICE_REFRESH_FAILED` is terminal and flags the day input. Backend Testcontainers suites cover dedup onto scheduled jobs, retry-suffix re-requests, both caps and HTTP mappings; 88 desktop/mobile Chromium cases pass including pending-fetch, terminal-failure and saturated-queue paths. Six live cases pass against disposable PostgreSQL with the real API and worker: an incomplete day drove real claim→fetch cycles whose placeholder OE credential failed permanently, and the browser reached the explicit terminal state after three bounded attempts (~90 s of `Retry-After` waits). A visitor fetch succeeding against real OE remains unexercised — the harness holds no live credential — but the claim/commit path is the one already proven for scheduled and operator jobs. Committed as `cf4d63b` (backend) and `6dd3478` (frontend); records accompany this update.
 
 ### Notes
 
-Agreed with the user on 2026-09-24 and required before BatteryLab/M4 is treated as done; the milestone record reflects the reopened scope. The rejected alternative is a synchronous OE fetch inside the API request: it would hold a credential the API deliberately lacks, cannot fit fetch latency/retries inside a request, and loses crash-safe dedup. Open implementation choices: the visitor request-key namespace, the concrete abuse limit, and how a terminal visitor-triggered job admits a later retry (a fresh key or an explicit reset). Reusing the durable queue keeps provider calls inside the existing bounded claim/fetch/commit path.
+Agreed with the user on 2026-09-24 and required before BatteryLab/M4 is treated as done; the milestone record reflects the reopened scope. The rejected alternative is a synchronous OE fetch inside the API request: it would hold a credential the API deliberately lacks, cannot fit fetch latency/retries inside a request, and loses crash-safe dedup. Implemented choices: the `visitor-price-v1:` request-key namespace with `:rN` retry suffixes, three visitor attempts per day, ten pending visitor jobs globally, and `Retry-After`-paced automatic resubmission (20 pending / 10 limited attempts) before pausing. Reusing the durable queue keeps provider calls inside the existing bounded claim/fetch/commit path.

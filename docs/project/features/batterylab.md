@@ -45,7 +45,7 @@ Use common windows for an equal-constraint comparison. If also showing unrestric
 
 Persist normalised inputs, exact price snapshot, model/strategy versions, solver termination status, interval dispatch/energy, revenue, charging cost/credit, fees, degradation and total margin. Report energy losses as a physical quantity. Explanations must be derived from computed limits and timing.
 
-UI states: invalid input; unavailable coverage; queued; running; complete; failed/timed out; missing or expired shared result. Long work is asynchronous; retries must not create uncontrolled duplicate jobs. Public run limits and retention are set before launch.
+UI states: invalid input; fetching prices for an uncovered day; queued; running; complete; failed/timed out; fetch exhausted or fetch queue saturated; missing or expired shared result. Long work is asynchronous; retries must not create uncontrolled duplicate jobs. Public run limits and retention are set before launch.
 
 Assume a price-taking wholesale battery. Exclude capital/finance costs, contracts, detailed losses/network charging, FCAS and household tariffs. Results are simulated energy-trading margin, not investment return or actual facility revenue.
 
@@ -75,11 +75,12 @@ and displays source, units and revision metadata. Loading, unavailable coverage 
 errors are explicit. This read-only view neither imports data nor runs the battery engine;
 the simulator and chart journey remain future work.
 
-NEM-046 (scoped, not yet implemented) changes missing-coverage behaviour for the simulator:
+NEM-046 changes missing-coverage behaviour for the simulator:
 an eligible submitted day without a complete stored revision enqueues a deduplicated price
-refresh and returns a pending-data state that resumes the lifecycle once the day arrives,
-rather than ending at unavailable coverage. Ineligible days keep the explicit rejection;
-the visitor-triggered abuse limit is decided within the task.
+refresh (`visitor-price-v1:REGION:DAY` keys, three attempts per day, ten pending visitor
+jobs globally) and returns `PRICE_REFRESH_PENDING`; the browser resubmits the unchanged
+scenario after each `Retry-After` until coverage arrives, the queue cap pauses, or
+`PRICE_REFRESH_FAILED` reports exhaustion. Ineligible days keep the explicit rejection.
 
 ## Chart interaction proof
 
