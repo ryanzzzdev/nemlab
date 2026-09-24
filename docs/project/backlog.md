@@ -1128,7 +1128,7 @@ Also applies the accepted centered-layout revision in [decision 018](decisions/0
 
 ### Completion evidence
 
-Implemented the exact-decimal scenario form, complete-day checks, bounded public simulation client and queued/running/terminal lifecycle with stop/resume and stale-state clearing. Both products now use the accepted centered layouts. Frontend contract/format/TypeScript/build checks and 66 desktop/mobile Chromium cases pass. Four additional browser cases pass against a disposable PostgreSQL database and real API/worker, including worker-produced result retrieval and terminal deduplication. Desktop/mobile screenshots reviewed. Detailed comparison/charts remain NEM-044; saved-link reopening remains NEM-045. The existing lazy ECharts bundle warning and hosted CI gate remain. Implementation and documentation are pending local commit.
+Implemented the exact-decimal scenario form, complete-day checks, bounded public simulation client and queued/running/terminal lifecycle with stop/resume and stale-state clearing. Both products now use the accepted centered layouts. Frontend contract/format/TypeScript/build checks and 66 desktop/mobile Chromium cases pass. Four additional browser cases pass against a disposable PostgreSQL database and real API/worker, including worker-produced result retrieval and terminal deduplication. Desktop/mobile screenshots reviewed. Detailed comparison/charts remain NEM-044; saved-link reopening remains NEM-045. The existing lazy ECharts bundle warning and hosted CI gate remain. Committed as `81af319` (frontend implementation) and `f8ff41e` (records); `2d5cd08` corrects a focus race found when the browser suite was re-run before committing.
 
 <a id="nem-044"></a>
 
