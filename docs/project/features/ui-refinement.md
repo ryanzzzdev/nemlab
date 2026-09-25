@@ -61,3 +61,14 @@ Verification must cover fresh three-strategy runs, explicit conversion of old tw
 - Verify desktop, 320px/mobile and both themes; keyboard disclosure behavior; automatic chart rendering on fresh and reopened results; synchronized chart controls; loading/chunk failures; exact-table access; incomplete/missing price days; and unchanged saved-result accounting and price-refresh behavior.
 - Review the demo and real-page screenshots side by side at matched desktop/mobile widths. Check field grouping/density, button positions, metadata placement, panel consistency and chart integration, as well as hierarchy and chart prominence. Document intentional differences required by the newer instructions or accessibility. Keep the financial table compact enough that it does not dominate the result column above the charts.
 - These are post-M4 UX refinements. Preserve historical acceptance evidence; do not reopen backend correctness work or imply hosted CI/public launch completion.
+
+
+## Visual polish after three-strategy delivery — NEM-053
+
+Implemented following the user's request for computer-use UI polishing. Keep the demo's paired power/connection inputs: capacity on its own row, then charge/discharge, then import/export. Shared variable costs precede schedule and threshold settings. New-scenario empty states introduce all three strategies.
+
+Use slate, violet and teal accents consistently for the three primary strategy summary cards, with one desktop row and compact stacked mobile rows. Present hindsight advantage and hindsight energy loss as secondary metrics, explicitly naming their scope. Explanations and collapsed disclosures use the same card surface as the form and charts. Simulation status/identity/sharing remains beneath Run.
+
+Render grid-side power as five-minute charging/discharging bars, matching the demo and keeping isolated trades visible. Preserve shared interval coordinates when zooming; bar-specific automatic axis padding must not shift the cursor relative to the price, energy and margin panels. A strategy that imports or exports no energy has no average price for that side: omit that average instead of showing NaN. Financial breakdown remains above the always-visible result charts; interval detail and methodology remain collapsed.
+
+Verification: full frontend check passes 100 browser cases; real local result and demo reviewed through computer use, including both themes and a 390px viewport. See [NEM-053](../backlog.md#nem-053).

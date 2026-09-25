@@ -8,11 +8,12 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
-- [NEM-052 — Make price thresholds a default third strategy](#nem-052) — next BatteryLab UX follow-up; planned only.
+- [NEM-053 — Polish BatteryLab presentation against the demo](#nem-053)
+- [NEM-052 — Make price thresholds a default third strategy](#nem-052)
 
 Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
 
-After those refinements, the optional [price-threshold experiment](features/price-threshold-strategy.md) is planned as NEM-049–NEM-051. Commercial-grade market realism is explicitly outside its scope.
+The [price-threshold strategy](features/price-threshold-strategy.md) was delivered through NEM-049–NEM-051 and promoted to a default third strategy in NEM-052. Commercial-grade market realism is explicitly outside its scope.
 
 - [NEM-049 — Implement the price-threshold engine](#nem-049)
 - [NEM-050 — Persist and expose threshold experiments](#nem-050)
@@ -1392,3 +1393,32 @@ Present Fixed schedule, Price thresholds and Perfect hindsight as three default 
 ### Completion evidence
 
 Implemented in frontend `5d4a82c` (NEM-051 shipped thresholds as opt-in; this task removed the opt-in). New scenarios submit `thresholds` unconditionally — the checkbox is gone, both fields are always visible with illustrative defaults (30/150) and the same signed-decimal/ordering validation. The form separates shared settings, "Schedule windows — fixed schedule and hindsight only", and "Price thresholds — all-day rule" with the ending-energy caveat beside the fields. Strategy naming is aligned ("Fixed schedule" / "Price thresholds" / "Perfect hindsight") across stat cards, breakdown and interval columns, legends and the power-panel selector, and the threshold card sits with the other strategy cards. Old two-strategy saved results reopen unchanged with empty threshold fields and an explicit "Compare all three" action that fills the illustrative defaults, detaches the link and preserves the stored result — nothing is fabricated or silently rerun. The API still accepts optional thresholds; no engine or contract change. `npm run check` passed 98/98 (default submission, validation, old-result conversion, saved links, themes, narrow screens); `npm run test:live` passed 6/6 with the real worker producing a three-strategy result; screenshots reviewed in both themes.
+
+
+<a id="nem-053"></a>
+
+## NEM-053 — Polish BatteryLab presentation against the demo
+
+- Repository: frontend
+- Milestone: Post-M4 UX refinement
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-052](#nem-052)
+- References: [UI refinement plan](features/ui-refinement.md)
+
+### Outcome
+
+Polish the implemented three-strategy page through computer-use review of the live page and static demo, preserving the simulation workflow.
+
+### Done when
+
+- All three strategies appear in the empty state and as equally prominent result summaries; supporting metrics are visually secondary.
+- Form pairs and panel styling follow the demo, with shared inputs preceding strategy settings.
+- Power charts show isolated five-minute trades and retain synchronized cursors/window controls.
+- One-sided trading days have readable explanations without invalid price averages; desktop/mobile/theme checks pass.
+
+### Completion evidence
+
+Implemented in the frontend files `BatteryWorkspace.tsx`, `ResultView.tsx`, `ResultCharts.tsx`, `compare.ts` and `styles.css`. Capacity occupies its own row, charge/discharge and import/export inputs pair correctly, and costs precede both strategy-specific groups. Strategy-colored summary cards form one desktop row and compact mobile rows; supporting hindsight metrics are quieter, and explanation/disclosure panels use the shared card surface. Empty-state and stored-result copy reflect the actual strategy count. Charging/discharging bars replace lines that could hide isolated intervals; disabling automatic bar padding preserves exact cursor alignment at zoomed endpoints. Zero-volume sides omit their undefined average price.
+
+`npm run check` passed 100/100 browser cases, contract validation, formatting and build; a charge-only regression case was added. Computer-use review compared the demo and a real local NSW1 result for 2026-09-24, including saved-result reload, threshold power selection, light/dark appearance and 390px mobile presentation. Existing tests additionally cover 320px overflow/disclosures and shared chart controls. The first bar-chart test run exposed cursor padding; the final full suite passes after correction. No backend/contract changes; the separate live integration suite was not rerun for this presentation change. Local commits are recorded in the journal.
