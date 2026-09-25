@@ -5,6 +5,8 @@ Status: Proposed detailed specification; BatteryLab's place before GridReplay is
 
 ## Visitor outcome
 
+Accepted follow-up UX direction (2026-09-25): new scenarios should present Fixed schedule, Price thresholds and Perfect hindsight as three default strategies, with shared battery inputs, schedule-only windows and separate all-day threshold settings. NEM-052 owns the change; the current shipped UI still uses an optional threshold checkbox. Old saved results remain faithful to their original strategies. See the [threshold UX revision](price-threshold-strategy.md#accepted-ux-revision--2026-09-25-pending-nem-052).
+
 Implemented UX refinement (2026-09-25, frontend `ef4c25f`): automatically visible comparison charts in consistently styled panels, financial breakdown above charts, collapsed interval detail and standalone price exploration at `/prices`. See the [UX plan](ui-refinement.md) and NEM-047–NEM-048.
 
 Accepted visual direction, now implemented: the BatteryLab page closely reproduces the demo's field/button styling and placement, compact layout and consistent panel/chart design. Simulation ID, status, source details and Copy link sit directly beneath the simulation button as secondary content in the scenario panel. Accessible error/progress behavior is preserved.
@@ -61,7 +63,7 @@ Assume a price-taking wholesale battery. Exclude capital/finance costs, contract
 - Reloading a shared result preserves its input data even after OE revisions.
 - Charts and totals agree; keyboard-accessible controls, clear units and meaningful loading/error states support the full browser journey.
 
-The optional price-threshold experiment is implemented (2026-09-25): visitors enable two signed-decimal thresholds and the worker replays an all-day "charge below / discharge above, else hold" rule alongside the fixed/hindsight pair. See the [threshold strategy record](price-threshold-strategy.md) and NEM-049–NEM-051. It is an idealised same-interval replay that may end at a different stored energy and is not ranked against the pair. Forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis remain deferred. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
+Price thresholds are a default third strategy (2026-09-25, NEM-052): every new scenario submits two signed-decimal thresholds and the worker replays an all-day "charge below / discharge above, else hold" rule alongside the fixed/hindsight pair. Older two-strategy saved results reopen unchanged with an explicit compare-all-three path. See the [threshold strategy record](price-threshold-strategy.md) and NEM-049–NEM-051. It is an idealised same-interval replay that may end at a different stored energy and is not ranked against the pair. Forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis remain deferred. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
 
 ## Public shell implementation
 

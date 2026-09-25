@@ -48,6 +48,14 @@ Preserve the price explorer's read-only semantics. Moving it must not silently g
 
 ## Delivery and verification
 
+### Follow-up: three strategies by default — NEM-052
+
+Following delivery of the original refinements and the threshold engine, the user accepted promoting Price thresholds to an equally prominent third strategy — implemented in frontend `5d4a82c` (NEM-052). New scenarios submit thresholds unconditionally with both fields visible and illustrative defaults; the opt-in checkbox is removed. Schedule windows are labelled as fixed-schedule/hindsight-only beside the all-day threshold fields. Old two-strategy saved results reopen unchanged with an explicit "Compare all three" path. See the [accepted threshold UX revision](price-threshold-strategy.md#accepted-ux-revision--2026-09-25-pending-nem-052); threshold-only mode remains deferred.
+
+Verification must cover fresh three-strategy runs, explicit conversion of old two-strategy results into a new scenario, unchanged saved-link replay, input grouping/labels, all three result series and clear ending-energy differences at desktop/mobile widths and in both themes.
+
+### Original refinement delivery sequence
+
 - First implement NEM-047: align the real BatteryLab page closely with the demo, including inputs/actions, panel/chart styling and secondary simulation details beneath Run; reorder result content, remove the comparison-chart toggle and collapse interval details. Update affected browser/live assertions.
 - Then implement NEM-048: move price exploration to its route, remove its toggle and replace the prototype presentation with a real-price view. Update navigation, direct-load/reload and price/chart tests to use the new route.
 - Verify desktop, 320px/mobile and both themes; keyboard disclosure behavior; automatic chart rendering on fresh and reopened results; synchronized chart controls; loading/chunk failures; exact-table access; incomplete/missing price days; and unchanged saved-result accounting and price-refresh behavior.

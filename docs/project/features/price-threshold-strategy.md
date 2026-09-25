@@ -33,6 +33,22 @@ The fixed-schedule/hindsight pair retains its existing equal-window and equal-te
 
 ## Visitor experience
 
+### Accepted UX revision — 2026-09-25, implemented as NEM-052
+
+The user accepted making thresholds a first-class third strategy rather than an opt-in experiment, implemented in frontend `5d4a82c`. The NEM-051 behavior below records the shipped opt-in variant; this revision superseded its optional-control presentation without changing the engine rules.
+
+- New scenarios run **Fixed schedule**, **Price thresholds** and **Perfect hindsight** by default. Show both threshold inputs immediately; remove the experiment checkbox and “optional” wording from the normal new-scenario form.
+- Group the form into **Shared battery settings** (region/day, site, efficiency and costs), **Schedule settings**, and **Price-threshold settings**. Preserve the demo-inspired field density, action placement and secondary details beneath Run.
+- Label the windows **“Schedule windows — fixed schedule and hindsight only.”** Explain beside the threshold fields that they operate all day and ignore these windows. Windows remain visible and required because the default run includes both scheduled strategies.
+- Give all three strategies equal visual prominence in summaries, financial columns, legends and strategy selectors. Show their names consistently; equal prominence does not imply identical constraints or a valid winner ranking.
+- Keep a short visible note: “Price thresholds operate all day and may finish with different stored energy.” Retain threshold ending energy, and limit the hindsight advantage/optimality claim to the existing fixed-schedule comparison.
+- Older saved results without thresholds must reopen faithfully with their original two strategies. Do not insert defaults into saved inputs, fabricate a third result or automatically resubmit. Provide an explicit “Compare all three” action to start a new editable scenario using the saved battery/windows plus clearly identified illustrative threshold defaults; running it creates/reuses the appropriate new scenario ID while preserving the original result.
+- The API may continue accepting optional thresholds for compatibility. This is a frontend default/presentation change, not a requirement to make thresholds mandatory in old contracts.
+
+Threshold-only mode is deferred. If added later, it should omit window controls and validation and run only the selected strategy through an explicit API/model change. Do not hide required schedule inputs while silently using their values in an all-three run.
+
+### Original shipped experience — NEM-051
+
 - Add an optional “Price thresholds” experiment control and the two threshold fields; retain fixed schedule.
 - Show the threshold dispatch alongside the existing result views with a distinct accessible series style and clear legend. Preserve automatic chart visibility from NEM-047.
 - Draw labelled horizontal charge/discharge thresholds on the price chart, allowing negative values.

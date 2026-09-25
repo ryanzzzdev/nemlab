@@ -8,6 +8,8 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
+- [NEM-052 — Make price thresholds a default third strategy](#nem-052) — next BatteryLab UX follow-up; planned only.
+
 Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
 
 After those refinements, the optional [price-threshold experiment](features/price-threshold-strategy.md) is planned as NEM-049–NEM-051. Commercial-grade market realism is explicitly outside its scope.
@@ -1356,3 +1358,37 @@ Let visitors adjust two thresholds and inspect the resulting dispatch, cashflow 
 ### Completion evidence
 
 Implemented in frontend `d4540c7`. An optional "Price thresholds" fieldset enables two signed-decimal inputs with strict ordering and exact-string submission; saved results restore the checkbox and values, and results stored before the experiment still render. The comparison adds a threshold stat card naming all-day operation and ending energy, a third financial-breakdown column, threshold MW/MWh/margin columns in the interval table, a third power-panel strategy and a violet series in the energy and margin charts, labelled dashed charge/discharge lines on the price chart, and per-interval action explanations including binding energy/power limits. Explanations state the rule is not ranked against the fixed/hindsight pair, whose equal-terminal-energy comparison and dual-bound claims are unchanged. `npm run check` passed 98/98 including new validation, ordering, negative-threshold, saved-link, old-result, theme and narrow-screen cases; `npm run test:live` passed 6/6 with a threshold submission executed by the real worker; screenshots reviewed in both themes.
+
+<a id="nem-052"></a>
+
+## NEM-052 — Make price thresholds a default third strategy
+
+- Repository: frontend
+- Milestone: Post-M4 UX refinement
+- Priority: High
+- Status: Done
+- Depends on: [NEM-051](#nem-051)
+- References: [Threshold UX revision](features/price-threshold-strategy.md#accepted-ux-revision--2026-09-25-pending-nem-052), [UI refinement plan](features/ui-refinement.md)
+
+### Outcome
+
+Present Fixed schedule, Price thresholds and Perfect hindsight as three default strategies, with clearly separated shared, schedule and threshold inputs rather than an optional experiment.
+
+### Implementation sequence
+
+1. Enable thresholds in new scenarios, show both fields and remove the opt-in checkbox; preserve the API's optional fields for old-result compatibility.
+2. Group shared battery settings, schedule settings and price-threshold settings. Label windows as applying only to fixed schedule and hindsight; explain that thresholds run all day.
+3. Align the three strategy names and visual prominence across summaries, financial breakdown, charts and selectors; retain the short ending-energy caveat and correct scope of hindsight claims.
+4. Preserve old two-strategy saved results. Add an explicit “Compare all three” path to a new editable scenario with illustrative thresholds; never mutate or silently rerun the old result.
+
+### Done when
+
+- New submissions include validated thresholds by default and produce three visible strategy results without an enabling checkbox.
+- Windows remain available for scheduled strategies and are never presented as affecting threshold dispatch.
+- Fresh, shared and older saved-result paths behave correctly; no third result is fabricated or old input altered on reload.
+- Browser/live checks cover default submission, validation, conversion from old results, sharing and result agreement; demo-style desktop/mobile/theme screenshots are reviewed.
+- Threshold-only mode remains out of scope; no unnecessary engine or API change is introduced.
+
+### Completion evidence
+
+Implemented in frontend `5d4a82c` (NEM-051 shipped thresholds as opt-in; this task removed the opt-in). New scenarios submit `thresholds` unconditionally — the checkbox is gone, both fields are always visible with illustrative defaults (30/150) and the same signed-decimal/ordering validation. The form separates shared settings, "Schedule windows — fixed schedule and hindsight only", and "Price thresholds — all-day rule" with the ending-energy caveat beside the fields. Strategy naming is aligned ("Fixed schedule" / "Price thresholds" / "Perfect hindsight") across stat cards, breakdown and interval columns, legends and the power-panel selector, and the threshold card sits with the other strategy cards. Old two-strategy saved results reopen unchanged with empty threshold fields and an explicit "Compare all three" action that fills the illustrative defaults, detaches the link and preserves the stored result — nothing is fabricated or silently rerun. The API still accepts optional thresholds; no engine or contract change. `npm run check` passed 98/98 (default submission, validation, old-result conversion, saved links, themes, narrow screens); `npm run test:live` passed 6/6 with the real worker producing a three-strategy result; screenshots reviewed in both themes.
