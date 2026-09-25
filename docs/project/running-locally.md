@@ -10,98 +10,62 @@ quick orientation.
 - JDK 25 with `JAVA_HOME` set, e.g. `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64`.
 - Node.js 22.23.1 and npm 10.9.8 (`nvm use` in `nemlab-ui/` reads `.nvmrc`).
 - Docker — only for PostgreSQL-backed features and the disposable-container tests.
+- A filled-in `.env` copied from `.env.example`; its comments say which variables
+  are worker-only, API-only or shared. Nothing loads it implicitly.
 
-## Backend API (port 8080)
-
-From `nemlab/`:
-
-```sh
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
-
-# One-time: install the locked contract tooling used by the backend build.
-npm ci --ignore-scripts --prefix api/contracts
-
-# Build the runnable jars (or use ./gradlew clean build for the full test suite).
-./gradlew :api:bootJar :worker:bootJar
-```
-
-Then either run the packaged jar or use bootRun for development:
+## One-time setup
 
 ```sh
-"$JAVA_HOME/bin/java" -jar api/build/libs/api.jar
-# or: ./gradlew :api:bootRun
+cd nemlab
+npm ci --ignore-scripts --prefix api/contracts   # contract tooling used by the build
+docker compose up -d postgres                    # PostgreSQL on 127.0.0.1:55432
+set -a; . ./.env; set +a
+./gradlew :infrastructure:prices --args='migrate'  # schema, once per deployment
 ```
 
-Verify with `curl http://127.0.0.1:8080/actuator/health` (returns UP). `PORT` and
-`SERVER_ADDRESS` override the bind. Ctrl+C stops it. With no optional features
-enabled the API needs no database or credentials.
+`docker compose stop postgres` stops the database while keeping its volume.
+Editing `NEMLAB_DB_PASSWORD` later does not change the existing database password;
+the `postgres` volume is initialised once.
 
-## Backend worker (no HTTP port)
+## Run the backend
 
-The worker is a non-HTTP process. Its default mode is inert — no jobs, no
-schedules, no credentials needed:
+From `nemlab/`, one process per terminal:
 
 ```sh
-"$JAVA_HOME/bin/java" -jar worker/build/libs/worker.jar
-# or: ./gradlew :worker:bootRun
+set -a; . ./.env; set +a   # required in every backend terminal
+./gradlew :api:bootRun     # http://127.0.0.1:8080 — curl /actuator/health
+./gradlew :worker:bootRun  # no HTTP port; quiet between polls
 ```
 
-Packaged-startup smoke check for both apps (uses Python 3, random loopback port):
+Packaged jars also work: `./gradlew :api:bootJar :worker:bootJar` then
+`"$JAVA_HOME/bin/java" -jar api/build/libs/api.jar` (or `worker/.../worker.jar`).
+Packaged-startup smoke check: `python3 scripts/smoke_apps.py`.
 
-```sh
-python3 scripts/smoke_apps.py
-```
+With `.env` sourced, the enabled flags take effect — database-backed price reads,
+simulation endpoints and worker polling/scheduling all come up. With all flags
+off, the API still starts (health only) and the worker idles with no credentials.
 
-## Frontend (port 5173)
+Running `ApiApplication`/`WorkerApplication` from IntelliJ needs the same
+variables in the run configuration's environment (or an env-file plugin) —
+the IDE does not read `.env` either.
+
+## Run the frontend
 
 From `nemlab-ui/`:
 
 ```sh
 npm ci --ignore-scripts
-npm run dev
+npm run dev   # http://127.0.0.1:5173
 ```
 
-Open http://127.0.0.1:5173. The dev server binds to loopback, fails if the port is
-taken, and starts without a backend. It proxies `/api/v1/prices` to
-`http://127.0.0.1:8080` (override with `NEMLAB_API_TARGET` in the dev-server
-environment), so stored-price pages only show data when the API runs with
-`NEMLAB_DATA_ENABLED=true` against a migrated, populated database.
+The shell works without the backend. It proxies `/api/v1/prices` to
+`http://127.0.0.1:8080` (override with `NEMLAB_API_TARGET`), so stored-price
+pages only show data when the API runs with `NEMLAB_DATA_ENABLED=true` against
+a migrated, populated database.
 
-Other useful commands: `npm run build` then `npm run preview` (serves the bundle at
-http://127.0.0.1:4173); `npm run check` runs contract/format/type/build/Playwright
-verification; `npm run test:live` exercises the real Java API and PostgreSQL.
-
-## Optional: local PostgreSQL and data features
-
-The API/worker start fine without a database. For stored prices, ingestion or
-simulations, from `nemlab/`:
-
-```sh
-export NEMLAB_DB_URL='jdbc:postgresql://127.0.0.1:55432/nemlab'
-export NEMLAB_DB_USER='nemlab'
-export NEMLAB_DB_PASSWORD='<your local password>'
-
-docker compose up -d postgres                              # loopback port 55432
-./gradlew :infrastructure:prices --args='migrate'          # run once per deployment
-```
-
-`docker compose stop postgres` stops the database while keeping its volume. Or load
-the same variables from a local `.env` (`set -a; . ./.env; set +a`) — Gradle and
-`java` do not read `.env` automatically, Compose does.
-
-Feature flags, all off by default:
-
-| Flag | Process | Needs | Effect |
-| --- | --- | --- | --- |
-| `NEMLAB_DATA_ENABLED=true` | API | migrated DB | Public stored-price reads (`/api/v1/prices/...`), used by the frontend. |
-| `NEMLAB_SIMULATION_API_ENABLED=true` | API | migrated DB (V3) | Public simulation submit/status/result endpoints. |
-| `NEMLAB_ADMIN_ENABLED=true` + `NEMLAB_ADMIN_OPERATOR` + `NEMLAB_ADMIN_TOKEN` | API | migrated DB | Protected operator endpoints for queuing price refreshes. |
-| `NEMLAB_WORKER_ENABLED=true` | worker | DB + `OPEN_ELECTRICITY_API_KEY` | Polls and executes queued price-refresh jobs. |
-| `NEMLAB_WORKER_SCHEDULE_ENABLED=true` + `NEMLAB_WORKER_REGIONS=NSW1,...` | worker | worker enabled | Submits daily refresh jobs at 00:15 NEM time. |
-| `NEMLAB_SIMULATION_ENABLED=true` | worker | DB only | Polls and executes queued simulation jobs. |
-
-Keep `NEMLAB_ADMIN_ENABLED=false` for the public frontend slice, and never put OE
-keys or operator tokens in frontend code or `VITE_` variables.
+Other commands: `npm run build` then `npm run preview` (port 4173);
+`npm run check` for contract/format/type/build/Playwright verification;
+`npm run test:live` exercises the real API and PostgreSQL.
 
 ## Detailed references
 

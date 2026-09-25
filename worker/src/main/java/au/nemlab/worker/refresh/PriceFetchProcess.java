@@ -41,8 +41,10 @@ public final class PriceFetchProcess implements AutoCloseable {
             ProcessBuilder builder = new ProcessBuilder(arguments);
             builder.environment().clear();
             builder.environment().putAll(environment);
-            builder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-            builder.redirectError(ProcessBuilder.Redirect.DISCARD);
+            // The fetch child logs each OE request/response on its console; never
+            // credentials or raw bodies. Inherit so those lines reach the worker log.
+            builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            builder.redirectError(ProcessBuilder.Redirect.INHERIT);
             synchronized (this) {
                 if (closed) {
                     throw new InterruptedException("Worker is stopping");

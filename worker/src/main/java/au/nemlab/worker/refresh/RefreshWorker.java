@@ -67,18 +67,22 @@ public final class RefreshWorker implements SmartLifecycle {
     private void execute(RefreshJob job) {
         LOG.info("Claimed refresh job {} ({} {}, attempt {}); fetching OE prices",
                 job.id(), job.region(), job.day(), job.attempts());
+        long started = System.nanoTime();
         try {
             FetchOutcome outcome = fetcher.fetch(job);
+            long elapsed = (System.nanoTime() - started) / 1_000_000;
             if (outcome.fetch() != null) {
                 jobs.complete(job.id(), job.claimToken(), outcome.fetch());
-                LOG.info("Refresh job {} committed stored prices for {} {}",
-                        job.id(), job.region(), job.day());
+                LOG.info("Refresh job {} committed stored prices for {} {} ({} ms)",
+                        job.id(), job.region(), job.day(), elapsed);
             } else if (outcome.retryable()) {
                 jobs.fail(job.id(), job.claimToken(), outcome.failure());
-                LOG.info("Refresh job {} failed: {}; bounded retry scheduled", job.id(), outcome.failure());
+                LOG.info("Refresh job {} failed: {}; bounded retry scheduled ({} ms)",
+                        job.id(), outcome.failure(), elapsed);
             } else {
                 jobs.failPermanently(job.id(), job.claimToken(), outcome.failure());
-                LOG.info("Refresh job {} failed permanently: {}", job.id(), outcome.failure());
+                LOG.info("Refresh job {} failed permanently: {} ({} ms)",
+                        job.id(), outcome.failure(), elapsed);
             }
         } catch (RefreshJobService.StaleClaimException ignored) {
             LOG.info("Discarded stale refresh result: job={}", job.id());

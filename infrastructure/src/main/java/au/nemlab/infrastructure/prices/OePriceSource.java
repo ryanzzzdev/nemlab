@@ -1,6 +1,8 @@
 package au.nemlab.infrastructure.prices;
 
 import au.nemlab.batterylab.PriceDay;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.DeserializationFeature;
 import java.net.*;
@@ -11,6 +13,8 @@ import java.time.*;
 import java.util.*;
 
 public final class OePriceSource implements PriceSource {
+    private static final Logger LOG = LoggerFactory.getLogger(OePriceSource.class);
+
     public static final class Failure extends java.io.IOException {
         private final String code;
 
@@ -65,18 +69,36 @@ public final class OePriceSource implements PriceSource {
                 .header("Authorization", "Bearer " + key)
                 .header("User-Agent", "NEMLab-data-ingestion/0.1").GET().build();
         for (int attempt = 0; attempt < 3; attempt++) {
+            // The credential travels in the Authorization header and is never logged.
+            LOG.info("OE request attempt {}/3: GET {}", attempt + 1, uri);
+            long started = System.nanoTime();
             HttpResponse<String> response;
             try {
                 response = client.send(request, info -> new LimitedBody());
             } catch (java.io.IOException ex) {
+                LOG.info("OE request attempt {}/3 failed after {} ms: {}", attempt + 1,
+                        (System.nanoTime() - started) / 1_000_000,
+                        ex instanceof Failure failure ? failure.code() : "transport error");
                 if (attempt == 2)
                     throw new Failure("TRANSPORT_RETRIES_EXHAUSTED");
                 sleeper.sleep(1000L << attempt);
                 continue;
             }
             int status = response.statusCode();
-            if (status == 200)
-                return parse(region, day, response.body(), clock.instant());
+            LOG.info("OE response: HTTP {} in {} ms, {} bytes", status,
+                    (System.nanoTime() - started) / 1_000_000,
+                    response.body() == null ? 0 : response.body().length());
+            if (status == 200) {
+                Fetch fetch = parse(region, day, response.body(), clock.instant());
+                LOG.info("OE response summary: {} {} -> {} values, {} source nulls, {} missing, prices {} to {} AUD/MWh, source version {}",
+                        region, day,
+                        fetch.batch().count(PriceBatch.Kind.VALUE),
+                        fetch.batch().count(PriceBatch.Kind.SOURCE_NULL),
+                        fetch.batch().count(PriceBatch.Kind.MISSING),
+                        priceBound(fetch.batch(), true), priceBound(fetch.batch(), false),
+                        fetch.sourceVersion());
+                return fetch;
+            }
             if ((status == 429 || status >= 500) && attempt < 2) {
                 long delay = 1000L << attempt;
                 String retry = response.headers().firstValue("Retry-After").orElse("");
@@ -201,5 +223,14 @@ public final class OePriceSource implements PriceSource {
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException("Invalid OE price response (metadata, duplicate, timestamp or value)");
         }
+    }
+
+    private static String priceBound(PriceBatch batch, boolean minimum) {
+        return batch.slots().stream()
+                .filter(slot -> slot.kind() == PriceBatch.Kind.VALUE)
+                .map(PriceBatch.Slot::price)
+                .reduce((a, b) -> minimum ? a.min(b) : a.max(b))
+                .map(BigDecimal::toPlainString)
+                .orElse("none");
     }
 }
