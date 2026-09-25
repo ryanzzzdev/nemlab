@@ -37,6 +37,7 @@ public final class RefreshWorker implements SmartLifecycle {
             return;
         }
         running = true;
+        LOG.info("Price refresh polling started ({} ms interval)", pollInterval.toMillis());
         executor.scheduleWithFixedDelay(this::tick, 0, pollInterval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
@@ -64,16 +65,21 @@ public final class RefreshWorker implements SmartLifecycle {
     }
 
     private void execute(RefreshJob job) {
+        LOG.info("Claimed refresh job {} ({} {}, attempt {}); fetching OE prices",
+                job.id(), job.region(), job.day(), job.attempts());
         try {
             FetchOutcome outcome = fetcher.fetch(job);
             if (outcome.fetch() != null) {
                 jobs.complete(job.id(), job.claimToken(), outcome.fetch());
+                LOG.info("Refresh job {} committed stored prices for {} {}",
+                        job.id(), job.region(), job.day());
             } else if (outcome.retryable()) {
                 jobs.fail(job.id(), job.claimToken(), outcome.failure());
+                LOG.info("Refresh job {} failed: {}; bounded retry scheduled", job.id(), outcome.failure());
             } else {
                 jobs.failPermanently(job.id(), job.claimToken(), outcome.failure());
+                LOG.info("Refresh job {} failed permanently: {}", job.id(), outcome.failure());
             }
-            LOG.info("Refresh attempt finished: job={}", job.id());
         } catch (RefreshJobService.StaleClaimException ignored) {
             LOG.info("Discarded stale refresh result: job={}", job.id());
         } catch (InterruptedException stopped) {

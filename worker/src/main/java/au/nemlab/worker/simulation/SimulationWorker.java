@@ -26,6 +26,7 @@ public final class SimulationWorker implements SmartLifecycle {
     public synchronized void start() {
         if (running) return;
         running = true;
+        LOG.info("Simulation polling started ({} ms interval)", interval.toMillis());
         executor.scheduleWithFixedDelay(this::tick, 0, interval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
@@ -43,10 +44,17 @@ public final class SimulationWorker implements SmartLifecycle {
     }
 
     private void execute(SimulationJobs.Job job) {
+        LOG.info("Claimed simulation job {}; running comparison in child process", job.id());
         try {
             var outcome = process.execute(jobs.input(job.id()));
-            if (outcome.result() != null) jobs.complete(job.id(), job.token(), outcome.result());
-            else jobs.fail(job.id(), job.token(), outcome.failure(), outcome.retryable());
+            if (outcome.result() != null) {
+                jobs.complete(job.id(), job.token(), outcome.result());
+                LOG.info("Simulation job {} succeeded; comparison stored", job.id());
+            } else {
+                jobs.fail(job.id(), job.token(), outcome.failure(), outcome.retryable());
+                LOG.info("Simulation job {} failed: {} (retryable={})",
+                        job.id(), outcome.failure(), outcome.retryable());
+            }
         } catch (SimulationJobs.StaleClaim ignored) {
             LOG.info("Discarded stale simulation result: job={}", job.id());
         } catch (InterruptedException stopped) {
