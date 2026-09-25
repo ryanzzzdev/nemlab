@@ -1,12 +1,23 @@
 # NEMLab backlog
 
-Updated: 2026-09-24
+Updated: 2026-09-25
 
 Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-046: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts, the saved-result journey and visitor-triggered price refresh; M4’s local exit criteria are met. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
 
 NEM-011 onward are milestone-level planning packages: split them into focused tasks with new IDs before execution, preserving the original package and dependency links. Do not treat their broad acceptance criteria as a one-session assignment.
 
 ## Task index
+
+Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
+
+After those refinements, the optional [price-threshold experiment](features/price-threshold-strategy.md) is planned as NEM-049–NEM-051. Commercial-grade market realism is explicitly outside its scope.
+
+- [NEM-049 — Implement the price-threshold engine](#nem-049)
+- [NEM-050 — Persist and expose threshold experiments](#nem-050)
+- [NEM-051 — Present the threshold experiment](#nem-051)
+
+- [NEM-047 — Make comparison charts part of the default result view](#nem-047)
+- [NEM-048 — Separate price exploration from BatteryLab](#nem-048)
 
 - [NEM-001 — Establish initial project planning documents](#nem-001)
 - [NEM-002 — Define the OE sample plan and check access](#nem-002)
@@ -1214,3 +1225,126 @@ Implemented end to end. `RefreshJobService.submitVisitor` enqueues under determi
 ### Notes
 
 Agreed with the user on 2026-09-24 and required before BatteryLab/M4 is treated as done; the milestone record reflects the reopened scope. The rejected alternative is a synchronous OE fetch inside the API request: it would hold a credential the API deliberately lacks, cannot fit fetch latency/retries inside a request, and loses crash-safe dedup. Implemented choices: the `visitor-price-v1:` request-key namespace with `:rN` retry suffixes, three visitor attempts per day, ten pending visitor jobs globally, and `Retry-After`-paced automatic resubmission (20 pending / 10 limited attempts) before pausing. Reusing the durable queue keeps provider calls inside the existing bounded claim/fetch/commit path.
+
+<a id="nem-047"></a>
+
+## NEM-047 — Make comparison charts part of the default result view
+
+- Repository: frontend
+- Milestone: Post-M4 UX refinement
+- Priority: High
+- Status: Done
+- Depends on: [NEM-044](#nem-044), [NEM-045](#nem-045)
+- References: [UX plan](features/ui-refinement.md)
+
+### Outcome
+
+Show comparison charts automatically, put the financial breakdown above them and collapse the interval detail table.
+
+Expanded by explicit user direction (2026-09-25): make the real BatteryLab page closely match the static demo's inputs, buttons and positions, compact layout, consistently styled panels and integrated charts. Group ID/status/source/Copy link and relevant monitoring controls immediately below the simulation button as secondary content. See the UX plan for precedence over the demo's original ordering.
+
+### Done when
+
+- Fresh and reopened results render all four charts without a toggle, preserving shared controls and immutable result values.
+- Summary figures and compact financial breakdown precede charts; interval detail is keyboard-accessible and closed initially, like methodology.
+- Demo and real-page screenshots are compared at matched widths; input grouping, action positions, spacing, panel styling and chart styling closely follow the demo, with deliberate deviations recorded.
+- Simulation metadata and secondary actions sit beneath Run in the scenario panel; no oversized progress/metadata panel competes with results. Long IDs, copy feedback, queued/fetching/failure states and stop/resume remain accessible and usable in both themes.
+- Loading/no-result/chart-failure states are honest and exact table access remains available.
+- Desktop/mobile, theme, disclosure, failure and saved-result regression checks pass; screenshots reviewed.
+
+### Completion evidence
+
+Implemented in frontend `ef4c25f`. The scenario panel reproduces the demo's compact 320px card: denser fieldset grouping, a radio efficiency input, the primary Run button, and a status chip with simulation ID, scenario, price source/revision, engine versions, stop/resume and Copy result link directly beneath it — long identifiers wrap without widening the panel. The result column orders summary stats, strategy explanations and the financial breakdown ahead of four chart panels that render automatically in consistently styled cards with compact titles/legends; the power panel swaps Fixed/Hindsight through a segmented control. Interval detail and methodology sit in closed native disclosures; the chart show/hide toggle is gone. `npm run check` passed with 90/90 desktop/mobile cases covering fresh and saved-link charts, disclosure keyboard access, 320px layout, light/dark/auto themes and chart-chunk failure; `npm run test:live` passed 6/6 against the real stack. Desktop/mobile/light/dark screenshots were reviewed against the demo; the site header and theme picker stay shared rather than adopting the demo's bespoke band, and window shading plus the exact readout are retained where the demo relies on a tooltip.
+
+<a id="nem-048"></a>
+
+## NEM-048 — Separate price exploration from BatteryLab
+
+- Repository: frontend
+- Milestone: Post-M4 UX refinement
+- Priority: High
+- Status: Done
+- Depends on: [NEM-035](#nem-035), [NEM-036](#nem-036)
+- References: [UX plan](features/ui-refinement.md)
+
+### Outcome
+
+Give price exploration its own navigable page and render available price charts automatically; remove the embedded explorer from BatteryLab.
+
+### Done when
+
+- A dedicated route supports direct load/reload and shared navigation/theme; BatteryLab no longer includes the explorer.
+- Imported price series render charts without a toggle; missing observations stay distinct from zero and no-data/error states remain clear.
+- Read-only price browsing and visitor-triggered simulation refresh remain separate; saved results retain their original prices.
+- Exact values remain accessible; route, coverage, chart and keyboard/mobile checks pass and screenshots are reviewed.
+
+### Completion evidence
+
+Implemented in frontend `ef4c25f`. `/prices` is a directly navigable route ("Explore electricity prices") in the primary navigation; BatteryLab no longer embeds the explorer. The stored-price chart renders automatically whenever a series exists — the synthetic energy trace is removed — while gaps stay disconnected and the exact interval table sits in a collapsed disclosure. Coverage, revision, loading, incomplete, absent and failure states are unchanged, and price browsing still issues only read-only GETs — no visitor refresh. Saved simulation results keep their embedded price snapshots. `npm run check` passed with route, coverage, auto-chart, collapsed-table, keyboard, mobile, theme and failure cases (90/90), `npm run test:live` passed 6/6 against the real API, and screenshots were reviewed in both themes.
+
+<a id="nem-049"></a>
+
+## NEM-049 — Implement the price-threshold engine
+
+- Repository: backend
+- Milestone: Optional post-M4 extension
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-009](#nem-009)
+- References: [Threshold strategy proposal](features/price-threshold-strategy.md)
+
+### Outcome
+
+An understandable all-day strategy that charges below a fixed threshold, discharges above another and otherwise holds, using existing physical limits and accounting.
+
+### Done when
+
+- Finalise/version strict threshold comparisons, idealised same-interval execution, multiple cycles and no forced terminal trade before implementation.
+- Tests cover exact boundary prices, negative prices, repeated/no trades, partial intervals, losses/fees, power/energy limits and no future-price dependence.
+- Ending energy and cashflow are explicit; existing schedule/hindsight behavior and proof claims remain intact.
+
+### Notes
+
+Planned after NEM-047–NEM-048; no implementation yet. No forecast model or unrestricted optimiser required.
+
+<a id="nem-050"></a>
+
+## NEM-050 — Persist and expose threshold experiments
+
+- Repository: both
+- Milestone: Optional post-M4 extension
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-049](#nem-049), [NEM-041](#nem-041)
+- References: [Threshold strategy proposal](features/price-threshold-strategy.md)
+
+### Outcome
+
+Support optional threshold inputs/results through the existing durable simulation lifecycle and versioned API.
+
+### Done when
+
+- Versioned request/result contracts preserve exact threshold strings and immutable snapshot/strategy identity; generated frontend types agree.
+- Worker execution, storage, deduplication and result retrieval include the experiment without changing existing strategy semantics.
+- Old requests and saved results remain usable; integration tests cover optional fields and stored-result reproduction.
+
+<a id="nem-051"></a>
+
+## NEM-051 — Present the threshold experiment
+
+- Repository: frontend
+- Milestone: Optional post-M4 extension
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-050](#nem-050), [NEM-047](#nem-047)
+- References: [Threshold strategy proposal](features/price-threshold-strategy.md)
+
+### Outcome
+
+Let visitors adjust two thresholds and inspect the resulting dispatch, cashflow and ending energy with the existing charts.
+
+### Done when
+
+- Controls, threshold price lines, distinct strategy series, financial details and interval explanations agree with saved backend results.
+- All-day operation and ending-energy differences are visible; no invalid winner ranking or restricted-hindsight upper-bound claim is made.
+- Saved links and old results work; browser checks cover themes, narrow screens, keyboard controls and validation.

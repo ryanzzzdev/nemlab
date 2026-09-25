@@ -5,6 +5,10 @@ Status: Proposed detailed specification; BatteryLab's place before GridReplay is
 
 ## Visitor outcome
 
+Implemented UX refinement (2026-09-25, frontend `ef4c25f`): automatically visible comparison charts in consistently styled panels, financial breakdown above charts, collapsed interval detail and standalone price exploration at `/prices`. See the [UX plan](ui-refinement.md) and NEM-047–NEM-048.
+
+Accepted visual direction, now implemented: the BatteryLab page closely reproduces the demo's field/button styling and placement, compact layout and consistent panel/chart design. Simulation ID, status, source details and Copy link sit directly beneath the simulation button as secondary content in the scenario panel. Accessible error/progress behavior is preserved.
+
 Accepted visual direction (2026-09-24): a centered 1160px workspace with a scenario-side column, compact result cards and teal accents, taking the light mock as the reference. Shared Light/Dark/Auto applies to this and the GridReplay page; Auto follows the device. See [decision 018](../decisions/018-product-layouts-and-appearance.md). NEM-042 establishes the layout with existing stored-price exploration; the scenario form and actual comparison remain NEM-043–NEM-045.
 
 Configure a battery for a historical market day and understand its simulated energy-trading margin under a fixed schedule and perfect hindsight. Working audience assumption: energy-curious visitors and employers evaluating the engineering; specialised investment workflows are deferred.
@@ -57,7 +61,7 @@ Assume a price-taking wholesale battery. Exclude capital/finance costs, contract
 - Reloading a shared result preserves its input data even after OE revisions.
 - Charts and totals agree; keyboard-accessible controls, clear units and meaningful loading/error states support the full browser journey.
 
-Deferred: reactive thresholds, forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
+Fixed price thresholds are now a planned optional post-M4 experiment (2026-09-25); see the [threshold strategy proposal](price-threshold-strategy.md) and NEM-049–NEM-051. It prioritises an understandable historical replay over commercial realism, preserves the existing schedule/hindsight pair, and explicitly reports different ending energy. Implementation has not started. Forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis remain deferred. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
 
 ## Public shell implementation
 
@@ -69,11 +73,12 @@ full product journey and acceptance criteria above remain future work.
 
 NEM-043 adds a real aggregate-site scenario form alongside the separate price explorer. It offers round-trip or separate-leg efficiency, exact decimal costs/energy/power, ordered five-minute windows including 24:00, field validation and complete-day coverage checks. Submission progresses through queued/running/succeeded/failed states and retrieves the stored result. Inputs stay locked during monitoring; stop/resume affects browser checking only. Editing inputs clears stale progress/results. Equivalent submissions reuse terminal jobs, including failed jobs. Detailed comparison/charts and saved-link reopening remain NEM-044–NEM-045. A disconnected API produces a clear error, not synthetic results.
 
-NEM-035 adds a bounded region/completed-day price view to the BatteryLab page. It reads
-coverage before loading the 288 intervals, preserves exact decimal strings and gap states,
-and displays source, units and revision metadata. Loading, unavailable coverage and safe
-errors are explicit. This read-only view neither imports data nor runs the battery engine;
-the simulator and chart journey remain future work.
+NEM-035 adds a bounded region/completed-day price view, now living on the standalone
+`/prices` page since NEM-048. It reads coverage before loading the 288 intervals,
+preserves exact decimal strings and gap states, and displays source, units and revision
+metadata. Loading, unavailable coverage and safe errors are explicit. This read-only
+view neither imports data nor runs the battery engine; visitor-triggered refresh under
+NEM-046 remains a simulation-submission behaviour, not a price-page behaviour.
 
 NEM-046 changes missing-coverage behaviour for the simulator:
 an eligible submitted day without a complete stored revision enqueues a deduplicated price
@@ -84,10 +89,11 @@ scenario after each `Retry-After` until coverage arrives, the queue cap pauses, 
 
 ## Chart interaction proof
 
-NEM-036 adds an optional two-panel chart to the price view. The second panel is explicitly
-synthetic energy, not a computed battery trajectory. Shared cursor/window selection,
-fixed-time labels, visible gaps and text/table alternatives are verified. Final multi-series
-simulation presentation remains NEM-017 after real simulation APIs exist.
+NEM-036 proved shared cursor/window selection, fixed-time labels, visible gaps and
+text/table alternatives on the price chart. NEM-048 removed the explicitly synthetic
+second energy panel: the public price view now renders a single real stored-price
+chart automatically whenever a series exists, with the exact interval table in a
+collapsed disclosure.
 
 
 ## Simulation request boundary
@@ -126,17 +132,24 @@ NEM-044 presents the stored result. Margin stat cards, plain-language explanatio
 (interval counts, weighted-average prices, the fixed policy's limiting reason, the
 hindsight advantage and the solver's dual bound) and a financial breakdown table show
 per-strategy imported/exported energy, charging cost (credit when negative), revenue,
-fees, degradation and physical losses. A lazy four-panel chart links price, grid-side
-power, stored energy and cumulative margin under one cursor and window control, with the
-interval table as the exact text alternative. Hindsight is labelled a benchmark, not a
+fees, degradation and physical losses. Hindsight is labelled a benchmark, not a
 forecast. Charts plot approximate numbers; tables and readouts keep stored values.
-Reopening a saved result by link remains NEM-045.
+
+NEM-047 finalises the result hierarchy after the demo: summary stats and explanations
+lead, the financial breakdown sits above the charts, and four chart panels — price with
+window/negative bands, grid-side power (a segmented control swaps strategies), stored
+energy with site limits, cumulative margin — render automatically in consistent cards
+under one cursor and window control. Interval detail and methodology collapse into
+native disclosures; the chart toggle is gone. Simulation ID, status chip, price
+source/revision, engine versions and monitoring/copy actions live beneath the Run
+button in the scenario panel as secondary content.
 
 ## Saved-result journey
 
 NEM-045 makes a finished scenario reopenable. A stored result writes its opaque job
 ID into the page address (`/batterylab?simulation=<uuid>`), and a keyboard-accessible
-"Copy result link" action copies that locally constructed URL. Opening the link reads
+"Copy result link" action — beneath the Run button since NEM-047 — copies that
+locally constructed URL. Opening the link reads
 job status then the immutable result — never resubmitting — restores the stored
 scenario inputs into the form and renders the identical comparison; the embedded
 price snapshot is unaffected by later source revisions. Links to queued or running
