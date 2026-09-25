@@ -1289,7 +1289,7 @@ Implemented in frontend `ef4c25f`. `/prices` is a directly navigable route ("Exp
 - Repository: backend
 - Milestone: Optional post-M4 extension
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-009](#nem-009)
 - References: [Threshold strategy proposal](features/price-threshold-strategy.md)
 
@@ -1303,9 +1303,9 @@ An understandable all-day strategy that charges below a fixed threshold, dischar
 - Tests cover exact boundary prices, negative prices, repeated/no trades, partial intervals, losses/fees, power/energy limits and no future-price dependence.
 - Ending energy and cashflow are explicit; existing schedule/hindsight behavior and proof claims remain intact.
 
-### Notes
+### Completion evidence
 
-Planned after NEM-047–NEM-048; no implementation yet. No forecast model or unrestricted optimiser required.
+Implemented in backend `98015d0` as `PriceThreshold` (`price-threshold-v1`) with a `Thresholds` exact-decimal value type. The engine evaluates each stored interval price strictly — charge below the charge threshold, discharge above the discharge threshold, hold otherwise (equality holds) — at the greatest feasible power under energy bounds, charge/discharge MW, import/export MW and efficiency, clamping partial intervals and allowing multiple cycles with no forced terminal trade. `DispatchValidator` gained an unrestricted variant enforcing physical limits and energy balance without schedule windows or equal terminal energy. `PriceThresholdTest` covers exact boundary prices, negative prices, repeated and zero trades, partial intervals, losses/fees, power/energy limits and no future-price dependence; the full `./gradlew test` suite passes.
 
 <a id="nem-050"></a>
 
@@ -1314,7 +1314,7 @@ Planned after NEM-047–NEM-048; no implementation yet. No forecast model or unr
 - Repository: both
 - Milestone: Optional post-M4 extension
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-049](#nem-049), [NEM-041](#nem-041)
 - References: [Threshold strategy proposal](features/price-threshold-strategy.md)
 
@@ -1328,6 +1328,10 @@ Support optional threshold inputs/results through the existing durable simulatio
 - Worker execution, storage, deduplication and result retrieval include the experiment without changing existing strategy semantics.
 - Old requests and saved results remain usable; integration tests cover optional fields and stored-result reproduction.
 
+### Completion evidence
+
+Implemented in backend `98015d0`; frontend types synced via `contract:sync`. `SimulationRequest` gained an optional `thresholds` block whose exact decimal strings ride the canonical identity only when present — old scenario keys stay byte-identical while threshold scenarios deduplicate separately. `SimulationComparison` carries an optional threshold experiment result (version, thresholds, dispatch, accounting) validated before persistence, and `SimulationController` exposes it on `/result` plus the `inputs` echo. API contract 1.3.0 models the optional result field as `anyOf` object-or-null (compatible with the Swagger Parser/AJV verifier; `Retry-After` enum was widened for the legitimate `60` value); `verify.mjs` passed all operations and 120 captured responses. `SimulationJobsTest` covers threshold round-trip, distinct scenario keys and old-result compatibility; `SimulationHttpTest` covers submission, rejection and stored-result reproduction. `./gradlew test` passes.
+
 <a id="nem-051"></a>
 
 ## NEM-051 — Present the threshold experiment
@@ -1335,7 +1339,7 @@ Support optional threshold inputs/results through the existing durable simulatio
 - Repository: frontend
 - Milestone: Optional post-M4 extension
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-050](#nem-050), [NEM-047](#nem-047)
 - References: [Threshold strategy proposal](features/price-threshold-strategy.md)
 
@@ -1348,3 +1352,7 @@ Let visitors adjust two thresholds and inspect the resulting dispatch, cashflow 
 - Controls, threshold price lines, distinct strategy series, financial details and interval explanations agree with saved backend results.
 - All-day operation and ending-energy differences are visible; no invalid winner ranking or restricted-hindsight upper-bound claim is made.
 - Saved links and old results work; browser checks cover themes, narrow screens, keyboard controls and validation.
+
+### Completion evidence
+
+Implemented in frontend `d4540c7`. An optional "Price thresholds" fieldset enables two signed-decimal inputs with strict ordering and exact-string submission; saved results restore the checkbox and values, and results stored before the experiment still render. The comparison adds a threshold stat card naming all-day operation and ending energy, a third financial-breakdown column, threshold MW/MWh/margin columns in the interval table, a third power-panel strategy and a violet series in the energy and margin charts, labelled dashed charge/discharge lines on the price chart, and per-interval action explanations including binding energy/power limits. Explanations state the rule is not ranked against the fixed/hindsight pair, whose equal-terminal-energy comparison and dual-bound claims are unchanged. `npm run check` passed 98/98 including new validation, ordering, negative-threshold, saved-link, old-result, theme and narrow-screen cases; `npm run test:live` passed 6/6 with a threshold submission executed by the real worker; screenshots reviewed in both themes.

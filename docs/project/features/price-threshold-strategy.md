@@ -2,7 +2,7 @@
 
 Date: 2026-09-25
 
-Status: Accepted as a planned personal-project extension; the simple v1 design below is the implementation proposal. No engine, API or UI changes yet.
+Status: Implemented (2026-09-25). Engine and lifecycle in backend `98015d0` (NEM-049–NEM-050); visitor experience in frontend `d4540c7` (NEM-051). The v1 rules below are the shipped design.
 
 ## Purpose and scope
 

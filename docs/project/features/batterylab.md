@@ -61,7 +61,7 @@ Assume a price-taking wholesale battery. Exclude capital/finance costs, contract
 - Reloading a shared result preserves its input data even after OE revisions.
 - Charts and totals agree; keyboard-accessible controls, clear units and meaningful loading/error states support the full browser journey.
 
-Fixed price thresholds are now a planned optional post-M4 experiment (2026-09-25); see the [threshold strategy proposal](price-threshold-strategy.md) and NEM-049–NEM-051. It prioritises an understandable historical replay over commercial realism, preserves the existing schedule/hindsight pair, and explicitly reports different ending energy. Implementation has not started. Forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis remain deferred. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
+The optional price-threshold experiment is implemented (2026-09-25): visitors enable two signed-decimal thresholds and the worker replays an all-day "charge below / discharge above, else hold" rule alongside the fixed/hindsight pair. See the [threshold strategy record](price-threshold-strategy.md) and NEM-049–NEM-051. It is an idealised same-interval replay that may end at a different stored energy and is not ranked against the pair. Forecasts, multi-day/annual backtests, multi-asset heterogeneity and investment analysis remain deferred. See [model decision](../decisions/006-battery-model-contract.md), [BLK-004](../blockers.md#blk-004), and [M4](../roadmap.md#m4--batterylab).
 
 ## Public shell implementation
 
