@@ -7,7 +7,11 @@ import java.util.List;
 
 /** Exact request values; normalisation is independent of HTTP, storage and execution. */
 public record SimulationRequest(PriceDay.Region region, LocalDate day, Site site,
-        EfficiencyInput efficiency, Costs costs, Windows windows) {
+        EfficiencyInput efficiency, Costs costs, Windows windows, ThresholdInput thresholds) {
+    public SimulationRequest(PriceDay.Region region, LocalDate day, Site site,
+            EfficiencyInput efficiency, Costs costs, Windows windows) {
+        this(region, day, site, efficiency, costs, windows, null);
+    }
     public record Site(BigDecimal capacityMWh, BigDecimal minimumMWh, BigDecimal maximumMWh,
             BigDecimal initialMWh, BigDecimal chargeMW, BigDecimal dischargeMW,
             BigDecimal importLimitMW, BigDecimal exportLimitMW) {
@@ -20,6 +24,10 @@ public record SimulationRequest(PriceDay.Region region, LocalDate day, Site site
     }
 
     public record Windows(Integer chargeStart, Integer chargeEnd, Integer dischargeStart, Integer dischargeEnd) {
+    }
+
+    /** Raw optional threshold experiment input; both parts required together after normalisation. */
+    public record ThresholdInput(BigDecimal chargeBelow, BigDecimal dischargeAbove) {
     }
 
     public static final class Invalid extends IllegalArgumentException {
@@ -42,6 +50,7 @@ public record SimulationRequest(PriceDay.Region region, LocalDate day, Site site
         private final Battery battery;
         private final TradingCosts costs;
         private final ScheduleWindows windows;
+        private final Thresholds thresholds;
 
         private Normalised(SimulationRequest values) {
             this.values = values;
@@ -54,12 +63,17 @@ public record SimulationRequest(PriceDay.Region region, LocalDate day, Site site
                     values.costs().degradationPerExportedMWh().doubleValue());
             Windows w = values.windows();
             windows = ScheduleWindows.minutes(w.chargeStart(), w.chargeEnd(), w.dischargeStart(), w.dischargeEnd());
+            ThresholdInput t = values.thresholds();
+            thresholds = t == null ? null : new Thresholds(t.chargeBelow(), t.dischargeAbove());
         }
 
         public SimulationRequest values() { return values; }
         public Battery battery() { return battery; }
         public TradingCosts costs() { return costs; }
         public ScheduleWindows windows() { return windows; }
+
+        /** Null when the visitor did not enable the threshold experiment. */
+        public Thresholds thresholds() { return thresholds; }
 
         /** Fixed order is part of request-v1; all values exclude newline characters. */
         public String canonical() {
@@ -74,6 +88,10 @@ public record SimulationRequest(PriceDay.Region region, LocalDate day, Site site
             Windows w = values.windows();
             for (int minute : new int[] { w.chargeStart(), w.chargeEnd(), w.dischargeStart(), w.dischargeEnd() })
                 text.append('\n').append(minute);
+            if (thresholds != null)
+                text.append('\n').append(PriceThreshold.VERSION).append('\n')
+                        .append(thresholds.chargeBelow().toPlainString()).append('\n')
+                        .append(thresholds.dischargeAbove().toPlainString());
             return text.toString();
         }
     }
@@ -120,7 +138,18 @@ public record SimulationRequest(PriceDay.Region region, LocalDate day, Site site
         } catch (IllegalArgumentException e) {
             throw new Invalid("windows", "INVALID_WINDOWS");
         }
-        return new Normalised(new SimulationRequest(region, day, s, legs, c, windows));
+        ThresholdInput t = null;
+        if (thresholds != null) {
+            var chargeBelow = decimal("thresholds.chargeBelow", thresholds.chargeBelow(), "-1000000", "1000000");
+            var dischargeAbove = decimal("thresholds.dischargeAbove", thresholds.dischargeAbove(), "-1000000", "1000000");
+            try {
+                new Thresholds(chargeBelow, dischargeAbove);
+            } catch (IllegalArgumentException e) {
+                throw new Invalid("thresholds", "INVALID_ORDER");
+            }
+            t = new ThresholdInput(chargeBelow, dischargeAbove);
+        }
+        return new Normalised(new SimulationRequest(region, day, s, legs, c, windows, t));
     }
 
     private static void required(String field, Object value) {

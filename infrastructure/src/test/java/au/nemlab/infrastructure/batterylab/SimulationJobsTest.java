@@ -108,6 +108,52 @@ class SimulationJobsTest {
     }
 
     @Test
+    void thresholdExperimentsGetDistinctJobsAndRoundTrip() {
+        var t = new SimulationRequest.ThresholdInput(BigDecimal.valueOf(0), BigDecimal.valueOf(100));
+        var base = request(0);
+        var withThresholds = new SimulationRequest(base.region(), base.day(), base.site(),
+                base.efficiency(), base.costs(), base.windows(), t);
+        UUID plain = jobs.submit(base), thresholded = jobs.submit(withThresholds);
+        assertNotEquals(plain, thresholded);
+        assertEquals(thresholded, jobs.submit(withThresholds));
+        assertNull(jobs.input(plain).request().thresholds());
+        assertNotNull(jobs.input(thresholded).request().thresholds());
+        SimulationComparison thresholdResult = null;
+        for (int n = 0; n < 2; n++) {
+            var claim = jobs.claim().orElseThrow();
+            var result = compute(claim.id());
+            if (claim.id().equals(thresholded)) {
+                thresholdResult = result;
+                assertNotNull(result.threshold());
+                assertEquals("price-threshold-v1", result.threshold().version());
+                assertTrue(result.threshold().dispatch().intervals().get(0).importedMWh() > 0,
+                        "0 threshold should charge on the first interval's -30 price");
+                assertTrue(result.threshold().dispatch().intervals().get(1).exportedMWh() > 0,
+                        "100 threshold should discharge on the second interval's 200 price");
+            } else {
+                assertNull(result.threshold());
+            }
+            jobs.complete(claim.id(), claim.token(), result);
+        }
+        assertNotNull(thresholdResult);
+        var stored = jobs.result(thresholded).orElseThrow();
+        // jsonb normalises decimal literals (1E+2 -> 100): values round-trip, scale may not.
+        assertEquals(thresholdResult.fixedDispatch(), stored.fixedDispatch());
+        assertEquals(thresholdResult.hindsight(), stored.hindsight());
+        assertEquals(0, thresholdResult.threshold().thresholds().chargeBelow()
+                .compareTo(stored.threshold().thresholds().chargeBelow()));
+        assertEquals(thresholdResult.threshold().dispatch(), stored.threshold().dispatch());
+        assertEquals(thresholdResult.threshold().accounting(), stored.threshold().accounting());
+        // Results stored before the experiment existed still read back without it.
+        var json = new tools.jackson.databind.json.JsonMapper();
+        var node = (tools.jackson.databind.node.ObjectNode) json.readTree(json.writeValueAsString(thresholdResult));
+        node.remove("threshold");
+        var legacy = json.treeToValue(node, SimulationComparison.class);
+        assertNull(legacy.threshold());
+        assertEquals(thresholdResult.fixedDispatch(), legacy.fixedDispatch());
+    }
+
+    @Test
     void expiredClaimsRecoverWithNewTokensAndStopAfterThreeAttempts() {
         UUID id = jobs.submit(request(0));
         var abandoned = jobs.claim().orElseThrow();

@@ -18,7 +18,7 @@ final class SimulationJson {
 
     static SimulationRequest parse(byte[] body) {
         JsonNode root = JSON.readTree(body);
-        object(root, "request", "region", "day", "site", "efficiency", "costs", "windows");
+        object(root, "request", "region", "day", "site", "efficiency", "costs", "windows", "thresholds");
         var site = root.get("site");
         object(site, "site", "capacityMWh", "minimumMWh", "maximumMWh", "initialMWh", "chargeMW", "dischargeMW", "importLimitMW", "exportLimitMW");
         var efficiency = root.get("efficiency");
@@ -27,6 +27,14 @@ final class SimulationJson {
         object(costs, "costs", "importFee", "exportFee", "degradationPerExportedMWh");
         var windows = root.get("windows");
         object(windows, "windows", "chargeStart", "chargeEnd", "dischargeStart", "dischargeEnd");
+        var thresholds = root.get("thresholds");
+        SimulationRequest.ThresholdInput thresholdInput = null;
+        if (thresholds != null && !thresholds.isNull()) {
+            object(thresholds, "thresholds", "chargeBelow", "dischargeAbove");
+            thresholdInput = new SimulationRequest.ThresholdInput(
+                    decimal(thresholds, "thresholds", "chargeBelow"),
+                    decimal(thresholds, "thresholds", "dischargeAbove"));
+        }
         PriceDay.Region region;
         LocalDate day;
         try { region = PriceDay.Region.valueOf(string(root.get("region"), "region")); }
@@ -43,7 +51,8 @@ final class SimulationJson {
                         decimal(site, "site", "importLimitMW"), decimal(site, "site", "exportLimitMW")),
                 new SimulationRequest.EfficiencyInput(optional(efficiency, "charge"), optional(efficiency, "discharge"), optional(efficiency, "roundTrip")),
                 new SimulationRequest.Costs(decimal(costs, "costs", "importFee"), decimal(costs, "costs", "exportFee"), decimal(costs, "costs", "degradationPerExportedMWh")),
-                new SimulationRequest.Windows(minute(windows, "chargeStart"), minute(windows, "chargeEnd"), minute(windows, "dischargeStart"), minute(windows, "dischargeEnd")));
+                new SimulationRequest.Windows(minute(windows, "chargeStart"), minute(windows, "chargeEnd"), minute(windows, "dischargeStart"), minute(windows, "dischargeEnd")),
+                thresholdInput);
     }
 
     private static void object(JsonNode value, String path, String... allowed) {

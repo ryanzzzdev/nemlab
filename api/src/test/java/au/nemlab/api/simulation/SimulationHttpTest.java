@@ -111,6 +111,32 @@ class SimulationHttpTest {
     }
 
     @Test
+    void thresholdRequestsRoundTripThroughTheStoredResult() throws Exception {
+        save("-30", null, AT);
+        var withThresholds = body().replace("\"windows\":{\"chargeStart\":0,\"chargeEnd\":5,\"dischargeStart\":5,\"dischargeEnd\":10}",
+                "\"windows\":{\"chargeStart\":0,\"chargeEnd\":5,\"dischargeStart\":5,\"dischargeEnd\":10},\"thresholds\":{\"chargeBelow\":\"-10.0\",\"dischargeAbove\":\"150\"}");
+        var submitted = call("POST", PATH, withThresholds);
+        assertEquals(202, submitted.statusCode());
+        UUID id = UUID.fromString(json(submitted).get("id").asString());
+        complete(jobs.claim().orElseThrow());
+        var data = json(call("GET", PATH + "/" + id + "/result", null));
+        var threshold = data.get("threshold");
+        assertEquals("price-threshold-v1", threshold.get("version").asString());
+        assertEquals("-10", threshold.get("thresholds").get("chargeBelow").asText());
+        assertEquals(288, threshold.get("dispatch").get("intervals").size());
+        assertTrue(threshold.get("accounting").has("margin"));
+        assertEquals("-10", data.get("inputs").get("thresholds").get("chargeBelow").asString());
+        // The plain scenario is a different scenario, and its result carries no experiment.
+        var plain = call("POST", PATH, body());
+        UUID plainId = UUID.fromString(json(plain).get("id").asString());
+        assertNotEquals(id, plainId);
+        complete(jobs.claim().orElseThrow());
+        var plainData = json(call("GET", PATH + "/" + plainId + "/result", null));
+        assertTrue(plainData.get("threshold").isNull());
+        assertFalse(plainData.get("inputs").has("thresholds"));
+    }
+
+    @Test
     void duplicatePendingRequestsReuseJobAndNormalisedLegs() throws Exception {
         save("-30", null, AT);
         var first = call("POST", PATH, body());
@@ -134,7 +160,11 @@ class SimulationHttpTest {
                 body().replace("\"chargeMW\":\"12\"", "\"chargeMW\":\"-1\""),
                 body().replace("\"chargeEnd\":5", "\"chargeEnd\":6"),
                 body().replace("\"chargeEnd\":5", "\"chargeEnd\":5.0"),
-                body().replace("\"importFee\":\"0\"", "\"importFee\":\"1e100000\""))) {
+                body().replace("\"importFee\":\"0\"", "\"importFee\":\"1e100000\""),
+                body().replace("\"dischargeEnd\":10}}", "\"dischargeEnd\":10},\"thresholds\":{\"chargeBelow\":\"30\"}}"),
+                body().replace("\"dischargeEnd\":10}}", "\"dischargeEnd\":10},\"thresholds\":{\"chargeBelow\":\"150\",\"dischargeAbove\":\"30\"}}"),
+                body().replace("\"dischargeEnd\":10}}", "\"dischargeEnd\":10},\"thresholds\":{\"chargeBelow\":30,\"dischargeAbove\":\"150\"}}"),
+                body().replace("\"dischargeEnd\":10}}", "\"dischargeEnd\":10},\"thresholds\":{\"chargeBelow\":\"30\",\"dischargeAbove\":\"150\",\"extra\":\"1\"}}"))) {
             var response = call("POST", PATH, value);
             assertEquals(400, response.statusCode(), value);
             assertEquals("INVALID_REQUEST", json(response).get("code").asString());

@@ -54,6 +54,52 @@ class SimulationComparisonTest {
     }
 
     @Test
+    void runsAndValidatesTheThresholdExperimentWhenRequested() {
+        var r = SimulationRequestTest.request();
+        var with = new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(),
+                new SimulationRequest.ThresholdInput(new BigDecimal("30"), new BigDecimal("150")));
+        var p = with.normalise(SimulationRequestTest.CLOCK);
+        var prices = prices();
+        var result = SimulationComparison.run(p, prices, limits);
+        assertEquals(PriceThreshold.VERSION, result.threshold().version());
+        assertEquals(p.thresholds(), result.threshold().thresholds());
+        assertEquals(288, result.threshold().dispatch().intervals().size());
+        assertDoesNotThrow(() -> result.validate(p, prices, limits));
+        var t = result.threshold();
+        var steps = new ArrayList<>(t.dispatch().intervals());
+        steps.set(0, new Dispatch.Interval(0, 0, steps.get(0).endingEnergyMWh() + 1));
+        var tampered = new SimulationComparison.ThresholdResult(t.version(), t.thresholds(),
+                new Dispatch(steps, t.dispatch().limitingReason()), t.accounting());
+        assertThrows(IllegalArgumentException.class, () -> new SimulationComparison(result.fixedDispatch(),
+                result.fixedAccounting(), result.hindsight(), tampered).validate(p, prices, limits));
+        assertThrows(IllegalArgumentException.class, () -> new SimulationComparison(result.fixedDispatch(),
+                result.fixedAccounting(), result.hindsight(), null).validate(p, prices, limits));
+    }
+
+    @Test
+    void rejectsUnexpectedThresholdResultsAndVersionMismatch() {
+        var prices = prices();
+        var result = SimulationComparison.run(parameters, prices, limits);
+        var dispatch = new PriceThreshold().plan(parameters.battery(),
+                new Thresholds(new BigDecimal("30"), new BigDecimal("150")), prices);
+        var unexpected = new SimulationComparison.ThresholdResult(PriceThreshold.VERSION,
+                new Thresholds(new BigDecimal("30"), new BigDecimal("150")), dispatch,
+                Accounting.calculate(parameters.battery(), parameters.costs(), prices, dispatch));
+        assertThrows(IllegalArgumentException.class, () -> new SimulationComparison(result.fixedDispatch(),
+                result.fixedAccounting(), result.hindsight(), unexpected).validate(parameters, prices, limits));
+        var r = SimulationRequestTest.request();
+        var p = new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(),
+                new SimulationRequest.ThresholdInput(new BigDecimal("30"), new BigDecimal("150")))
+                .normalise(SimulationRequestTest.CLOCK);
+        var withResult = SimulationComparison.run(p, prices, limits);
+        var t = withResult.threshold();
+        var wrongVersion = new SimulationComparison.ThresholdResult("price-threshold-v0", t.thresholds(),
+                t.dispatch(), t.accounting());
+        assertThrows(IllegalArgumentException.class, () -> new SimulationComparison(withResult.fixedDispatch(),
+                withResult.fixedAccounting(), withResult.hindsight(), wrongVersion).validate(p, prices, limits));
+    }
+
+    @Test
     void preservesFailedSolverDiagnosticsWithoutDispatch() {
         var prices = prices();
         var result = SimulationComparison.run(parameters, prices, limits);

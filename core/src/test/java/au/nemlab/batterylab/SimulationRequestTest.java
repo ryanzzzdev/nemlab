@@ -117,6 +117,39 @@ class SimulationRequestTest {
     }
 
     @Test
+    void optionalThresholdsNormaliseAndEnterScenarioIdentity() {
+        var r = request();
+        var t = new SimulationRequest.ThresholdInput(n("30"), n("150"));
+        var with = new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(), t);
+        var p = with.normalise(CLOCK);
+        assertEquals(new Thresholds(n("30").stripTrailingZeros(), n("150").stripTrailingZeros()), p.thresholds());
+        assertNull(r.normalise(CLOCK).thresholds());
+        assertNotEquals(p.canonical(), r.normalise(CLOCK).canonical());
+        var scaled = new SimulationRequest.ThresholdInput(n("30.0"), n("150.00"));
+        var equivalent = new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(), scaled);
+        assertEquals(p.canonical(), equivalent.normalise(CLOCK).canonical());
+        var negative = new SimulationRequest.ThresholdInput(n("-50"), n("150"));
+        assertDoesNotThrow(() -> new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(),
+                r.costs(), r.windows(), negative).normalise(CLOCK));
+    }
+
+    @Test
+    void rejectsPartialOutOfRangeAndUnorderedThresholds() {
+        var r = request();
+        var partial = new SimulationRequest.ThresholdInput(n("30"), null);
+        rejects(new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(), partial),
+                "thresholds.dischargeAbove", "REQUIRED");
+        for (var t : List.of(new SimulationRequest.ThresholdInput(n("150"), n("30")),
+                new SimulationRequest.ThresholdInput(n("30"), n("30"))))
+            rejects(new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(), t),
+                    "thresholds", "INVALID_ORDER");
+        rejects(new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(),
+                new SimulationRequest.ThresholdInput(n("-1000001"), n("30"))), "thresholds.chargeBelow", "OUT_OF_RANGE");
+        rejects(new SimulationRequest(r.region(), r.day(), r.site(), r.efficiency(), r.costs(), r.windows(),
+                new SimulationRequest.ThresholdInput(n("1e-19"), n("30"))), "thresholds.chargeBelow", "DECIMAL_LIMIT");
+    }
+
+    @Test
     void marketDayEligibilityUsesFixedNemTime() {
         var r = request();
         for (LocalDate day : List.of(LocalDate.of(2021, 9, 30), LocalDate.of(2026, 9, 20), LocalDate.MAX))

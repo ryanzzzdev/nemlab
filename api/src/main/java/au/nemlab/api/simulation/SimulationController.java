@@ -27,11 +27,13 @@ public class SimulationController {
             String statusUrl, String resultUrl) { }
     public record PriceInterval(Instant start, Instant end, String price) { }
     public record Strategy(Dispatch dispatch, Accounting accounting) { }
+    public record ThresholdView(String version, Map<String, String> thresholds, Dispatch dispatch,
+            Accounting accounting) { }
     public record Solver(OrderedHindsight.Status status, Double objective, Double upperBound, Double absoluteGap) { }
     public record ResultResponse(UUID id, Map<String, Object> inputs, UUID priceRevision,
             ScenarioPreparation.Versions versions, String marketOffset, int intervalSeconds,
             String intervalLabel, Map<String, String> units, List<PriceInterval> prices,
-            Strategy fixed, Strategy hindsight, Solver solver) { }
+            Strategy fixed, Strategy hindsight, ThresholdView threshold, Solver solver) { }
 
     @PostMapping
     public ResponseEntity<JobResponse> submit(HttpServletRequest request) throws IOException {
@@ -76,17 +78,22 @@ public class SimulationController {
         var input = jobs.input(id);
         var h = result.hindsight();
         if (h.status() != OrderedHindsight.Status.OPTIMAL) throw new Failed();
+        var t = result.threshold();
         var response = new ResultResponse(id, inputs(input.request()), jobs.priceRevision(id), input.versions(),
                 "+10:00", 300, "END", Map.of("energy", "MWh", "power", "MW", "money", "AUD", "price", "AUD/MWh"),
                 input.prices().intervals().stream().map(i -> new PriceInterval(i.start(), i.end(), i.price().toPlainString())).toList(),
                 new Strategy(result.fixedDispatch(), result.fixedAccounting()), new Strategy(h.dispatch(), h.accounting()),
+                t == null ? null : new ThresholdView(t.version(),
+                        Map.of("chargeBelow", t.thresholds().chargeBelow().toPlainString(),
+                                "dischargeAbove", t.thresholds().dischargeAbove().toPlainString()),
+                        t.dispatch(), t.accounting()),
                 new Solver(h.status(), h.solverObjective(), h.upperBound(), h.absoluteGap()));
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response);
     }
 
     private static Map<String, Object> inputs(SimulationRequest r) {
         var s = r.site();
-        return Map.of("region", r.region(), "day", r.day(),
+        var inputs = new LinkedHashMap<String, Object>(Map.of("region", r.region(), "day", r.day(),
                 "site", Map.of("capacityMWh", s.capacityMWh().toPlainString(), "minimumMWh", s.minimumMWh().toPlainString(),
                         "maximumMWh", s.maximumMWh().toPlainString(), "initialMWh", s.initialMWh().toPlainString(),
                         "chargeMW", s.chargeMW().toPlainString(), "dischargeMW", s.dischargeMW().toPlainString(),
@@ -94,7 +101,12 @@ public class SimulationController {
                 "efficiency", Map.of("charge", r.efficiency().charge().toPlainString(), "discharge", r.efficiency().discharge().toPlainString()),
                 "costs", Map.of("importFee", r.costs().importFee().toPlainString(), "exportFee", r.costs().exportFee().toPlainString(),
                         "degradationPerExportedMWh", r.costs().degradationPerExportedMWh().toPlainString()),
-                "windows", r.windows());
+                "windows", r.windows()));
+        var t = r.thresholds();
+        if (t != null)
+            inputs.put("thresholds", Map.of("chargeBelow", t.chargeBelow().toPlainString(),
+                    "dischargeAbove", t.dischargeAbove().toPlainString()));
+        return inputs;
     }
 
     private static JobResponse view(SimulationJobs.Job job) {
