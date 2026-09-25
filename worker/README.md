@@ -88,7 +88,11 @@ its deadline. An unkillable child stops further polling and emits an operator-in
 | `WORKER_STOPPED` | Retry after the worker restarts. |
 | `LEASE_EXPIRED` | The previous worker did not finish; polling recovers the claim. |
 
-Logs contain job IDs and fixed messages, not credentials or raw provider responses. Fetch results
+Logs contain job IDs and fixed messages, not credentials or raw provider responses. The fetch
+child logs each OE request on its console — request URL (the credential stays in the
+`Authorization` header), HTTP status, elapsed time and response bytes, plus a normalised summary
+(value/source-null/missing counts, min–max price, source version) on success — and the parent
+inherits that console into the worker log. Fetch results
 use an owned temporary file that is deleted after the child finishes; abrupt parent termination
 can leave a price-only temporary file for normal OS temporary-file cleanup.
 
