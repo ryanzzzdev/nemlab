@@ -181,3 +181,10 @@ engine dispatch/accounting are returned with units/time boundaries. OpenAPI 1.1.
 three operations and generated TypeScript inputs without changing price/operator schemas.
 See [decision 017](decisions/017-simulation-http-contract.md), [API setup](../../api/README.md#public-simulation-lifecycle)
 and [verification](evidence/engine/http-findings.md).
+
+
+## GridReplay M5 implementation plan (not yet implemented)
+
+The [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25) and [NEM-054–NEM-064](backlog.md#m5-delivery-tasks) refine the existing conceptual design. Extend the present PostgreSQL/worker/API architecture with versioned grid observations and per-metric coverage, bounded operator imports, deterministic detectors and atomic event/replay publication. Retain exact event evidence through immutable snapshots or revision manifests referencing retained observations; corrected source data must not silently alter old replay links. Catalogue pagination is pinned to a publication. Public catalogue and replay endpoints are read-only and bounded; they do not initiate OE requests.
+
+The frontend retains React/plain CSS/ECharts and shared themes. A demo-faithful catalogue/replay UI is built early against typed test/development fixtures, then connected to the generated public contract. One cursor/window state drives playback, readouts and four contextual chart panels. Timestamp equality is not a claim of equivalent physical observation windows. Admin remains a separate optional app, subject to NEM-063; no new backend service or browser credential mechanism is selected by this plan.

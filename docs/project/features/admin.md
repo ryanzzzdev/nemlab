@@ -1,6 +1,7 @@
 # Admin
 
-Updated: 2026-09-13  
+Updated: 2026-09-25
+
 Status: Conditional feature; the UI is not committed to initial launch.
 
 ## Purpose and boundary
@@ -39,3 +40,16 @@ bounded recent-job and audit-event lists, status and idempotent cancellation. Au
 server-derived from one configured operator token; browser login and multiple operator accounts
 remain outside this slice. Direct CLI execution is retired. Coverage inspection remains available
 through read-only commands until NEM-014. The optional Admin frontend decision is unchanged.
+
+
+## M5 assessment plan — 2026-09-25
+
+Recommendation: deliver GridReplay and prove the protected operator workflow before building a second frontend. This is not a final decision to include or defer Admin. [NEM-063](../backlog.md#nem-063) owns the rehearsal and decision evidence; NEM-019 remains the parent package.
+
+The current price-refresh controller supports submit, recent jobs, job status, audit events and cancellation. It does **not** expose a dedicated manual retry endpoint. Existing automatic retries and submitting another operation are not interchangeable; the rehearsal must verify an explicit safe recovery procedure. Grid imports, event detection and catalogue publication still need operator surfaces in NEM-056/NEM-058.
+
+Rehearse: inspect metric/day coverage → request a bounded import → follow job progress → inspect a failure → recover safely → detect/publish events → check the public replay → refresh corrected input → confirm old links still reproduce their original evidence. Record the authenticated actor, exact requested scope and resulting operation IDs. Exercise unauthorized calls, deduplication, cancellation/restart and failure diagnostics without exposing credentials. No raw database edits as the routine workaround.
+
+If this remains comfortable through documented commands/endpoints for a single operator, recommend deferring the UI and keeping that tested runbook. If repeated inspection/recovery proves awkward, propose a minimal separate `apps/admin`: coverage, jobs/detail, bounded refresh, eligible recovery action and audit list. Add authentication/session/CSRF requirements appropriate to the selected mechanism before any browser implementation; the current server token must never be embedded in the public application or a Vite bundle. No account-management suite, arbitrary SQL or generic CRUD console.
+
+Record the include/defer decision explicitly after the rehearsal. If included, split it into focused tasks and make their completion part of M5 acceptance; if deferred, the tested operator alternative is the deliverable. Hosting, retention and final launch identity policy remain M6/BLK-006 work.

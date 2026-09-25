@@ -8,6 +8,21 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
+M5 next: [NEM-054](#nem-054). UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+
+- [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
+- [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
+- [NEM-056 — Run bounded grid imports through the worker](#nem-056)
+- [NEM-057 — Implement the three deterministic event detectors](#nem-057)
+- [NEM-058 — Publish versioned events and reproducible replays](#nem-058)
+- [NEM-059 — Expose the GridReplay catalogue and replay contract](#nem-059)
+- [NEM-060 — Build the demo-faithful GridReplay interface](#nem-060)
+- [NEM-061 — Connect catalogue and synchronized replay to real data](#nem-061)
+- [NEM-062 — Share replays and open the correct BatteryLab day](#nem-062)
+- [NEM-063 — Rehearse GridReplay operations and decide Admin scope](#nem-063)
+- [NEM-064 — Verify the GridReplay journey and M5 exit criteria](#nem-064)
+
+
 - [NEM-053 — Polish BatteryLab presentation against the demo](#nem-053)
 - [NEM-052 — Make price thresholds a default third strategy](#nem-052)
 
@@ -539,7 +554,7 @@ Delivered as NEM-042–NEM-046. NEM-042 established product layouts and shared a
 
 ### Outcome
 
-Refine detector definitions, versioned events, catalogue API and replay frontend into separate repository tasks.
+Deliver the demo-faithful real-data journey through NEM-054–NEM-062 and the NEM-064 exit review. This is the parent package, not a single implementation task.
 
 ### Done when
 
@@ -549,11 +564,11 @@ Refine detector definitions, versioned events, catalogue API and replay frontend
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Delivery tasks and acceptance criteria planned on 2026-09-25; implementation and verification remain pending.
 
 ### Notes
 
-A static mock-data demo of the catalogue/replay concept lives at [docs/demos/gridreplay/index.html](../demos/gridreplay/index.html) (2026-09-18) for discussion; illustrative only — detector definitions and scope remain unsettled per the feature spec and [BLK-005](blockers.md#blk-005).
+A static mock-data demo of the catalogue/replay concept lives at [docs/demos/gridreplay/index.html](../demos/gridreplay/index.html) (2026-09-18) for discussion; synthetic data and illustrative detector definitions only. The user has selected its visual design as the primary target; see the fidelity requirements in the feature spec. NEM-054 settles the data/detector recommendation; BLK-005 retains broader coverage gates.
 
 <a id="nem-019"></a>
 
@@ -563,7 +578,7 @@ A static mock-data demo of the catalogue/replay concept lives at [docs/demos/gri
 - Milestone: M5
 - Priority: Normal
 - Status: Backlog
-- Depends on: [NEM-013](#nem-013), [NEM-018](#nem-018)
+- Depends on: [NEM-013](#nem-013), [NEM-063](#nem-063)
 - References: [Specification / decision](features/admin.md)
 
 ### Outcome
@@ -578,7 +593,7 @@ Decide whether a minimal UI is needed before launch and record a usable operatio
 
 ### Completion evidence
 
-Not started; no implementation or verification evidence yet.
+Assessment split into NEM-063 on 2026-09-25. Recommend proving operator endpoints/commands first; no Admin UI inclusion or deferral has yet been decided. If included, create and complete focused UI tasks before closing this parent package.
 
 <a id="nem-020"></a>
 
@@ -1369,7 +1384,7 @@ Implemented in frontend `d4540c7`. An optional "Price thresholds" fieldset enabl
 - Priority: High
 - Status: Done
 - Depends on: [NEM-051](#nem-051)
-- References: [Threshold UX revision](features/price-threshold-strategy.md#accepted-ux-revision--2026-09-25-pending-nem-052), [UI refinement plan](features/ui-refinement.md)
+- References: [Threshold UX revision](features/price-threshold-strategy.md#accepted-ux-revision--2026-09-25-implemented-as-nem-052), [UI refinement plan](features/ui-refinement.md)
 
 ### Outcome
 
@@ -1428,3 +1443,292 @@ A follow-up pass compacted the page further: the introduction fits one line at d
 A second follow-up moved interval data into demo-style cursor tooltips: each chart shows a dark tooltip card beside the axis cursor (native ECharts `axis` tooltips synchronised across panels via chart groups), replacing hover-driven React updates that made the cursor feel heavy. The discrete selected interval still drives the mark line, slider and readout via click, arrow keys or controls. The Fixed/Thresholds/Hindsight segmented control now appears on the power, energy and margin panels with one synced selection — power swaps its bars, energy and margin emphasise the selected strategy while keeping comparison lines faintly visible. `npm run check` passed 102/102 cases; the live suite was not rerun for this presentation-only change. Frontend commit `d9b5a08`. A further copy pass gave `.intro` full width on every page and renamed the heading to "What could a battery do in a market day?" with a three-strategy introduction; `npm run check` stayed green, commit `3730335`.
 
 A third follow-up removed the chart controls entirely — the Visible window selector, Selected interval slider and the below-charts `.chart-readout` are gone on both the comparison and prices charts. Panels always cover the full day; the connected axis tooltips carry interval values and the exact interval tables remain the accessible alternative. Interval selection now commits on `mousedown` (taps on touch devices never produced a zrender `click`), a chart resize clears the stale axis-pointer state so the tooltip cannot linger at old coordinates, and `.chart-plot` clips the tooltip DOM. The Prices chart gained the same axis tooltip as the comparison panels. `npm run check` passed 102/102 cases updated for full-day rendering, tooltip content, cursor synchronisation and narrow layouts; the live suite passed 6/6 (it also caught a stale `nth(1)` table selector left by the metadata-table change, now scoped to the disclosure). Frontend commit `b48295e`.
+
+
+<a id="m5-delivery-tasks"></a>
+
+## M5 delivery tasks
+
+Planned on 2026-09-25. Only NEM-054 is ready to start; downstream records remain Backlog until their dependencies and evidence gates are met. The visual direction is accepted; proposed detector defaults, catalogue period and Admin recommendation must not be described as shipped or fully validated.
+
+<a id="nem-054"></a>
+
+## NEM-054 — Freeze GridReplay data scope and detector rules
+
+- Repository: both
+- Milestone: M5
+- Priority: High
+- Status: Ready
+- Depends on: [NEM-006](#nem-006), [NEM-053](#nem-053)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Turn the proposed NSW1 scope into an implementable contract and small labelled fixture set.
+
+### Done when
+
+- Record the first catalogue region/date window and a metric-by-metric coverage matrix using existing M1 evidence; list any additional bounded source checks needed before enabling imports.
+- Freeze the three detector definitions, exact comparisons, ramp tie/completeness policy, cross-midnight ownership, chunk continuation and treatment of unresolved coverage edges. Document recommended defaults and exclusions from the GridReplay spec.
+- Define event/replay fixture shapes, timestamp semantics, immutable version identity, retention dependency and maximum import/replay/page bounds. Add hand-labelled complete/gap/boundary/no-event examples without pretending synthetic data is real.
+- Record accepted implementation decisions and remaining evidence gaps; do not block the UI fixture work on optional renewable/battery methodology.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-055"></a>
+
+## NEM-055 — Persist versioned GridReplay observations and coverage
+
+- Repository: backend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-054](#nem-054)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Store the required grid context alongside the existing price foundation, preserving metric-specific semantics.
+
+### Done when
+
+- Migrations and repositories cover region/metric/technology identity, exact values, source timestamps, revisions and per-series coverage. Distinguish zero, null, omitted timestamps and missing series.
+- Bounded provider adapters validate demand, selected technology and flow responses, preserve signed anomalies and keep optional/unsupported categories explicit. Reuse proven price ingestion without changing its semantics.
+- PostgreSQL and adapter tests verify idempotence, corrections, malformed input, gaps, metadata/units and consistent revision reads. No generic all-metric framework or new service is required.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-056"></a>
+
+## NEM-056 — Run bounded grid imports through the worker
+
+- Repository: backend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-055](#nem-055)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Let the operator request and inspect durable GridReplay imports with the existing worker operating model.
+
+### Done when
+
+- Add protected bounded region/window submissions and status/audit visibility; reuse existing authentication and lease/fencing patterns without exposing controls to public visitors.
+- Worker imports are limited, resumable, deduplicated and retryable under a documented policy; cancellation/restart cannot publish partial data as complete. Preserve price/simulation workload limits.
+- Verify timeout/provider-error/restart/duplicate cases and document commands, progress and safe recovery. Optional-series failures remain distinguishable from core-data failure.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-057"></a>
+
+## NEM-057 — Implement the three deterministic event detectors
+
+- Repository: backend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-054](#nem-054)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Calculate negative-price runs, price spikes and scheduled-demand ramps from fixed versioned inputs.
+
+### Done when
+
+- Pure detector code implements the frozen rules and returns factual summaries, boundaries, required coverage and detector parameters/version.
+- Hand-labelled tests cover exact thresholds, minimum length, no events, nonpositive ramps, equal maxima, missing observations, midnight and input chunk overlaps. Chunked and unchunked evaluation agree.
+- Unresolved source edges do not become fabricated complete runs, and incomplete ramp domains do not produce unsupported daily-largest claims. No synthetic renewable ratio or causal title generator is introduced.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-058"></a>
+
+## NEM-058 — Publish versioned events and reproducible replays
+
+- Repository: backend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-055](#nem-055), [NEM-056](#nem-056), [NEM-057](#nem-057)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Produce a catalogue whose event links retain the same evidence after source refreshes.
+
+### Done when
+
+- Persist events and immutable replay snapshots/manifests with detector configuration and exact source revisions; publish complete catalogue versions atomically.
+- Same inputs rerun without duplicates; corrected sources produce explicit new versions while retained old IDs still reproduce old evidence. Overlapping imports do not split or duplicate cross-midnight runs.
+- Provide a bounded, auditable detection/publication operator job and coverage summary, including incomplete/skipped windows. Failure/retry cannot expose partial publication.
+- Integration tests verify deduplication, corrections, snapshot retrieval, publication rollback and event-to-source provenance; define cleanup/reference protection before any deletion is enabled.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-059"></a>
+
+## NEM-059 — Expose the GridReplay catalogue and replay contract
+
+- Repository: both
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-058](#nem-058)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Offer read-only typed public endpoints for catalogue filters, event details and bounded replay data.
+
+### Done when
+
+- Version OpenAPI schemas and generated frontend types for the proposed events/detail/replay resources, per-metric coverage, exact units/timestamps and immutable IDs.
+- Define inclusive UI date overlap filtering, stable ordering, publication-pinned pagination and bounded replay windows. Unsupported coverage, no matches, missing optional series and missing/expired events are distinct.
+- HTTP/contract tests cover invalid inputs, bounds, pagination under concurrent publication and saved-version reproducibility. Public reads never cause imports/detection and never return operator secrets.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-060"></a>
+
+## NEM-060 — Build the demo-faithful GridReplay interface
+
+- Repository: frontend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-054](#nem-054)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Establish the real React page visually against the demo before live backend integration is complete.
+
+### Done when
+
+- Match the demo catalogue filters/card hierarchy, selected card, replay heading/BatteryLab action, Play/speed/scrub/clock row, readout strip, four chart cards and quiet provenance using the specification fidelity matrix.
+- Preserve centered 1440px workspace/shared header and shared Light/Dark/Auto behavior; test semantic controls, keyboard focus, mobile wrapping and chart legends.
+- Exercise typed complete/gapped/empty/error fixtures in browser tests or an explicit development harness only. The public page must not show synthetic events as real.
+- Use computer-use screenshots side by side with the demo at matching desktop, 768px, 390px and 320px sizes in both themes. Record deliberate differences and correct visual mismatches before integration acceptance.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-061"></a>
+
+## NEM-061 — Connect catalogue and synchronized replay to real data
+
+- Repository: frontend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-059](#nem-059), [NEM-060](#nem-060)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Replace the empty public shell with the stored catalogue and working replay interactions.
+
+### Done when
+
+- Wire region/type/date filters and bounded pagination to public endpoints with cancellation, loading, retry and truthful coverage/no-match states; opening a card selects and focuses the replay below the catalogue.
+- Render available price/demand/generation/flow panels automatically with event shading and one timestamp/window state. Preserve per-metric gaps/semantics and signed values; do not claim balance or causal alignment.
+- Play/Pause, three speeds, pointer/touch, keyboard scrub and bounded window changes keep charts/readouts synchronized. Stop at the end and pause on manual scrub, event change, hidden tab and navigation.
+- Browser tests verify those behaviors, missing optional context, reduced motion, chart failures, theme changes and responsive overflow; inspect actual UI through computer use.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-062"></a>
+
+## NEM-062 — Share replays and open the correct BatteryLab day
+
+- Repository: frontend
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-061](#nem-061)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Make an investigation reloadable and complete the catalogue-to-BatteryLab journey.
+
+### Done when
+
+- Implement validated event/filter URL state with direct loads, saved immutable event links, reload and Back/Forward; playback ticks do not flood browser history.
+- Place the BatteryLab link as in the demo; display/select the NEM day for cross-midnight events and define midnight price-interval ownership explicitly.
+- BatteryLab accepts valid region/day prefills without submitting; saved simulation IDs take precedence. Invalid/unsupported parameters produce a useful recovery state.
+- Browser and live journey checks cover same-day, cross-midnight, final 00:00, user timezone differences, missing event/price coverage and unchanged saved BatteryLab links.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-063"></a>
+
+## NEM-063 — Rehearse GridReplay operations and decide Admin scope
+
+- Repository: both
+- Milestone: M5
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-056](#nem-056), [NEM-058](#nem-058), [NEM-059](#nem-059)
+- References: [Delivery specification](features/admin.md)
+
+### Outcome
+
+Prove an operator can maintain both products and make an explicit include/defer decision for Admin UI.
+
+### Done when
+
+- Exercise authenticated coverage inspection, bounded price/grid import, status/audit, safe failed-job recovery, cancellation where supported, detection/republication and old-link preservation.
+- Verify unauthorized requests fail and repeated submissions do not create duplicate logical work. Distinguish automatic worker retry from a supported manual resubmission; document any missing operation rather than claiming an existing retry endpoint.
+- Record commands, actual results, usability pain points and required fixes. Split material gaps into new tasks before marking the rehearsal done.
+- Recommend include/defer with evidence and record the final scope decision explicitly. If UI is included, scope authentication/session handling and create separate implementation tasks; NEM-019 remains open until they pass. If deferred, retain the tested operator alternative.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.
+
+<a id="nem-064"></a>
+
+## NEM-064 — Verify the GridReplay journey and M5 exit criteria
+
+- Repository: both
+- Milestone: M5
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-061](#nem-061), [NEM-062](#nem-062), [NEM-063](#nem-063)
+- References: [Delivery specification](features/gridreplay.md)
+
+### Outcome
+
+Close M5 only when the real-data journey, demo fidelity and Admin decision are evidenced.
+
+### Done when
+
+- Rehearse a bounded real NSW1 import→detection→publication→catalogue→replay→BatteryLab flow and record the actual supported period. Retain reproducible fixture versions of key failure/boundary cases.
+- Run relevant backend, migration, contract, frontend and live checks; measure maximum-window payload/render/playback behavior and fix observed bottlenecks.
+- Review demo-matched desktop/mobile screenshots in light/dark/auto, keyboard/touch interaction, unavailable metrics and factual event copy. Record limitations and intentional differences.
+- Review NEM-018/NEM-019 acceptance. If an Admin UI is included, its added tasks are additional dependencies before closure. Update M5 status only when all required evidence passes; preserve hosted CI and public launch/retention/security gates under M6 and NEM-038.
+
+### Completion evidence
+
+Planned only; no implementation or verification evidence yet.

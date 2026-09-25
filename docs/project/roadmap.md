@@ -1,6 +1,6 @@
 # NEMLab roadmap
 
-Updated: 2026-09-24
+Updated: 2026-09-25
 
 The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
@@ -60,11 +60,11 @@ Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-
 
 ## M5 — GridReplay and Admin assessment
 
-Scope: a focused catalogue, three proposed event types, one polished replay, and navigation into BatteryLab. Validate region coverage before expanding. Assess Admin based on actual operational workflows.
+Scope: a bounded NSW1 catalogue, three evidence-backed event types, a replay closely matching the selected demo, and navigation into BatteryLab. The recommended first detectors are negative-price runs, price spikes and scheduled-demand ramps; NEM-054 freezes definitions/coverage before implementation. Renewable peaks remain deferred pending methodology. Assess Admin through actual operational workflows; a separate UI is not yet committed.
 
 Exit criteria: event results are repeatable and coverage-aware; linked charts align; observations do not imply unsupported causal claims; a replay can open the corresponding BatteryLab day. Record whether Admin UI is included or deferred, with an operational alternative if deferred.
 
-Planning work packages: [NEM-018](backlog.md#nem-018), [NEM-019](backlog.md#nem-019).
+Delivery plan (2026-09-25): [NEM-054–NEM-064](backlog.md#m5-delivery-tasks) refine parent packages [NEM-018](backlog.md#nem-018) and [NEM-019](backlog.md#nem-019). Start NEM-054, then build storage/ingestion/detectors and the demo-faithful UI in independent tracks; connect publication/API/replay, finish sharing/BatteryLab handoff, rehearse Admin operations and review exit evidence. UI design starts at NEM-060 after the scope/fixture contract, rather than waiting for all backend implementation. M5 remains Planned: this update establishes executable tasks, not delivered features. See the [feature plan](features/gridreplay.md#m5-delivery-plan--2026-09-25).
 
 ## M6 — Launch readiness and release
 

@@ -1,6 +1,6 @@
 # Blockers and open questions
 
-Updated: 2026-09-20
+Updated: 2026-09-25
 
 These records distinguish future decision gates from work that is blocked now. No failed implementation attempt is implied. Each record is Open until evidence and its resolution date are recorded. Task execution status belongs in the [backlog](backlog.md).
 
@@ -66,9 +66,9 @@ These records distinguish future decision gates from work that is blocked now. N
 - Status: Open
 - Impact: M1 sample selection, M4 curated demo and M5 detection.
 - Affected tasks: [NEM-002](backlog.md#nem-002), [NEM-016](backlog.md#nem-016), [NEM-018](backlog.md#nem-018), [NEM-020](backlog.md#nem-020).
-- Evidence / attempts: No sample region/dates or launch history range are agreed. Energy-curious visitors and employers are a working audience assumption. GridReplay thresholds/grouping are proposals.
+- Evidence / attempts: M1 validated bounded NSW1 samples on 2023-09-11 and 2026-09-11; this does not establish complete catalogue/launch coverage. Energy-curious visitors and employers are a working audience assumption. GridReplay thresholds/grouping remain proposals until NEM-054 freezes them.
 - Blocking scope: Can be resolved incrementally; does not require pausing all work for a full product specification.
-- Next action / owner: Select explicit bounded sample dates/region in NEM-002 using reasonable defaults; refine launch claims from validation. Finalise detector parameters and demo audience before the corresponding UI work.
+- Next action / owner: Implementing agent completes NEM-054: confirm initial NSW1 window, metric coverage and negative-run/spike/demand-ramp definitions using the M5 plan. NEM-020 still owns promised launch coverage. Renewable peaks and regional battery aggregation remain excluded until their methodology is evidenced.
 - Resolution: Not yet resolved.
 
 
@@ -84,7 +84,7 @@ These records distinguish future decision gates from work that is blocked now. N
 - Affected tasks: [NEM-019](backlog.md#nem-019), [NEM-020](backlog.md#nem-020).
 - Evidence / attempts: No hosting provider/budget, identity mechanism, public compute quotas, retention policy or decision to ship Admin UI is recorded.
 - Blocking scope: Not an immediate blocker. Blocks final launch readiness if unresolved.
-- Next action / owner: Use engine/runtime measurements to propose deployment limits and costs, rehearse operator commands, and decide Admin UI scope with the user before launch.
+- Next action / owner: NEM-063 rehearses price/grid import, recovery and event publication through protected controls, then records the Admin include/defer decision with the user. Recommend proving commands/endpoints before creating an Admin app; this is not a final deferral. NEM-020 separately settles hosting, quotas, identity and retention using measured workloads.
 - Resolution: Not yet resolved.
 
 
