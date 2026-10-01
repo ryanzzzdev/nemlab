@@ -34,7 +34,9 @@ extend-exclude = ["reference", "docs"]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ASYNC", "S", "TID"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101", "S105", "S106"]
+"**/tests/**" = ["S101", "S105", "S106", "S311"]
+# post-validation narrowing asserts, not security checks
+"core/src/nemlab_core/request.py" = ["S101"]
 
 [tool.mypy]
 mypy_path = ["core/src", "infrastructure/src", "api/src", "worker/src"]

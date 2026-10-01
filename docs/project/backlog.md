@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-068](#nem-068), then NEM-069–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-069](#nem-069), then NEM-070–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1844,7 +1844,7 @@ Create a locked uv workspace matching core/infrastructure/api/worker boundaries.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-067](#nem-067)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1861,7 +1861,11 @@ Implement exact market-day/request boundaries, fixed schedule, threshold strateg
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+- `core/src/nemlab_core/` ports all named types across `decimal_text.py` (BigDecimal-grammar parse, sign-free zero, manual trailing-zero strip avoiding `Decimal.normalize` 28-digit context rounding), `numbers.py`, `prices.py` (288 slots, fixed UTC+10, contiguous 5-minute ends), `battery.py`, `windows.py`, `dispatch.py`, `accounting.py`, `fixed.py`, `threshold.py` (strict `<`/`>` equality-hold semantics, unrestricted daily operation, unforced terminal energy), `request.py` (normalise + canonical strings, structured field/code errors, optional threshold pairs, legacy two-strategy requests still valid).
+- `tests/parity/test_java_parity.py` replays `docs/project/evidence/python-rebuild/fixtures/parity-fixtures.json` — 56 cases covering decimal forms, request normalisation/error codes, content hashes, canonical strings, and all 10 frozen strategy runs with bitwise-exact interval dispatch and accounting for fixed and threshold strategies.
+- `core/tests/test_engine.py` and `core/tests/test_threshold.py` port the Java unit/property coverage: physical limits, terminal-energy rules, fees/losses, validator rejections, negative prices, equality-hold; sampled real OE CSV days feed the property checks.
+- Verification: `uv run pytest` 120 passed; `uv run ruff check`/`ruff format --check` clean; `uv run mypy` clean (22 files); `uv run lint-imports` kept. `pyproject.toml` per-file-ignores extended for test S311 and `request.py` post-validation asserts (S101).
+- The solver (`OrderedHindsight`) remains NEM-069 scope; no solver code was ported here.
 
 <a id="nem-069"></a>
 
