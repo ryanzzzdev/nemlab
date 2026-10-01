@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-077](#nem-077), then NEM-078–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-079](#nem-079), then NEM-080. See the [rebuild plan](python-backend-rebuild.md). See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -2176,7 +2176,7 @@ Verified: `api/tests/test_simulation_http.py` (12 tests) ports `SimulationHttpTe
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-073](#nem-073), [NEM-077](#nem-077)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2194,7 +2194,9 @@ Replace active Java commands with reproducible Python checks and clear operation
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+Done — `Dockerfile` builds three non-root targets from the locked uv workspace on `python:3.13.14-slim`: `api` (`nemlab-api`), `worker` (`nemlab-worker`) and `migrate` (`python -m nemlab_infrastructure.migrate`, default `check`). SciPy/HiGHS run as binary wheels — no system solver libraries. `compose.yaml` keeps the `postgres` service and `nemlab-postgres` volume untouched and adds optional `api`/`worker` services under the `apps` profile (in-network `jdbc:postgresql://postgres:5432/nemlab`, `.env` passthrough for flags/credentials, api healthcheck on `/actuator/health`). `scripts/smoke_apps.py` replaces the jar smoke — starts `nemlab-api`/`nemlab-worker` flags-off, checks actuator health + worker liveness, SIGTERM-stops its own children. `.github/workflows/backend.yml` is the active workflow: pinned checkout/setup-node (same SHAs as the Java-era workflow), `uv==0.11.29` via pip, `uv sync --locked`, ruff/format/mypy/lint-imports, pytest against a postgres:18.6 service container, `verify.mjs`, packaged smoke and docker build+smoke per target. Module READMEs (`api/README.md`, `worker/README.md`), root README and running-locally rewritten Python-first; Java usage documented as reference. NEM-038 remains outstanding — no remote run evidence yet.
+
+Verified: all three images build; container API serves `/actuator/health` and contract-shaped errors as uid 999 non-root; container worker claimed and committed a real refresh job against the Java-managed compose DB and exited cleanly on SIGTERM; containerised `migrate check` correctly reported the compose DB as java-managed V1-V3. `docker compose --profile apps up` starts postgres+api+worker independently. Clean `git clone` copy: `uv sync --locked`, ruff/format/mypy/lint-imports, full pytest (285) and `verify.mjs` (61 captures) all pass with no Java tooling.
 
 <a id="nem-079"></a>
 

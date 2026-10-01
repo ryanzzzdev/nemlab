@@ -14,5 +14,46 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Optional packaged applications — `docker compose --profile apps up -d`.
+  # Credentials/flags come from .env (same NEMLAB_* contract as `uv run`);
+  # the database URL is overridden to the in-network service name.
+  api:
+    profiles: ["apps"]
+    build:
+      context: .
+      target: api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NEMLAB_DB_URL: jdbc:postgresql://postgres:5432/nemlab
+      SERVER_ADDRESS: 0.0.0.0
+      PORT: "8080"
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/actuator/health', timeout=3).status == 200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    profiles: ["apps"]
+    build:
+      context: .
+      target: worker
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NEMLAB_DB_URL: jdbc:postgresql://postgres:5432/nemlab
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   nemlab-postgres:

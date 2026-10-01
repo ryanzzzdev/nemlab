@@ -1,94 +1,106 @@
 # Running NEMLab locally
 
 Created: 2026-09-24
+Updated: 2026-10-01 — the Python backend is the active local runtime; Java remains
+under `reference/java/` for comparison.
 Scope: Commands to run the backend (`nemlab/`) and frontend (`nemlab-ui/`) on a
 local workstation. Module READMEs remain the detailed references; this page is the
 quick orientation.
 
 ## Prerequisites
 
-- JDK 25 with `JAVA_HOME` set, e.g. `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64`.
+- uv 0.11.29+ — `uv sync` provisions the pinned CPython 3.13.14 automatically.
 - Node.js 22.23.1 and npm 10.9.8 (`nvm use` in `nemlab-ui/` reads `.nvmrc`).
-- Docker — only for PostgreSQL-backed features and the disposable-container tests.
+- Docker — for PostgreSQL, the PostgreSQL-backed tests and container packaging.
 - A filled-in `.env` copied from `.env.example`; its comments say which variables
   are worker-only, API-only or shared. Nothing loads it implicitly.
+- JDK 25 is only needed when running the Java reference under `reference/java/`.
 
 ## One-time setup
 
 ```sh
 cd nemlab
-npm ci --ignore-scripts --prefix api/contracts   # contract tooling used by the build
+npm ci --ignore-scripts --prefix api/contracts   # contract tooling
+uv sync --all-packages --locked                  # Python 3.13.14 + locked deps
 docker compose up -d postgres                    # PostgreSQL on 127.0.0.1:55432
 set -a; . ./.env; set +a
-cd reference/java
-./gradlew :infrastructure:prices --args='migrate'  # schema, once per deployment
-```
-
-For the Python backend, schema migration is Alembic instead — see
-[infrastructure/README.md](../../infrastructure/README.md). From the repository
-root, with the same `.env` loaded:
-
-```sh
 uv run python -m nemlab_infrastructure.migrate check    # report DB state
 uv run python -m nemlab_infrastructure.migrate migrate  # empty database only
 uv run python -m nemlab_infrastructure.migrate adopt    # adopt a Java-managed DB
 ```
 
-The Python worker runs the fenced refresh queue from the repository root:
-
-```sh
-set -a; . ./.env; set +a
-NEMLAB_WORKER_ENABLED=true uv run python -m nemlab_worker
-```
-
-It honours the same flags as the Java worker (`NEMLAB_WORKER_ENABLED`,
-`NEMLAB_WORKER_SCHEDULE_ENABLED`, `NEMLAB_WORKER_REGIONS`,
-`NEMLAB_WORKER_POLL_MS`) and requires `OPEN_ELECTRICITY_API_KEY` only when
-refresh polling is enabled. `python -m nemlab_worker --fetch-price REGION DAY
-OUT` is the isolated fetch child mode — it never sees database credentials.
-
-The Python API serves the public price reads and operator refresh endpoints:
-
-```sh
-set -a; . ./.env; set +a
-NEMLAB_DATA_ENABLED=true uv run python -m nemlab_api.main   # http://127.0.0.1:8080
-```
-
-It honours `NEMLAB_DATA_ENABLED` (public price reads), `NEMLAB_ADMIN_ENABLED`
-(operator routes, requiring `NEMLAB_ADMIN_OPERATOR` and a 43–128 character
-base64url `NEMLAB_ADMIN_TOKEN`) and `NEMLAB_SIMULATION_API_ENABLED`
-(simulation routes land with NEM-077). `SERVER_ADDRESS` and `PORT` match the
-Java listener contract; with all flags off the process starts health-only
-with no credentials, and any enabled flag requires `NEMLAB_DB_URL`/`USER`/
-`PASSWORD` and a migrated schema — startup fails fast otherwise.
-
-`docker compose stop postgres` stops the database while keeping its volume.
-Editing `NEMLAB_DB_PASSWORD` later does not change the existing database password;
-the `postgres` volume is initialised once.
+See [infrastructure/README.md](../../infrastructure/README.md) for the adoption
+workflow and backup/restore rehearsal.
 
 ## Run the backend
 
-From `nemlab/`, source the environment, then run Gradle under `reference/java/` —
-one process per terminal:
+From `nemlab/`, source the environment, then run each process in its own
+terminal:
 
 ```sh
 set -a; . ./.env; set +a   # required in every backend terminal
-cd reference/java
-./gradlew :api:bootRun     # http://127.0.0.1:8080 — curl /actuator/health
-./gradlew :worker:bootRun  # no HTTP port; quiet between polls
+uv run nemlab-api          # http://127.0.0.1:8080 — curl /actuator/health
+uv run nemlab-worker       # no HTTP port; idles with all flags off
 ```
 
-Packaged jars also work: `./gradlew :api:bootJar :worker:bootJar` then
-`"$JAVA_HOME/bin/java" -jar api/build/libs/api.jar` (or `worker/.../worker.jar`).
-Packaged-startup smoke check: `python3 scripts/smoke_apps.py`.
+The API honours `NEMLAB_DATA_ENABLED` (public price reads),
+`NEMLAB_ADMIN_ENABLED` (operator routes, requiring `NEMLAB_ADMIN_OPERATOR` and a
+43–128 character base64url `NEMLAB_ADMIN_TOKEN`) and
+`NEMLAB_SIMULATION_API_ENABLED` (public simulation lifecycle).
+`SERVER_ADDRESS` and `PORT` select the bind. With all flags off the API starts
+health-only; any enabled flag requires `NEMLAB_DB_*` and a migrated schema.
 
-With `.env` sourced, the enabled flags take effect — database-backed price reads,
-simulation endpoints and worker polling/scheduling all come up. With all flags
-off, the API still starts (health only) and the worker idles with no credentials.
+The worker honours `NEMLAB_WORKER_ENABLED` (refresh polling — requires
+`OPEN_ELECTRICITY_API_KEY`), `NEMLAB_WORKER_SCHEDULE_ENABLED`,
+`NEMLAB_WORKER_REGIONS`, `NEMLAB_WORKER_POLL_MS`, `NEMLAB_SIMULATION_ENABLED`
+and `NEMLAB_SIMULATION_POLL_MS`. Fetch and simulation children run isolated
+with cleared environments and bounded deadlines; stopping the worker releases
+claims as `WORKER_STOPPED`.
 
-Running `ApiApplication`/`WorkerApplication` from IntelliJ needs the same
-variables in the run configuration's environment (or an env-file plugin) —
-the IDE does not read `.env` either.
+Packaged startup smoke check:
+
+```sh
+python3 scripts/smoke_apps.py
+```
+
+## Run the backend in containers
+
+```sh
+docker build --target api -t nemlab-api .
+docker build --target worker -t nemlab-worker .
+docker build --target migrate -t nemlab-migrate .
+docker compose --profile apps up -d
+```
+
+`docker compose --profile apps up` builds the API and worker images and starts
+them alongside PostgreSQL; the in-network database URL is set to
+`jdbc:postgresql://postgres:5432/nemlab`. Migrate first — either with
+`uv run ... migrate` against `127.0.0.1:55432`, or containerised:
+
+```sh
+docker run --rm --network nemlab_default \
+  -e NEMLAB_DB_URL=jdbc:postgresql://postgres:5432/nemlab \
+  -e NEMLAB_DB_USER=nemlab -e NEMLAB_DB_PASSWORD=... nemlab-migrate migrate
+```
+
+`docker compose stop postgres` stops the database while keeping its volume.
+Editing `NEMLAB_DB_PASSWORD` later does not change the existing database
+password; the `nemlab-postgres` volume is initialised once.
+
+## Run the Java reference
+
+The preserved Java tree still builds and runs from `reference/java/`:
+
+```sh
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+cd reference/java
+./gradlew :api:bootRun     # http://127.0.0.1:8080
+./gradlew :worker:bootRun  # non-HTTP worker
+python3 scripts/smoke_apps.py   # packaged-jar startup check
+```
+
+It honours the same `NEMLAB_*` flags and database contract; run it for
+behaviour comparison or regression evidence.
 
 ## Run the frontend
 
@@ -111,7 +123,7 @@ Other commands: `npm run build` then `npm run preview` (port 4173);
 ## Detailed references
 
 - Backend overview and build: [README.md](../../README.md)
-- API endpoints and operator setup: [api/README.md](../../reference/java/api/README.md)
-- Worker settings and simulation execution: [worker/README.md](../../reference/java/worker/README.md)
-- Database, migrations and ingestion: [infrastructure/README.md](../../reference/java/infrastructure/README.md)
+- API endpoints and operator setup: [api/README.md](../../api/README.md)
+- Worker settings and simulation execution: [worker/README.md](../../worker/README.md)
+- Database, migrations and ingestion: [infrastructure/README.md](../../infrastructure/README.md)
 - Frontend setup, proxying and checks: [nemlab-ui README](../../../nemlab-ui/README.md)

@@ -1,0 +1,68 @@
+name: Backend checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_DB: nemlab
+          POSTGRES_USER: nemlab
+          POSTGRES_PASSWORD: ci-postgres
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U nemlab -d nemlab"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: api/contracts/package-lock.json
+      - name: Install locked contract tooling
+        run: npm ci --ignore-scripts --prefix api/contracts
+      - name: Install uv (pinned)
+        run: python3 -m pip install --disable-pip-version-check 'uv==0.11.29'
+      - name: Sync locked workspace
+        run: uv sync --all-packages --locked
+      - name: Format, lint, types, module boundaries
+        run: |
+          uv run ruff format --check .
+          uv run ruff check .
+          uv run mypy api core infrastructure worker --strict
+          uv run lint-imports
+      - name: Test all packages against PostgreSQL
+        env:
+          NEMLAB_DB_URL: jdbc:postgresql://127.0.0.1:55432/nemlab
+          NEMLAB_DB_USER: nemlab
+          NEMLAB_DB_PASSWORD: ci-postgres
+        run: uv run pytest
+      - name: Verify HTTP contract captures
+        working-directory: api/contracts
+        run: node verify.mjs
+      - name: Verify packaged application startup
+        run: python3 scripts/smoke_apps.py
+      - name: Build and smoke container targets
+        run: |
+          docker build --target api -t nemlab-api:ci .
+          docker build --target worker -t nemlab-worker:ci .
+          docker build --target migrate -t nemlab-migrate:ci .
+          docker run -d --name api -p 127.0.0.1:18080:8080 -e SERVER_ADDRESS=0.0.0.0 nemlab-api:ci
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:18080/actuator/health && break || sleep 1
+          done
+          docker exec api python -c "import scipy.optimize"
+          docker stop api
+          timeout 15 docker run --rm nemlab-worker:ci || test $? -eq 124
