@@ -1963,7 +1963,7 @@ Restore bounded source retrieval and revision/coverage/snapshot persistence.
 - `infrastructure/tests/test_price_command.py` ports `PriceImportCommandTest` — subprocess `start`/`resume` exit 2 with the retired message and no env names.
 - Direct production ingestion bypasses stay retired; resumable checkpoint/status goes through `price_backfill` as in Java (worker fencing is NEM-072).
 - Full suite: `uv run pytest` 190 passed; `ruff check`/`ruff format --check`/`mypy`/`lint-imports` clean. Shared `scratch_db` fixture extracted to `infrastructure/tests/conftest.py`.
-- Committed as HEAD — new `prices/` package, `test_price_ingestion.py`, `test_price_command.py`, `conftest.py` refactor.
+- Committed as `23d7cd3` — new `prices/` package, `test_price_ingestion.py`, `test_price_command.py`, `conftest.py` refactor.
 
 <a id="nem-072"></a>
 
