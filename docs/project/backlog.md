@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-071](#nem-071), then NEM-072–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-072](#nem-072), then NEM-073–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1939,7 +1939,7 @@ Support both empty databases and validated populated Java database clones withou
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-068](#nem-068), [NEM-070](#nem-070)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1957,7 +1957,13 @@ Restore bounded source retrieval and revision/coverage/snapshot persistence.
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+- New `infrastructure/src/nemlab_infrastructure/prices/` package ports the Java `au.nemlab.infrastructure.prices` classes: `batch.py` (`PriceBatch`/`Slot`/`Kind`, 288-slot invariant, BigDecimal precision/scale/finiteness gate via `decimal_text`, exact `contentHash` canonical string, `to_price_day`), `source.py` (`Fetch` + `OePriceSource` on httpx — 3 attempts, `1000<<attempt` backoff, `Retry-After` seconds/RFC-1123 honoured with the 60 s ceiling, 2 MiB stream cap, key only in `Authorization` header, strict `parse` preserving MISSING vs SOURCE_NULL), `store.py` (`PriceStore` on SQLAlchemy Core parameterised text — byte-equivalent statements incl. `ON CONFLICT` idempotent revision insert, `retrieved_at <=` freshness guard on `price_current`, attempts audit, snapshot/coverage/history reads, `create_backfill` bounds, `commit_day` optimistic `next_day` fence, `record_failure` with safe diagnostics), `backfill.py` (`PriceBackfill.step` with `HTTP_*`/transport codes and `FETCH_OR_STORAGE_FAILED:<type>`), `cli.py`/`__main__.py` (`python -m nemlab_infrastructure.prices` — `start`/`resume` exit 2 retired; `status`/`history`/`coverage`; sanitised error output).
+- `content_hash` parity proven against the frozen Java fixtures: both CSV days reproduce the pinned `contentHash` values bitwise (`test_content_hash_matches_java_fixtures`).
+- `infrastructure/tests/test_price_ingestion.py` (16 tests) ports `PriceIngestionTest` on real PostgreSQL 18.6 via per-test `nemlab_test_*` scratch DBs: fixture boundary/exact prices, idempotent saves + snapshot surviving a correction + immutability triggers rejecting UPDATE/DELETE, freshness fencing (older fetch loses, reverted content reuses revision), MISSING/SOURCE_NULL/zero distinct and unsnapshotable, crash/restart resume from persisted `next_day` with secret-free diagnostics, incomplete-day pause, data+checkpoint atomic rollback under an injected trigger failure, stale-checkpoint and unbounded-date rejection, parser metadata/duplicate/malformed/missing-vs-null cases, stdlib-HTTP-server retry/Retry-After/secret tests (401 once; 503/429 three attempts; 2 MiB+1 body cancelled → `TRANSPORT_RETRIES_EXHAUSTED`), 4-thread concurrent idempotent saves, and operator-status diagnostic safety.
+- `infrastructure/tests/test_price_command.py` ports `PriceImportCommandTest` — subprocess `start`/`resume` exit 2 with the retired message and no env names.
+- Direct production ingestion bypasses stay retired; resumable checkpoint/status goes through `price_backfill` as in Java (worker fencing is NEM-072).
+- Full suite: `uv run pytest` 190 passed; `ruff check`/`ruff format --check`/`mypy`/`lint-imports` clean. Shared `scratch_db` fixture extracted to `infrastructure/tests/conftest.py`.
+- Committed as HEAD — new `prices/` package, `test_price_ingestion.py`, `test_price_command.py`, `conftest.py` refactor.
 
 <a id="nem-072"></a>
 

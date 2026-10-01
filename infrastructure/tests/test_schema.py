@@ -7,9 +7,6 @@ Integration tests run against a throwaway database on the server named by
 """
 
 import datetime
-import os
-import uuid
-from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -17,6 +14,7 @@ import pytest
 import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config
+from conftest import apply_schema
 
 from nemlab_infrastructure.schema import (
     EXPECTED_HISTORY,
@@ -58,48 +56,6 @@ CREATE INDEX flyway_schema_history_s_idx ON flyway_schema_history (success);
 """
 
 
-def _engine(url: str | None = None) -> sa.Engine:
-    if url is None:
-        url = DatabaseSettings().sqlalchemy_url()
-    return sa.create_engine(url)
-
-
-def _load_db_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Apply repo `.env` database credentials when not already set — tests
-    exercise the same NEMLAB_* contract as the CLI. Function-scoped via
-    monkeypatch so feature flags never leak to sibling tests."""
-    env_file = REPO_ROOT / ".env"
-    if env_file.is_file():
-        for line in env_file.read_text().splitlines():
-            key, _, value = line.partition("=")
-            if key in ("NEMLAB_DB_URL", "NEMLAB_DB_USER", "NEMLAB_DB_PASSWORD") and (
-                key not in os.environ
-            ):
-                monkeypatch.setenv(key, value.strip().strip('"'))
-
-
-@pytest.fixture
-def scratch_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[sa.Engine]:
-    """A fresh empty database on the configured server, dropped on teardown."""
-    _load_db_env(monkeypatch)
-    admin = _engine().execution_options(isolation_level="AUTOCOMMIT")
-    try:
-        admin.connect().close()
-    except sa.exc.OperationalError:
-        pytest.skip("no PostgreSQL server at NEMLAB_DB_URL")
-    name = f"nemlab_test_{uuid.uuid4().hex[:12]}"
-    with admin.connect() as conn:
-        conn.execute(sa.text(f'CREATE DATABASE "{name}"'))
-    base = DatabaseSettings()
-    url = base.sqlalchemy_url().rsplit("/", 1)[0] + "/" + name
-    engine = sa.create_engine(url)
-    yield engine
-    engine.dispose()
-    with admin.connect() as conn:
-        conn.execute(sa.text(f'DROP DATABASE "{name}" WITH (FORCE)'))
-    admin.dispose()
-
-
 def _alembic_config(monkeypatch: pytest.MonkeyPatch, engine: sa.Engine) -> Config:
     db_name = engine.url.database
     assert db_name is not None
@@ -113,9 +69,8 @@ def _alembic_config(monkeypatch: pytest.MonkeyPatch, engine: sa.Engine) -> Confi
 
 def _apply_java_schema(engine: sa.Engine) -> None:
     """Replay the Flyway DDL and history exactly as the Java migrate leaves it."""
+    apply_schema(engine)
     with engine.begin() as conn:
-        for _version, _description, script in EXPECTED_HISTORY:
-            conn.exec_driver_sql(migration_text(script))
         conn.exec_driver_sql(FLYWAY_HISTORY_DDL)
         for rank, (version, description, script) in enumerate(EXPECTED_HISTORY, 1):
             conn.execute(
