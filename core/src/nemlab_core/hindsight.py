@@ -232,12 +232,12 @@ def solve(
         charge_col = {i: k for k, i in enumerate(charge_idx)}
         discharge_col = {i: nc + k for k, i in enumerate(discharge_idx)}
         intervals: list[Interval] = []
-        energy = battery.initial_mwh
-        eta_c = battery.efficiency.charge
-        eta_d = battery.efficiency.discharge
+        energy = float(battery.initial_mwh)
+        eta_c = float(battery.efficiency.charge)
+        eta_d = float(battery.efficiency.discharge)
         for i in range(INTERVALS):
-            c = x[charge_col[i]] / eta_c if i in charge_col else 0.0
-            d = x[discharge_col[i]] * eta_d if i in discharge_col else 0.0
+            c = float(x[charge_col[i]]) / eta_c if i in charge_col else 0.0
+            d = float(x[discharge_col[i]]) * eta_d if i in discharge_col else 0.0
             energy += eta_c * c - d / eta_d
             intervals.append(Interval(c, d, energy))
         dispatch = Dispatch(tuple(intervals), Limit.NOT_EVALUATED)

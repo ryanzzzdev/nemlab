@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-075](#nem-075), then NEM-076–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-076](#nem-076), then NEM-077–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -2089,7 +2089,7 @@ Committed as the NEM-074 checkpoint; SHA recorded in the journal.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-068](#nem-068), [NEM-069](#nem-069), [NEM-070](#nem-070)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2107,7 +2107,9 @@ Persist reproducible scenarios and fenced simulation lifecycle with old-result c
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+Done 2026-10-01. `infrastructure/src/nemlab_infrastructure/simulations.py` ports `ScenarioPreparation` + `SimulationJobs` onto SQLAlchemy Core over the V3 `simulation_*` tables: canonical request identity (SHA-256 over normalised parameters + captured immutable price revision), `Versions` carrying the truthful Python solver string (`HiGHS 1.12.0 via SciPy 1.18.1 linprog/highs-ds`) + `ordered-comparison-v1` profile, Jackson-compatible JSON codecs (compact `_encode`, `Decimal` parse hooks), dedup by `scenario_key`, `MAX_PENDING_JOBS=100` cap, advisory queue lock, single-runner claims with expired-lease recovery, `30 * attempts` backoff, claim-token + live-lease fencing (`StaleClaim`), atomic `complete` (validate → insert result → finish), `SOLVER_*` terminal codes on non-optimal outcomes, and `UnsupportedVersion` on stored-version mismatch before publish. `SimulationComparison` results persist verbatim; Java-era rows with old solver metadata read back without recomputation (legacy `QUEUED` rows surface as unsupported rather than silently converting). `hindsight.py` dispatch loop now mirrors Java's all-double arithmetic (numpy scalars no longer leak into domain objects/JSON).
+
+`infrastructure/tests/test_simulations.py` (18 tests) ports `SimulationJobsTest` + `ScenarioPreparationTest` on real PostgreSQL 18.6: 4-thread global dedup, competing-claim single winner, equivalent-request identity (normalised efficiency legs, `2.000`/`-0.00` inputs), corrections minting new keys while captured inputs stay immutable, unavailable/incomplete days never enqueueing, validation before DB access, every result-affecting parameter + execution identity in the key, result publication + trigger-forced rollback, lease expiry recovery, queue cap, unsupported-version reads, and `RUNNING` refresh jobs not blocking claims. `uv run pytest` 258 passed; ruff/format/mypy/lint-imports clean. Committed as NEM-075 checkpoint (see journal).
 
 <a id="nem-076"></a>
 
