@@ -17,6 +17,7 @@ from nemlab_core.prices import Region
 from nemlab_infrastructure.database import create_bounded_engine
 from nemlab_infrastructure.jobs import RefreshJobService
 from nemlab_infrastructure.prices.store import PriceStore
+from nemlab_infrastructure.simulations import SimulationJobs
 from nemlab_worker.refresh import (
     MODE,
     PriceFetchProcess,
@@ -26,6 +27,12 @@ from nemlab_worker.refresh import (
     run_fetch_command,
 )
 from nemlab_worker.settings import WorkerSettings
+from nemlab_worker.simulation import (
+    SIMULATE_MODE,
+    SimulationProcess,
+    SimulationWorker,
+    run_simulation_command,
+)
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
@@ -34,36 +41,47 @@ logger = logging.getLogger("nemlab_worker")
 
 
 def run(settings: WorkerSettings, stop: threading.Event) -> None:
-    if not settings.worker_enabled:
-        if settings.simulation_enabled:
-            logger.info("worker idle: simulation polling attaches in NEM-076")
-        else:
-            logger.info("worker idle: all features disabled")
+    if not settings.worker_enabled and not settings.simulation_enabled:
+        logger.info("worker idle: all features disabled")
         stop.wait()
         return
     engine = create_bounded_engine(settings)
+    workers: list[RefreshWorker | SimulationWorker] = []
     try:
-        jobs = RefreshJobService(engine, PriceStore(engine))
-        api_key = settings.open_electricity_api_key
-        if api_key is None:  # the settings validator guarantees this
-            raise ValueError("OPEN_ELECTRICITY_API_KEY is required")
-        fetcher = PriceFetchProcess(api_key)
-        regions = (
-            [Region[name] for name in settings.regions]
-            if settings.worker_schedule_enabled
-            else []
-        )
-        worker = RefreshWorker(
-            jobs,
-            RefreshSchedule(jobs, _utc_now, regions),
-            fetcher,
-            settings.worker_poll_ms / 1000,
-        )
-        worker.start()
+        if settings.worker_enabled:
+            jobs = RefreshJobService(engine, PriceStore(engine))
+            api_key = settings.open_electricity_api_key
+            if api_key is None:  # the settings validator guarantees this
+                raise ValueError("OPEN_ELECTRICITY_API_KEY is required")
+            fetcher = PriceFetchProcess(api_key)
+            regions = (
+                [Region[name] for name in settings.regions]
+                if settings.worker_schedule_enabled
+                else []
+            )
+            workers.append(
+                RefreshWorker(
+                    jobs,
+                    RefreshSchedule(jobs, _utc_now, regions),
+                    fetcher,
+                    settings.worker_poll_ms / 1000,
+                )
+            )
+        if settings.simulation_enabled:
+            workers.append(
+                SimulationWorker(
+                    SimulationJobs(engine),
+                    SimulationProcess(),
+                    settings.simulation_poll_ms / 1000,
+                )
+            )
+        for worker in workers:
+            worker.start()
         try:
             stop.wait()
         finally:
-            worker.stop()
+            for worker in workers:
+                worker.stop()
     finally:
         engine.dispose()
 
@@ -72,6 +90,8 @@ def main() -> None:
     argv = sys.argv[1:]
     if argv and argv[0] == MODE:
         sys.exit(run_fetch_command(argv))
+    if argv and argv[0] == SIMULATE_MODE:
+        sys.exit(run_simulation_command(argv))
 
     try:
         settings = WorkerSettings()

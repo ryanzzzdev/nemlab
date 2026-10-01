@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-076](#nem-076), then NEM-077–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-077](#nem-077), then NEM-078–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -2118,7 +2118,7 @@ Done 2026-10-01. `infrastructure/src/nemlab_infrastructure/simulations.py` ports
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-075](#nem-075)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2135,7 +2135,11 @@ Supervise independent compute and publish only independently validated outcomes.
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+Done 2026-10-01. `worker/src/nemlab_worker/simulation.py` ports the `au.nemlab.worker.simulation` package: `run_simulation_command` (`--simulate INPUT OUTPUT` child mode — DB-free, 15 s self-watchdog `os._exit(124)`, 512 KB input cap, exit 0/2/3, 4 GiB `RLIMIT_AS` self-bound), `SimulationProcess` (one child at a time, fully cleared env, discarded stdio, parent deadline → `SIMULATION_DEADLINE_EXCEEDED` retryable, nonzero exit → `SIMULATION_PROCESS_FAILED` retryable, >1 MB/invalid/mismatched-key output → `INVALID_CHILD_RESULT` terminal, `UnsupportedVersion` before launch → `UNSUPPORTED_SIMULATION_VERSION` terminal, parent-side `validate()` before publish, forcible kill bounded by 5 s → `TerminationFailure`), `SimulationWorker` (fixed-delay poll, `StaleClaim` results discarded, `WORKER_STOPPED` claim release on shutdown). `main.py`/`__main__.py` dispatch the child mode before settings; `WorkerSettings` enforces the 1000–60000 ms simulation poll bound; simulation polling needs no OE credential and shares the bounded engine with refresh when both are enabled. `simulations.py` gained the `Input`/`Output` file codecs (Jackson-shaped `key/request/prices/versions` + `key/comparison`).
+
+Measured child footprint on a real run: ~110 MiB RSS, ~1.9 GiB peak VmSize, ~0.6 s wall — the 4 GiB `RLIMIT_AS` bounds runaway allocation without clipping normal scipy imports (documented bound; cgroup memory limits remain the operator-level enforcement, same as the Java deployment).
+
+`worker/tests/test_simulation.py` (15 tests) + `simulation_fixture.py` on real PostgreSQL 18.6 and real children: OPTIMAL result through the packaged `python -m nemlab_worker` child with empty env, parent deadline kill, shutdown kill + `WORKER_STOPPED` recovery, malformed/oversized/crash/tampered-key classification, orphan watchdog bound (<23 s), unsupported stored version never launching, restart recovering an expired claim to `SUCCEEDED` (attempts=2), bounded retry exhaustion to `FAILED`, independent opt-in settings, and a packaged worker process claiming/completing a real queued job end-to-end. `uv run pytest` 273 passed; ruff/format/mypy/lint-imports clean. Committed as NEM-076 checkpoint (see journal).
 
 <a id="nem-077"></a>
 

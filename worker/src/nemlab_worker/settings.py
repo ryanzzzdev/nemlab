@@ -33,6 +33,10 @@ class WorkerSettings(DatabaseSettings):
 
     @model_validator(mode="after")
     def _worker_requirements(self) -> "WorkerSettings":
+        if self.simulation_enabled and not 1000 <= self.simulation_poll_ms <= 60_000:
+            raise ValueError(
+                "Simulation poll interval must be between 1000 and 60000 ms"
+            )
         if not self.worker_enabled:
             return self
         if not 1000 <= self.worker_poll_ms <= 60_000:

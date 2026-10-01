@@ -24,6 +24,7 @@ from nemlab_core.comparison import SimulationComparison, ThresholdResult, valida
 from nemlab_core.dispatch import Dispatch, Interval, Limit
 from nemlab_core.fixed import FIXED_VERSION, MODEL_VERSION
 from nemlab_core.hindsight import Limits, Outcome, Status
+from nemlab_core.prices import Interval as PriceInterval
 from nemlab_core.prices import PriceDay, Region
 from nemlab_core.request import (
     REQUEST_VERSION,
@@ -267,7 +268,7 @@ def _read_versions(doc: dict[str, Any]) -> Versions:
         doc["hindsight"],
         doc["solver"],
         doc["executionProfile"],
-        Limits(doc["limits"]["milliseconds"], doc["limits"]["iterations"]),
+        Limits(int(doc["limits"]["milliseconds"]), int(doc["limits"]["iterations"])),
     )
 
 
@@ -288,7 +289,11 @@ def _dispatch_json(dispatch: Dispatch) -> dict[str, Any]:
 def _read_dispatch(doc: dict[str, Any]) -> Dispatch:
     return Dispatch(
         tuple(
-            Interval(i["importedMWh"], i["exportedMWh"], i["endingEnergyMWh"])
+            Interval(
+                float(i["importedMWh"]),
+                float(i["exportedMWh"]),
+                float(i["endingEnergyMWh"]),
+            )
             for i in doc["intervals"]
         ),
         Limit[doc["limitingReason"]],
@@ -310,19 +315,23 @@ def _accounting_json(a: Accounting) -> dict[str, Any]:
 
 def _read_accounting(doc: dict[str, Any]) -> Accounting:
     return Accounting(
-        doc["importedMWh"],
-        doc["exportedMWh"],
-        doc["chargingCost"],
-        doc["revenue"],
-        doc["fees"],
-        doc["degradation"],
-        doc["margin"],
-        doc["lossesMWh"],
+        float(doc["importedMWh"]),
+        float(doc["exportedMWh"]),
+        float(doc["chargingCost"]),
+        float(doc["revenue"]),
+        float(doc["fees"]),
+        float(doc["degradation"]),
+        float(doc["margin"]),
+        float(doc["lossesMWh"]),
     )
 
 
 def _decimal(value: float | int | str) -> Decimal:
     return Decimal(str(value))
+
+
+def _float(value: Any) -> float | None:
+    return None if value is None else float(value)
 
 
 def _result_json(result: SimulationComparison) -> dict[str, Any]:
@@ -380,10 +389,10 @@ def _read_result(doc: dict[str, Any]) -> SimulationComparison:
             h["certificateState"],
             None if dispatch is None else _read_dispatch(dispatch),
             None if accounting is None else _read_accounting(accounting),
-            h["solverObjective"],
-            h["upperBound"],
-            h["absoluteGap"],
-            h["elapsedNanos"],
+            _float(h["solverObjective"]),
+            _float(h["upperBound"]),
+            _float(h["absoluteGap"]),
+            int(h["elapsedNanos"]),
             Limits(h["limits"]["milliseconds"], h["limits"]["iterations"]),
             h["diagnostic"],
         ),
@@ -432,6 +441,81 @@ class Input:
         ):
             raise ValueError("price day mismatch")
         return parameters
+
+
+# -- child-process file exchange -------------------------------------------------
+#
+# The ``--simulate`` worker child is database-free; the parent exchanges the
+# captured ``Input`` and the computed ``SimulationComparison`` as JSON files.
+# Shapes mirror the Jackson records (``Input{key,request,prices,versions}``,
+# ``Output{key,comparison}``).
+
+
+def _instant(value: datetime) -> str:
+    return value.isoformat().replace("+00:00", "Z")
+
+
+def _price_day_json(prices: PriceDay) -> dict[str, Any]:
+    return {
+        "region": prices.region.name,
+        "date": str(prices.date),
+        "intervals": [
+            {
+                "start": _instant(i.start),
+                "end": _instant(i.end),
+                "price": i.price,
+            }
+            for i in prices.intervals
+        ],
+    }
+
+
+def _read_price_day(doc: dict[str, Any]) -> PriceDay:
+    region = Region[doc["region"]]
+    return PriceDay(
+        region,
+        date.fromisoformat(doc["date"]),
+        tuple(
+            PriceInterval(
+                region,
+                datetime.fromisoformat(i["start"]),
+                datetime.fromisoformat(i["end"]),
+                Decimal(str(i["price"])),
+            )
+            for i in doc["intervals"]
+        ),
+    )
+
+
+def input_json(input: Input) -> str:
+    return _encode(
+        {
+            "key": input.key,
+            "request": _request_json(input.request),
+            "prices": _price_day_json(input.prices),
+            "versions": _versions_json(input.versions),
+        }
+    )
+
+
+def read_input(text: str) -> Input:
+    doc = json.loads(text, parse_float=Decimal, parse_int=Decimal)
+    return Input(
+        doc["key"],
+        _read_request(doc["request"]),
+        _read_price_day(doc["prices"]),
+        _read_versions(doc["versions"]),
+    )
+
+
+def output_json(key: str, comparison: SimulationComparison) -> str:
+    return _encode({"key": key, "comparison": _result_json(comparison)})
+
+
+def read_output(text: str) -> tuple[str, SimulationComparison | None]:
+    doc = json.loads(text, parse_float=Decimal, parse_int=Decimal)
+    comparison = doc["comparison"]
+    return doc["key"], (None if comparison is None else _read_result(comparison))
 
 
 def _job(row: sa.engine.Row[Any]) -> Job:
