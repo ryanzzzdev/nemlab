@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-067](#nem-067), then NEM-068–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-068](#nem-068), then NEM-069–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1817,7 +1817,7 @@ Move only Java-specific tracked assets to reference/java while preserving reposi
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-066](#nem-066)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1835,7 +1835,7 @@ Create a locked uv workspace matching core/infrastructure/api/worker boundaries.
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+2026-10-01: uv workspace at repo root — CPython **3.13.14** pinned via `.python-version`, `required-version >=0.11.0`, one `uv.lock`, four packages matching the Java boundaries: `nemlab-core` (SciPy), `nemlab-infrastructure` (SQLAlchemy 2.1 Core, `psycopg[binary]` 3.3, Alembic 1.20, pydantic-settings, httpx), `nemlab-api` (FastAPI 0.141, uvicorn 0.53), `nemlab-worker` (httpx). `DatabaseSettings` accepts the existing `jdbc:postgresql://` `NEMLAB_DB_URL` unchanged and translates to `postgresql+psycopg://` with credentials; all Java `NEMLAB_*` flags keep identical names/defaults (features off, polls 5000 ms, regions NSW1); API binds `SERVER_ADDRESS`/`PORT` like Spring. One bounded QueuePool Engine per process (`pool_size=5, max_overflow=5, timeout=30s, pre_ping`); no `psycopg_pool`, no ORM. Entry points: `nemlab-api` serves `GET /actuator/health` → `{"status":"UP"}` (feature routes unmounted → 404 while disabled), `nemlab-worker` idles non-HTTP and exits 0 on SIGTERM, `python -m nemlab_infrastructure.migrate {migrate,check,stamp}` runs Alembic against `migrations/`; invalid env (bad int/bool/URL) exits 2 with per-field diagnostics. import-linter `layers` contract enforces `api|worker → infrastructure → core`. Verified: fresh `uv lock` + `uv sync --all-packages --locked` reproducible (53 packages, Linux wheels incl. psycopg-binary/scipy/pydantic-core), `pytest` 17 pass, `ruff check`/`format`, `mypy --strict` (12 files), `lint-imports`, live API health+404 surface, worker SIGTERM, Alembic online `check` against compose Postgres :55432. Version-age policy applied: fastapi pinned `<0.142` (0.142.x <7 days old), uvicorn `<0.54`, sqlalchemy `<2.1.1`, hypothesis `<6.168.2` — resolved versions all ≥7 days old (verified via PyPI upload times). Licences: MIT (fastapi, sqlalchemy, alembic, pydantic, pydantic-settings), BSD (uvicorn, scipy, httpx, starlette), LGPL-3.0-only (psycopg/psycopg-binary — unmodified library use, accepted). Dev tools: pytest 9.1, hypothesis, ruff 0.16, mypy 2.3, import-linter 2.15, pytest-asyncio, httpx. Note: `ruff` excludes `reference/` and `docs/` (historical scripts); Starlette deprecation warning on httpx TestClient is upstream-only. Committed as `COMMIT_SHA`.
 
 <a id="nem-068"></a>
 

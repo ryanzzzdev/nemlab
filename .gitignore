@@ -9,6 +9,12 @@
 *.class
 __pycache__/
 *.pyc
+.venv/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+dist/
 .idea/
 *.iml
 .DS_Store

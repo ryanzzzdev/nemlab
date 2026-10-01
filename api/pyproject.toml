@@ -1,0 +1,27 @@
+[project]
+name = "nemlab-api"
+version = "0.1.0"
+description = "NEMLab public/operator HTTP API (FastAPI)"
+requires-python = "==3.13.*"
+dependencies = [
+    "nemlab-core",
+    "nemlab-infrastructure",
+    "fastapi>=0.115,<0.142",
+    "uvicorn>=0.32,<0.54",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.7,<3",
+]
+
+[project.scripts]
+nemlab-api = "nemlab_api.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nemlab_api"]
+
+[tool.uv.sources]
+nemlab-core = { workspace = true }
+nemlab-infrastructure = { workspace = true }

@@ -66,11 +66,27 @@ python3 reference/java/scripts/smoke_apps.py
 
 That script starts each executable jar, checks API health and worker liveness, then stops its own processes. It uses a random loopback port for the API. Reports are under each module's `build/reports/tests/test/` directory.
 
+## Python backend (rebuild in progress)
+
+The backend is being rebuilt in Python under the [rebuild plan](docs/project/python-backend-rebuild.md); the Java tree under `reference/java/` remains the runnable reference until the parity gate closes. The Python workspace uses uv with CPython 3.13.14 pinned in `.python-version` and four packages mirroring the Java boundaries: `core` (`nemlab_core`), `infrastructure` (`nemlab_infrastructure`), `api` (`nemlab_api`) and `worker` (`nemlab_worker`).
+
+```sh
+uv sync --all-packages --locked   # provisions Python 3.13.14 + locked deps
+uv run pytest                     # all package tests
+uv run ruff check . && uv run ruff format --check . && uv run mypy
+uv run lint-imports               # module-boundary contract
+uv run nemlab-api                 # API on 127.0.0.1:8080 (SERVER_ADDRESS/PORT)
+uv run nemlab-worker              # non-HTTP worker; idles with flags off
+uv run python -m nemlab_infrastructure.migrate migrate   # Alembic schema
+```
+
+Environment variables are unchanged: `.env.example` still documents the shared `NEMLAB_*` contract, including the `jdbc:postgresql://` database URL format the Python settings translate for SQLAlchemy/Psycopg. The Python feature surface is still scaffold-only — parity lands task by task.
+
 ## CI and module boundaries
 
-[The backend workflow](.github/workflows/backend.yml) runs the locked build/tests and packaged startup checks on Java 25. Its action revisions and JDK version are pinned. The same commands have passed locally and from a clean source-only copy; no hosted workflow run or remote publication has occurred. If another CI provider is selected, reuse these commands.
+[The reference workflow](reference/java/ci/backend.yml) records the Java build/tests and packaged startup checks on Java 25 as they ran pre-move, repaired to run under `reference/java/`; no active hosted workflow runs the Python build yet (NEM-078). No remote publication has occurred. If another CI provider is selected, reuse these commands.
 
-`./gradlew verifyModuleBoundaries` rejects forbidden project dependencies. API and worker may depend on core/infrastructure; infrastructure may depend on core; core has no project dependencies. Infrastructure contains the explicit price-source and JDBC adapters; opt-in worker wiring is implemented, while price-read/operator APIs are implemented and simulation APIs are implemented and GridReplay APIs remain future work. See [foundation verification](docs/project/evidence/foundation/findings.md).
+In the Java build, `./gradlew verifyModuleBoundaries` rejects forbidden project dependencies; the Python workspace enforces the same direction with `uv run lint-imports` (import-linter layers contract). API and worker may depend on core/infrastructure; infrastructure may depend on core; core has no project dependencies. Infrastructure contains the explicit price-source and JDBC adapters; opt-in worker wiring is implemented, while price-read/operator APIs are implemented and simulation APIs are implemented and GridReplay APIs remain future work. See [foundation verification](docs/project/evidence/foundation/findings.md).
 
 ## Price ingestion and local PostgreSQL
 

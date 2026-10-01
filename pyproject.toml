@@ -1,0 +1,70 @@
+[project]
+name = "nemlab"
+version = "0.1.0"
+description = "NEMLab backend workspace root (not a package)"
+requires-python = "==3.13.*"
+dependencies = []
+
+[tool.uv]
+package = false
+required-version = ">=0.11.0"
+
+[tool.uv.workspace]
+members = ["core", "infrastructure", "api", "worker"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "hypothesis>=6.100,<6.168.2",
+    "import-linter>=2.1",
+    "pytest-asyncio>=0.25",
+    "httpx>=0.28",
+]
+
+[tool.ruff]
+target-version = "py313"
+src = ["core/src", "infrastructure/src", "api/src", "worker/src"]
+# reference/java is a frozen copy of the Java-era tree; docs evidence scripts
+# are historical records — neither is reformatted or linted.
+extend-exclude = ["reference", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ASYNC", "S", "TID"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+mypy_path = ["core/src", "infrastructure/src", "api/src", "worker/src"]
+strict = true
+disallow_untyped_defs = true
+packages = ["nemlab_core", "nemlab_infrastructure", "nemlab_api", "nemlab_worker"]
+
+[tool.pytest.ini_options]
+testpaths = ["core/tests", "infrastructure/tests", "api/tests", "worker/tests", "tests"]
+pythonpath = ["core/src", "infrastructure/src", "api/src", "worker/src"]
+
+[tool.importlinter]
+root_packages = [
+    "nemlab_core",
+    "nemlab_infrastructure",
+    "nemlab_api",
+    "nemlab_worker",
+]
+
+# Dependency direction mirrors the Java modules: core is leaf; infrastructure may use
+# core; api and worker may use core + infrastructure but never each other.
+
+# Dependency direction mirrors the Java modules: applications on top,
+# infrastructure in the middle, domain core as the leaf. api and worker sit in
+# the same top layer as independent siblings — they may not import each other.
+[[tool.importlinter.contracts]]
+name = "layered dependency direction"
+type = "layers"
+layers = [
+    "nemlab_api | nemlab_worker",
+    "nemlab_infrastructure",
+    "nemlab_core",
+]
