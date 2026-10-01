@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-079](#nem-079), then NEM-080. See the [rebuild plan](python-backend-rebuild.md). See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) — the local parity gate is closed. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -2231,9 +2231,9 @@ Done — `nemlab-ui/scripts/test-live.py` now launches the Python backend (`uv s
 - Repository: both
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-065](#nem-065), [NEM-069](#nem-069), [NEM-070](#nem-070), [NEM-078](#nem-078), [NEM-079](#nem-079)
-- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md), [parity gate](evidence/python-rebuild/parity.md), [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md); capability-specific Java/spec references in the plan.
 
 ### Outcome
 
@@ -2249,7 +2249,38 @@ Demonstrate complete local parity, safe transition and recovery before resuming 
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+2026-10-02 — all "Done when" criteria met; full record in
+[parity.md](evidence/python-rebuild/parity.md) and
+[cutover-rehearsal.md](evidence/python-rebuild/cutover-rehearsal.md):
+
+- **Parity matrix**: all 12 rows closed with Python module, test and commit
+  links. Intentional differences recorded: solver provenance strings
+  (`ojAlgo 57.3.0` preserved on old rows, HiGHS/SciPy on new) and the
+  ojAlgo `DISTINCT` vs HiGHS `OPTIMAL` degenerate-optimum status (Python
+  publishes on success + independent validation, not native status names).
+- **Rehearsal on isolated clones** (live `nemlab` DB untouched): populated
+  Java DB (10 revisions/days/refresh jobs, 13 sim jobs+results, queues
+  drained) dumped, restored, adopted (`java-managed` → `alembic-managed`,
+  `flyway_schema_history` preserved). Empty setup rehearsed on a fresh DB.
+  Python API read Java-era prices and results verbatim; Python worker
+  executed a new simulation to `SUCCEEDED`. The Java API booted on the
+  adopted clone and read the Python-written result — both-direction read
+  compatibility. Rollback = restore pre-cutover dump to a fresh DB →
+  `java-managed`, Java resumes; forward dump/restore preserves adoption +
+  post-switch writes. No automatic destructive restore exists.
+- **Final combined gates** (once, final tree): `uv sync --locked`, ruff
+  check/format, mypy (45 files), lint-imports, `pytest` 285 passed,
+  `verify.mjs` 61 captures/10 operations, frontend `npm run check` (102
+  Playwright) and `npm run test:live` (6/6 real stack) — all pass.
+- **Limits recorded**: solver budget/tolerances identical; sim child ~110 MiB
+  RSS / ~1.9 GiB virtual / ~0.6 s, 4 GiB address-space bound (not RSS);
+  queue caps/backoffs unchanged. Honest pending gates: NEM-038 hosted CI
+  (never run), NEM-020 deployment.
+- Rebuild milestone marked Complete in [roadmap](roadmap.md); NEM-054 is
+  next; M3/NEM-038 and launch gates retained.
+
+Changes committed alongside this record (docs + two lint/typing repairs in
+`pyproject.toml` per-file ignores and `simulations.py` handler typing).
 
 
 <a id="nem-081"></a>

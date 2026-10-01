@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from nemlab_api.errors import instant, simulation_error
@@ -519,7 +519,7 @@ def simulations_router(jobs: SimulationJobs, refreshes: RefreshJobService) -> AP
 # -- error advice (``SimulationErrors``) ----------------------------------------------
 
 
-def register_simulation_errors(app: Any) -> None:
+def register_simulation_errors(app: FastAPI) -> None:
     """Simulation-scoped handlers; shared exceptions (storage, refresh queue
     saturation) branch on path inside ``errors.py``."""
     from nemlab_infrastructure.jobs import (

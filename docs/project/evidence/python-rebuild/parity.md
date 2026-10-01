@@ -1,8 +1,10 @@
-# Python rebuild parity baseline (NEM-065)
+# Python rebuild parity baseline and gate (NEM-065, NEM-080)
 
 Frozen: 2026-10-01. Task: [NEM-065](../../backlog.md#nem-065). Scope: exact delivered
-behavior of the Java backend before any move or port. Python-side rows are filled in as
-NEM-067–NEM-080 land.
+behavior of the Java backend before any move or port. The parity matrix is filled in
+and the local parity gate was closed under [NEM-080](../../backlog.md#nem-080) on
+2026-10-02; see [Final verification](#final-verification-nem-080) and
+[Cutover rehearsal](#cutover-rehearsal-nem-080).
 
 Layout note: this document records the baseline at the pre-move layout. NEM-066 moved all
 Java assets under `reference/java/`; module paths cited below (`core/`, `infrastructure/`,
@@ -158,22 +160,26 @@ worker (25): WorkerApplicationTest 1, RefreshWorkerTest 9, PriceFetchProcessTest
 SimulationWorkerTest 5, SimulationProcessTest 7 (+ FetchFixture, SimulationFixture).
 Frontend: 102 Playwright browser cases + 6 live-stack cases, all pass.
 
-## Parity matrix (capability → sources → Python target → evidence)
+## Parity matrix (capability → sources → Python implementation → evidence)
 
-| Capability | Java sources / tests | Python module (target) | Fixtures / acceptance |
+All rows closed under NEM-080. Python test files run against real PostgreSQL 18.6
+scratch databases unless noted; `tests/parity/test_java_parity.py` replays the frozen
+`parity-fixtures.json` rows.
+
+| Capability | Java sources / tests | Python module + tests | Evidence |
 | --- | --- | --- | --- |
-| Market time, decimal bounds, request normalisation | core `PriceDay`, `SimulationRequest`, `Efficiency`, `ScheduleWindows`, `Numbers`; SimulationRequestTest, BatteryEngineTest | `nemlab_core` domain | `requests`, `decimalForms` rows |
-| Fixed schedule + accounting | core `FixedSchedule`, `BatterySimulation`, `DispatchValidator`, `Accounting` | `nemlab_core` | `runs[*].fixed` per-interval + totals |
-| Threshold strategy | core `PriceThreshold`, `Thresholds`, `SimulationComparison`; PriceThresholdTest, SimulationComparisonTest | `nemlab_core` | `runs[*].threshold`, strict `<`/`>` equality-hold |
-| Ordered hindsight LP + dual certificate | core `OrderedHindsight`; HindsightTest, HindsightBenchmark | `nemlab_core` (SciPy HiGHS) | `runs[*].hindsight`; objective/bound/gap parity, DISTINCT-status tolerance |
-| OE import + revision/snapshot storage | infra `OePriceSource`, `PriceBatch`, `PriceStore`, `PriceBackfill`, `PriceImportCommand`; PriceIngestionTest, PriceImportCommandTest | `nemlab_infrastructure` | `priceDays[*].contentHash`, V1–V3 schema, real-PG tests |
-| Refresh queue + visitor admission | infra `RefreshJobService`, `RefreshJob`; RefreshJobServiceTest | `nemlab_infrastructure` | locks/leases/claims matrix, concurrent-claim races |
-| Fetch/schedule worker | worker `RefreshWorker`, `RefreshSchedule`, `PriceFetchProcess`, `FetchCommand`; worker tests | `nemlab_worker` | process lifecycle cases, failure classification |
-| Public price + operator HTTP | api `PriceReadController`, `AdminRefreshController`, errors, security; AdminHttpTest, PriceReadHttpTest | `nemlab_api` (FastAPI) | `fixtures/http-responses/`, `api/contracts/openapi.json` |
-| Simulation persistence | infra `ScenarioPreparation`, `SimulationJobs`; their tests | `nemlab_infrastructure` | `scenarioKeys`, `savedResults`, legacy-shape read |
-| Simulation supervision | worker `SimulationWorker`, `SimulationProcess`, `SimulationCommand`; their tests | `nemlab_worker` | child lifecycle + parent revalidation |
-| Simulation HTTP | api `SimulationController`, `SimulationJson`, errors; SimulationHttpTest | `nemlab_api` | strict-JSON cases, status code matrix |
-| Runtime/ops | application.properties, READMEs, smoke_apps.py, workflow | packaging/CI | credential-free start, flags independent |
+| Market time, decimal bounds, request normalisation | core `PriceDay`, `SimulationRequest`, `Efficiency`, `ScheduleWindows`, `Numbers`; SimulationRequestTest, BatteryEngineTest | `nemlab_core/{numbers,decimal_text,request,windows,prices}.py`; `core/tests/test_engine.py`, `tests/parity/test_java_parity.py` | `requests`/`decimalForms` fixture rows byte-equal; NEM-068 |
+| Fixed schedule + accounting | core `FixedSchedule`, `BatterySimulation`, `DispatchValidator`, `Accounting` | `nemlab_core/{fixed,battery,dispatch,accounting}.py`; `core/tests/test_engine.py`, parity replay | `runs[*].fixed` per-interval + totals identical; NEM-068 |
+| Threshold strategy | core `PriceThreshold`, `Thresholds`, `SimulationComparison`; PriceThresholdTest, SimulationComparisonTest | `nemlab_core/{threshold,comparison}.py`; `core/tests/test_threshold.py`, `test_comparison.py` | `runs[*].threshold`; strict `<`/`>` equality-hold; NEM-068 |
+| Ordered hindsight LP + dual certificate | core `OrderedHindsight`; HindsightTest, HindsightBenchmark | `nemlab_core/hindsight.py` (SciPy `linprog(method="highs-ds")`); `core/tests/test_hindsight.py`, parity replay | `runs[*].hindsight` objective/bound/gap parity; OPTIMAL on success + independent validation, no native-status-name dependency; NEM-069 |
+| OE import + revision/snapshot storage | infra `OePriceSource`, `PriceBatch`, `PriceStore`, `PriceBackfill`, `PriceImportCommand`; PriceIngestionTest, PriceImportCommandTest | `nemlab_infrastructure/prices/{source,batch,store,backfill,cli}.py`; `test_price_ingestion.py` (16), `test_price_command.py` | `priceDays[*].contentHash` asserted; V1–V3 schema, real-PG tests; NEM-071 (`23d7cd3`) |
+| Refresh queue + visitor admission | infra `RefreshJobService`, `RefreshJob`; RefreshJobServiceTest | `nemlab_infrastructure/jobs.py` (+ `prices/store.py` tx internals); `test_refresh_jobs.py` (15 + adoption-read test) | locks/leases/claims matrix, concurrent-claim races, atomic rollback; NEM-072 (`17e5b05`) |
+| Fetch/schedule worker | worker `RefreshWorker`, `RefreshSchedule`, `PriceFetchProcess`, `FetchCommand`; worker tests | `nemlab_worker/refresh.py`; `worker/tests/test_refresh.py` (16) + `fetch_fixture.py` child | process lifecycle cases, cleared-env child, failure classification; NEM-073 (`b316e86`) |
+| Public price + operator HTTP | api `PriceReadController`, `AdminRefreshController`, errors, security; AdminHttpTest, PriceReadHttpTest | `nemlab_api/{prices,admin,errors,middleware,validation}.py`; `api/tests/test_price_http.py`, `test_admin_http.py` | `fixtures/http-responses/` shapes byte-identical; live captures validate against `api/contracts/openapi.json`; NEM-074 (`a3a8fdc`) |
+| Simulation persistence | infra `ScenarioPreparation`, `SimulationJobs`; their tests | `nemlab_infrastructure/simulations.py`; `test_simulations.py` (18) | `scenarioKeys`, `savedResults`, legacy-shape read; NEM-075 (`692df46`) |
+| Simulation supervision | worker `SimulationWorker`, `SimulationProcess`, `SimulationCommand`; their tests | `nemlab_worker/simulation.py`; `worker/tests/test_simulation.py` (15) + `simulation_fixture.py` | child lifecycle + parent revalidation; NEM-076 (`5e642b0`) |
+| Simulation HTTP | api `SimulationController`, `SimulationJson`, errors; SimulationHttpTest | `nemlab_api/simulations.py`; `api/tests/test_simulation_http.py` (12) + `test_contract_captures.py` | strict-JSON cases, status matrix; `verify.mjs` 61 captures green; NEM-077 (`9cb9223`) |
+| Runtime/ops | application.properties, READMEs, smoke_apps.py, workflow | `Dockerfile` (api/worker/migrate targets), `compose.yaml` apps profile, `.github/workflows/backend.yml`, `scripts/smoke_apps.py` | credential-free start, flags independent; clean-clone `uv sync` + all checks with no Java; NEM-078 (`5c9c94e`) |
 
 ## Discrepancies and resolutions
 
@@ -184,7 +190,7 @@ Frontend: 102 Playwright browser cases + 6 live-stack cases, all pass.
 | 3 | Plan lists visitor retry delays "30/60-second" and simulation "5/10-second"; actual formula is `30*attempts`/`5*attempts` after the claim increment (identical values). | Consistent — Python uses the formula, not a literal pair. |
 | 4 | `test-live.py` seeds revisions with placeholder `content_hash='aaaa…'` — reads trust the stored hash; nothing recomputes it at read time. | Keep: Python reads must not recompute stored hashes either. |
 | 5 | `versions.canonical()` includes `"ojAlgo 57.3.0"` as solver identity — new Python runs MUST NOT reuse it. | New `solver`/`executionProfile` strings for Python per plan; old rows keep their stored versions verbatim. |
-| 6 | No stored result in any fixture lacks `threshold`; the legacy shape was reconstructed by removing the key. | Fixture is representative, not provenance-captured — real populated-DB clone rehearsal (NEM-080) remains the true check. |
+| 6 | No stored result in any fixture lacks `threshold`; the legacy shape was reconstructed by removing the key. | Resolved: the NEM-080 populated-clone rehearsal read a real Java-era stored result through the Python API — all fields round-tripped and `ojAlgo 57.3.0` metadata survived verbatim. See `cutover-rehearsal.md`. |
 
 ## Populated-database / queue compatibility requirements
 
@@ -209,3 +215,64 @@ Frontend: 102 Playwright browser cases + 6 live-stack cases, all pass.
 | Python 3.13 | system has 3.14; provision via `uv python pin`/`uv.lock` at NEM-067 |
 | OE API key | present locally (`.env`, gitignored) — needed only for live fetches, not for parity fixtures |
 | Compose Postgres on 55432 | compose file present; volume `nemlab-postgres` holds the user's data — never test destructive ops against it |
+
+## Cutover rehearsal (NEM-080)
+
+Full record: [cutover-rehearsal.md](cutover-rehearsal.md). Summary, 2026-10-02:
+
+- Populated Java DB (10 revisions / 10 days / 10 refresh jobs / 13 simulation
+  jobs + results, all queues drained) dumped and restored to `nemlab_rehearsal`.
+- `migrate check` → `java-managed`; `adopt` stamped `nemlab_baseline_v1_v3`;
+  `flyway_schema_history` preserved.
+- Empty setup rehearsed on `nemlab_empty`: `check` → `empty`, `migrate` →
+  `alembic-managed`.
+- Python API read historical prices and a Java-era result verbatim
+  (`ojAlgo 57.3.0` preserved); Python worker executed a new simulation to
+  `SUCCEEDED` with `HiGHS 1.12.0 via SciPy 1.18.1 linprog/highs-ds` metadata.
+- The reference Java API booted on the adopted clone (Flyway validate passed)
+  and read the Python-written result plus Java-era prices — both-direction
+  read compatibility confirmed.
+- Rollback: restore pre-cutover dump into `nemlab_rollback` → `java-managed`,
+  Java resumes unmodified; post-switch writes absent as expected. A forward
+  dump/restore of the adopted clone preserved adoption state + Python writes.
+  No automatic destructive restore exists by design.
+
+## Final verification (NEM-080)
+
+Combined gates run once against the final tree, 2026-10-02:
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Locked deps | `uv sync --all-packages --locked` | PASS |
+| Lint | `uv run ruff check .` | PASS |
+| Format | `uv run ruff format --check .` | PASS (82 files) |
+| Types | `uv run mypy` | PASS (45 source files) |
+| Import boundaries | `uv run lint-imports` | PASS (1 contract kept) |
+| Full tests | `uv run pytest` | 285 passed, 1 warning (78 s) |
+| Contract | `(cd api/contracts && node verify.mjs)` | PASS — 61 captures, 10 operations, all error codes |
+| Frontend | `npm run check` (nemlab-ui) | PASS — contract, format, build, 102 Playwright tests |
+| Live stack | `npm run test:live` | PASS — 6/6 vs real Python API + worker + PostgreSQL |
+
+Two repairs during the final pass (doc/script scope only): ruff `scripts/**`
+per-file ignores for `smoke_apps.py` (S101/S607), and `FastAPI` typing on
+`register_simulation_errors` (mypy untyped-decorator).
+
+## Intentional differences (accepted)
+
+- **Solver metadata**: stored `versions.solver` is provenance. Java-era rows
+  keep `ojAlgo 57.3.0` verbatim forever; Python writes
+  `HiGHS 1.12.0 via SciPy 1.18.1 linprog/highs-ds`. Both are display metadata —
+  never parsed for logic.
+- **Degenerate optimum**: ojAlgo reports `DISTINCT` where HiGHS reports
+  `OPTIMAL` on the no-headroom case. Python publishes on success + independent
+  validation (gap ≤ 0.01, accounting reconcile, budget), not on a native
+  status name — matching the parity plan.
+- **`test-live.py` placeholder `content_hash`**: reads trust stored hashes;
+  neither implementation recomputes them at read time (discrepancy #4).
+
+## Limits and pending gates
+
+Recorded in [cutover-rehearsal.md](cutover-rehearsal.md#numerical-performance-and-resource-limits):
+solver budgets/tolerances identical to Java; sim child ~110 MiB RSS / ~1.9 GiB
+virtual / ~0.6 s with a 4 GiB **address-space** (not RSS) bound; queue caps and
+backoffs unchanged. Pending: NEM-038 hosted CI (never run), NEM-020 deployment.

@@ -1,13 +1,13 @@
 # NEMLab architecture
 
 Updated: 2026-10-01
-Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation request normalisation and immutable price-input capture are implemented; durable simulation execution/results are implemented; simulation HTTP APIs are implemented; GridReplay APIs and frontend product integration remain planned.
+Status: Python (FastAPI/SQLAlchemy/HiGHS, uv workspace) is the active backend runtime with local Java parity verified (NEM-080): domain core and ordered-window hindsight, separate API/worker applications, versioned PostgreSQL price storage/import, opt-in scheduled worker execution, protected operator APIs, stored-price reads, immutable simulation inputs and durable execution/results, and simulation HTTP APIs — all verified against the existing frontend and contract. GridReplay APIs and frontend product integration remain planned. The Java implementation is preserved under `reference/java/` as the runnable baseline.
 
-## Accepted Python replacement — implementation pending
+## Python replacement — implemented, local parity verified
 
-On 2026-10-01 the user selected a complete Python backend rebuild and delegated stack choice. [Decision 019](decisions/019-python-backend-rebuild.md) selects CPython/uv, FastAPI, PostgreSQL/SQLAlchemy Core/Psycopg, Alembic and SciPy/HiGHS with the existing core/infrastructure/API/worker boundaries. Java will remain under `reference/java/`; docs and `api/contracts/` stay in place. The [rebuild plan](python-backend-rebuild.md) owns target layout, compatibility and cutover gates; [NEM-065–NEM-080](backlog.md#python-rebuild-tasks) own task status.
+On 2026-10-01 the user selected a complete Python backend rebuild and delegated stack choice. [Decision 019](decisions/019-python-backend-rebuild.md) selected CPython/uv, FastAPI, PostgreSQL/SQLAlchemy Core/Psycopg, Alembic and SciPy/HiGHS with the existing core/infrastructure/API/worker boundaries — that stack is now implemented as the active runtime: `nemlab_core`, `nemlab_infrastructure`, `nemlab_api`, `nemlab_worker` under uv workspace packages `core/`, `infrastructure/`, `api/`, `worker/`. Java remains runnable under `reference/java/`; docs and `api/contracts/` stay in place.
 
-The sections below describe the currently implemented Java system and its remaining proposals. They are the rebuild baseline, not a recommendation to start new Java features. No Python parity, schema adoption or runtime replacement has yet been verified.
+Local parity closed on 2026-10-02 under NEM-080: the [parity matrix](evidence/python-rebuild/parity.md) is complete and the [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md) verified populated-database adoption, post-switch reads/writes in both directions, empty setup and non-destructive rollback. NEM-038 hosted CI and NEM-020 deployment remain outstanding; the sections below describe the Java baseline (now under `reference/java/`) and remaining proposals, not a recommendation to start new Java features.
 
 ## Agreed boundaries
 
