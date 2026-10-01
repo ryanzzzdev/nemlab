@@ -1930,7 +1930,7 @@ Support both empty databases and validated populated Java database clones withou
 - Verified on real PostgreSQL 18.6 (`postgres:18.6-alpine`, compose service + scratch container): Java `migrate` output adopted end-to-end via the CLI (`check` → `adopt` → `alembic_version` = baseline, 3 history rows intact); fresh empty DB `migrate` produced all 11 tables, 6 triggers, 3 functions, indexes — identical manifest to the Java schema.
 - `infrastructure/tests/test_schema.py` (20 tests): pinned checksums vs packaged + reference-tree bytes, CRLF/BOM handling, history-row unit cases (checksum drift, failed row, partial, extra), and DB-backed cases — empty/unknown states, fresh migrate satisfying the same manifest adoption validates, repeated upgrade no-op, adopt preserving a populated `price_revision` row, refusals on dropped trigger, dropped table and tampered checksum, and transactional rollback (failed upgrade on an unadopted Java DB leaves no `alembic_version`, schema and history untouched, still adoptable).
 - Full suite: `uv run pytest` 173 passed; `ruff check`/`ruff format --check`/`mypy`/`lint-imports` clean.
-- Committed as HEAD — new `schema.py`, baseline revision, `db/migration/*.sql`, `migrate.py` actions, `test_schema.py`, `infrastructure/README.md`.
+- Committed as `c77ae99` — new `schema.py`, baseline revision, `db/migration/*.sql`, `migrate.py` actions, `test_schema.py`, `infrastructure/README.md`.
 
 <a id="nem-071"></a>
 
