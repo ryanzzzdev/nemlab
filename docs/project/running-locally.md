@@ -24,6 +24,16 @@ cd reference/java
 ./gradlew :infrastructure:prices --args='migrate'  # schema, once per deployment
 ```
 
+For the Python backend, schema migration is Alembic instead — see
+[infrastructure/README.md](../../infrastructure/README.md). From the repository
+root, with the same `.env` loaded:
+
+```sh
+uv run python -m nemlab_infrastructure.migrate check    # report DB state
+uv run python -m nemlab_infrastructure.migrate migrate  # empty database only
+uv run python -m nemlab_infrastructure.migrate adopt    # adopt a Java-managed DB
+```
+
 `docker compose stop postgres` stops the database while keeping its volume.
 Editing `NEMLAB_DB_PASSWORD` later does not change the existing database password;
 the `postgres` volume is initialised once.

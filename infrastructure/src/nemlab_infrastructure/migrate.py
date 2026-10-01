@@ -3,13 +3,36 @@
 Wraps Alembic so the operator command mirrors the Java ``prices migrate`` CLI.
 The Alembic configuration lives in ``migrations/`` at the repository root;
 this command locates it by walking up from the working directory.
+
+Actions:
+
+- ``migrate`` — apply pending revisions (creates the schema on an empty
+  database; never touches an unstamped Java-managed database — Alembic sees
+  no ``alembic_version`` and refuses to replay DDL only via ``adopt``).
+- ``check`` — report database state: empty / java-managed (adoption status)
+  / alembic-managed at revision / unknown.
+- ``adopt`` — verify a Java-managed database (Flyway history, checksums and
+  schema objects) then stamp the baseline revision. Refuses drifted, partial
+  or unknown databases; Flyway history is preserved, never replayed.
+- ``stamp`` — force-stamp head without validation (explicit operator repair
+  escape hatch; prefer ``adopt``).
 """
 
 import argparse
+import sys
 from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
+from sqlalchemy import create_engine, text
+
+from nemlab_infrastructure.schema import (
+    AdoptionError,
+    State,
+    inspect_state,
+    validate_java_database,
+)
+from nemlab_infrastructure.settings import DatabaseSettings
 
 
 def _find_config(start: Path) -> Path:
@@ -23,26 +46,68 @@ def _find_config(start: Path) -> Path:
     )
 
 
-def main(argv: list[str] | None = None) -> None:
+def _check(settings: DatabaseSettings) -> int:
+    engine = create_engine(settings.sqlalchemy_url())
+    try:
+        state = inspect_state(engine)
+        if state is State.ALEMBIC_MANAGED:
+            with engine.connect() as conn:
+                rev = conn.execute(
+                    text("SELECT version_num FROM alembic_version")
+                ).scalar()
+            print(f"alembic-managed at {rev}")
+            return 0
+        if state is State.JAVA_MANAGED:
+            try:
+                validate_java_database(engine)
+            except AdoptionError as ex:
+                print(f"java-managed, adoption refused: {ex}")
+                return 1
+            print("java-managed, valid V1-V3 flyway schema — run `adopt` to stamp")
+            return 0
+        print(state.name.lower())
+        return 0 if state is not State.UNKNOWN else 1
+    finally:
+        engine.dispose()
+
+
+def _adopt(config: Config, settings: DatabaseSettings) -> int:
+    engine = create_engine(settings.sqlalchemy_url())
+    try:
+        try:
+            validate_java_database(engine)
+        except AdoptionError as ex:
+            print(f"adoption refused: {ex}", file=sys.stderr)
+            return 1
+    finally:
+        engine.dispose()
+    command.stamp(config, "head")
+    print("stamped baseline; flyway_schema_history preserved")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="nemlab-migrate")
     parser.add_argument(
         "action",
-        choices=["migrate", "check", "stamp"],
-        help=(
-            "migrate = upgrade head; check = report pending revisions; "
-            "stamp = mark head without DDL"
-        ),
+        choices=["migrate", "check", "adopt", "stamp"],
+        help="migrate=upgrade head; check=report state; "
+        "adopt=validate Java DB then stamp; stamp=force mark head without DDL",
     )
     args = parser.parse_args(argv)
 
     config = Config(str(_find_config(Path.cwd())))
+    settings = DatabaseSettings()
     if args.action == "migrate":
         command.upgrade(config, "head")
-    elif args.action == "stamp":
+        return 0
+    if args.action == "stamp":
         command.stamp(config, "head")
-    else:
-        command.current(config)
+        return 0
+    if args.action == "adopt":
+        return _adopt(config, settings)
+    return _check(settings)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

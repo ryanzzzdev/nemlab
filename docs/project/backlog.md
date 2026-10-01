@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-070](#nem-070), then NEM-071–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-071](#nem-071), then NEM-072–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1905,7 +1905,7 @@ Replace ojAlgo with a verified HiGHS LP adapter without changing the comparison 
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-067](#nem-067)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1923,7 +1923,14 @@ Support both empty databases and validated populated Java database clones withou
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+- The Java V1–V3 SQL is the single source: packaged byte-identically at `infrastructure/src/nemlab_infrastructure/db/migration/` and replayed verbatim by the Alembic baseline `migrations/versions/nemlab_baseline_v1_v3.py`; the original Flyway scripts remain in `reference/java/infrastructure/src/main/resources/db/migration/`.
+- `infrastructure/src/nemlab_infrastructure/schema.py` reproduces Flyway 12.x `ChecksumCalculator` (per-readLine CRC32, terminators excluded, per-line BOM strip, UTF-8, signed int32) — verified against real `flyway_schema_history` checksums produced by Flyway 12.4.0 on PostgreSQL 18.6: V1 `-1351753437`, V2 `581062717`, V3 `-144120848`.
+- Adoption validates history rows (exactly V1–V3, ordered, `success=true`, checksums recomputed from the packaged bytes) plus live schema: tables, columns (name/type/nullability), per-kind constraint counts, triggers, functions, indexes. Refuses empty (→ `migrate`), unknown (no Flyway history), partial, and drifted databases; stamps `nemlab_baseline_v1_v3` without replaying DDL; `flyway_schema_history` preserved.
+- CLI: `python -m nemlab_infrastructure.migrate` with `migrate` / `check` / `adopt` / `stamp` — explicit single-run commands; no app performs migrations on startup. Operator docs incl. backup/restore rehearsal in `infrastructure/README.md`; `docs/project/running-locally.md` and `README.md` updated.
+- Verified on real PostgreSQL 18.6 (`postgres:18.6-alpine`, compose service + scratch container): Java `migrate` output adopted end-to-end via the CLI (`check` → `adopt` → `alembic_version` = baseline, 3 history rows intact); fresh empty DB `migrate` produced all 11 tables, 6 triggers, 3 functions, indexes — identical manifest to the Java schema.
+- `infrastructure/tests/test_schema.py` (20 tests): pinned checksums vs packaged + reference-tree bytes, CRLF/BOM handling, history-row unit cases (checksum drift, failed row, partial, extra), and DB-backed cases — empty/unknown states, fresh migrate satisfying the same manifest adoption validates, repeated upgrade no-op, adopt preserving a populated `price_revision` row, refusals on dropped trigger, dropped table and tampered checksum, and transactional rollback (failed upgrade on an unadopted Java DB leaves no `alembic_version`, schema and history untouched, still adoptable).
+- Full suite: `uv run pytest` 173 passed; `ruff check`/`ruff format --check`/`mypy`/`lint-imports` clean.
+- Committed as HEAD — new `schema.py`, baseline revision, `db/migration/*.sql`, `migrate.py` actions, `test_schema.py`, `infrastructure/README.md`.
 
 <a id="nem-071"></a>
 

@@ -80,6 +80,10 @@ uv run nemlab-worker              # non-HTTP worker; idles with flags off
 uv run python -m nemlab_infrastructure.migrate migrate   # Alembic schema
 ```
 
+For an existing Java-migrated database, use `... migrate adopt` instead — see
+[infrastructure/README.md](infrastructure/README.md) for state checks,
+checksum validation and backup/restore rehearsal.
+
 Environment variables are unchanged: `.env.example` still documents the shared `NEMLAB_*` contract, including the `jdbc:postgresql://` database URL format the Python settings translate for SQLAlchemy/Psycopg. The Python feature surface is still scaffold-only — parity lands task by task.
 
 ## CI and module boundaries
