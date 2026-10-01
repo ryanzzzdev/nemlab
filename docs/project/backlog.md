@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-069](#nem-069), then NEM-070–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-070](#nem-070), then NEM-071–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1874,7 +1874,7 @@ Implement exact market-day/request boundaries, fixed schedule, threshold strateg
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-068](#nem-068)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1892,7 +1892,11 @@ Replace ojAlgo with a verified HiGHS LP adapter without changing the comparison 
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+- `core/src/nemlab_core/hindsight.py` ports the stored-energy primal (exact +1/-1 balance) and the independent dual-certificate LP onto `linprog(method="highs-ds")` — HiGHS 1.12.0 via SciPy 1.18.1. `time_limit`/`maxiter` carry the 5000 ms / 100000-iteration cooperative budgets; feasibility tolerances set to 1e-9, inside the 1e-7 validator tolerance. `dual_upper_bound` re-evaluates the bound in `Decimal` + `nextafter` exactly as Java; `comparison.py` ports `SimulationComparison.run/validate` so only certified OPTIMAL outcomes publish dispatch.
+- Evidence: `docs/project/evidence/python-rebuild/solver.md` — versions, LP formulation, measured budgets (import ~255 ms, cold solve ~6 ms, warm 2.4–4.0 ms vs the 5 s budget; abort probes for ms=0/iters=0/1ms/iter-limits all return NO_SOLUTION or unproven-with-dispatch, never false OPTIMAL).
+- Parity: `test_hindsight_runs` replays all 10 frozen runs — OPTIMAL status/state, objectives, bounds and gaps reconcile, dispatches independently validate; vertices may differ on ties (documented). `test_scenario_keys_change_with_python_execution_identity` proves key sensitivity to solver identity (`SOLVER = "HiGHS 1.12.0 via SciPy 1.18.1 linprog/highs-ds"`).
+- `core/tests/test_hindsight.py` ports all HindsightTest cases (manual optima, enumeration oracle, fractional efficiency, large-allowance unproven, denormal-overflow FAILED_VALIDATION, dual-bound robustness) plus warm-timing and abort probes; `test_comparison.py` ports SimulationComparisonTest. `sys.float_info.min` is *not* Double.MIN_VALUE — the denormal-overflow case uses `math.nextafter(0.0, 1.0)`.
+- Verification: `uv run pytest` 153 passed; `ruff check`/`format --check`/`mypy` (24 files)/`lint-imports` clean. mypy `scipy.*` `ignore_missing_imports` override added (no stubs shipped).
 
 <a id="nem-070"></a>
 

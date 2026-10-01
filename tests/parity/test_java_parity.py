@@ -2,9 +2,10 @@
 
 Fixtures were produced by ``:infrastructure:parityExport`` at the recorded
 baseline; inputs are reconstructed from ``reference/java/.../ParityExport.java``
-(the fixture stores expected outputs, not inputs). hindsight outcomes are
-asserted in NEM-069; this file covers decimals, canonical strings, scenario
-keys, fixed dispatch and the threshold strategy.
+(the fixture stores expected outputs, not inputs). hindsight intervals may pick
+a different equally-optimal vertex than ojAlgo, so the solver parity surface is
+status + objective/bound/gap + independently validated dispatch + reconciled
+accounting — not bitwise dispatch equality.
 """
 
 import hashlib
@@ -15,7 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from nemlab_core import accounting, decimal_text, fixed, threshold
+from nemlab_core import accounting, decimal_text, fixed, hindsight, threshold
+from nemlab_core import dispatch as dispatch_module
 from nemlab_core.battery import Battery, Efficiency, TradingCosts
 from nemlab_core.prices import INTERVALS, Interval, PriceDay, Region
 from nemlab_core.request import (
@@ -593,3 +595,85 @@ def test_fixed_and_threshold_runs(run: dict) -> None:
             accounting.calculate(battery, costs, prices, tdispatch),
             run["threshold"],
         )
+
+
+@pytest.mark.parametrize("run", FIXTURES["runs"], ids=lambda r: r["name"])
+def test_hindsight_runs(run: dict) -> None:
+    """HiGHS may choose a different equally-optimal vertex than ojAlgo, so the
+    parity surface is certified status, objective, bound, gap and an
+    independently validated dispatch — not bitwise interval equality."""
+    battery = _battery(run["battery"])
+    w = run["windows"]
+    windows = ScheduleWindows(
+        w["chargeStart"], w["chargeEnd"], w["dischargeStart"], w["dischargeEnd"]
+    )
+    c = run["costs"]
+    costs = TradingCosts(c["importFee"], c["exportFee"], c["degradationPerExportedMWh"])
+    prices = _price_day(run["day"])
+    expected = run["hindsight"]
+
+    outcome = hindsight.solve(
+        battery, windows, costs, prices, hindsight.Limits.standard()
+    )
+
+    assert expected["status"] == "OPTIMAL"  # fixture baseline
+    assert outcome.status is hindsight.Status.OPTIMAL
+    assert outcome.solver_state == "OPTIMAL"
+    assert outcome.certificate_state == "OPTIMAL"
+    assert outcome.diagnostic == expected["diagnostic"]
+    assert outcome.limits.milliseconds == expected["limits"]["milliseconds"]
+    assert outcome.limits.iterations == expected["limits"]["iterations"]
+    assert outcome.dispatch is not None and outcome.accounting is not None
+    dispatch_module.validate(battery, windows, outcome.dispatch)
+    assert accounting.reconciles(
+        expected["solverObjective"], outcome.solver_objective
+    ), f"objective {outcome.solver_objective} != {expected['solverObjective']}"
+    assert outcome.upper_bound is not None
+    assert accounting.reconciles(expected["upperBound"], outcome.upper_bound)
+    assert outcome.absolute_gap is not None
+    assert 0 <= outcome.absolute_gap <= hindsight.GAP_TOLERANCE
+    assert accounting.reconciles(expected["absoluteGap"], outcome.absolute_gap)
+    assert accounting.reconciles(
+        outcome.upper_bound - outcome.accounting.margin, outcome.absolute_gap
+    )
+    expected_accounting = expected["dispatch"]["accounting"]
+    for camel, actual in (
+        ("margin", outcome.accounting.margin),
+        ("importedMWh", outcome.accounting.imported_mwh),
+        ("exportedMWh", outcome.accounting.exported_mwh),
+    ):
+        assert accounting.reconciles(expected_accounting[camel], actual), camel
+
+
+def test_scenario_keys_change_with_python_execution_identity() -> None:
+    """Same request and price revision must hash differently once the solver
+    identity moves off ojAlgo — proven by recomputing the fixture key."""
+    case = FIXTURES["scenarioKeys"]["cases"][0]
+    python_versions = "\n".join(
+        (
+            "simulation-request-v1",
+            fixed.MODEL_VERSION,
+            fixed.FIXED_VERSION,
+            hindsight.VERSION,
+            hindsight.SOLVER,
+            "ordered-comparison-v1",
+            "5000",
+            "100000",
+        )
+    )
+    python_key = hashlib.sha256(
+        (case["canonical"] + "\n" + EXAMPLE_REVISION + "\n" + python_versions).encode(
+            "utf-8"
+        )
+    ).hexdigest()
+    assert python_key != case["key"]
+    other = hashlib.sha256(
+        (
+            case["canonical"]
+            + "\n"
+            + EXAMPLE_REVISION
+            + "\n"
+            + python_versions.replace(hindsight.SOLVER, "HiGHS 0.0.0")
+        ).encode("utf-8")
+    ).hexdigest()
+    assert other != python_key
