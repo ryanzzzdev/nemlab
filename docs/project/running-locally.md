@@ -34,6 +34,19 @@ uv run python -m nemlab_infrastructure.migrate migrate  # empty database only
 uv run python -m nemlab_infrastructure.migrate adopt    # adopt a Java-managed DB
 ```
 
+The Python worker runs the fenced refresh queue from the repository root:
+
+```sh
+set -a; . ./.env; set +a
+NEMLAB_WORKER_ENABLED=true uv run python -m nemlab_worker
+```
+
+It honours the same flags as the Java worker (`NEMLAB_WORKER_ENABLED`,
+`NEMLAB_WORKER_SCHEDULE_ENABLED`, `NEMLAB_WORKER_REGIONS`,
+`NEMLAB_WORKER_POLL_MS`) and requires `OPEN_ELECTRICITY_API_KEY` only when
+refresh polling is enabled. `python -m nemlab_worker --fetch-price REGION DAY
+OUT` is the isolated fetch child mode — it never sees database credentials.
+
 `docker compose stop postgres` stops the database while keeping its volume.
 Editing `NEMLAB_DB_PASSWORD` later does not change the existing database password;
 the `postgres` volume is initialised once.

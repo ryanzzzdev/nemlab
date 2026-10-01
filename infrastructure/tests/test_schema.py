@@ -14,7 +14,7 @@ import pytest
 import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config
-from conftest import apply_schema
+from db_fixture import apply_schema
 
 from nemlab_infrastructure.schema import (
     EXPECTED_HISTORY,

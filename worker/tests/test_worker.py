@@ -37,8 +37,10 @@ def test_idle_run_returns_on_stop() -> None:
 
 
 def test_enabled_run_waits_for_stop() -> None:
+    # Simulation polling attaches in NEM-076; for now the flag alone makes the
+    # process wait without needing the OE credential or a database.
     stop = threading.Event()
     timer = threading.Timer(0.05, stop.set)
     timer.start()
-    run(WorkerSettings(worker_enabled=True), stop)
+    run(WorkerSettings(simulation_enabled=True), stop)
     assert stop.is_set()

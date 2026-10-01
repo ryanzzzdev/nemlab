@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-073](#nem-073), then NEM-074–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-074](#nem-074), then NEM-075–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -2002,7 +2002,7 @@ Recreate durable refresh transitions, audit and bounded public refresh submissio
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-072](#nem-072)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2019,7 +2019,12 @@ Restore opt-in polling, fixed-market-time schedules and supervised fetch process
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+- `worker/src/nemlab_worker/refresh.py` ports the whole `au.nemlab.worker.refresh` package: `FetchOutcome` (exactly-one-of contract, `[A-Z][A-Z0-9_]{0,79}` failure codes, slot prices as plain decimal text), `run_fetch_command` (the `--fetch-price` child mode — 240 s self-watchdog `os._exit(124)`, OE failure classification `!HTTP_4xx || HTTP_429) && !RETRY_AFTER_EXCEEDS_BUDGET`, exit codes 0/2/3), `PriceFetchProcess` (one child at a time, cleared env carrying only `OPEN_ELECTRICITY_API_KEY`, inherited console, 256 KB output cap → `INVALID_CHILD_RESULT`, deadline → `FETCH_DEADLINE_EXCEEDED`, crash/malformed → `FETCH_PROCESS_FAILED`, forcible terminate with 5 s `TerminationFailure` bound), `RefreshSchedule` (fixed UTC+10 `-15 min`/`-1 day` math, `daily-price-v1:` keys, restart-safe dedup) and `RefreshWorker` (fixed-delay poll, TerminationFailure stops polling, `WORKER_STOPPED` claim release).
+- `main.py` dispatches `--fetch-price` before settings load like `WorkerApplication.main`; `__main__.py` adds `python -m nemlab_worker`; `settings.py` adds `OPEN_ELECTRICITY_API_KEY` (outside the `NEMLAB_` prefix) and enforces, only when enabled: 1000–60000 ms poll bound, non-blank newline-free key, valid `worker_regions`.
+- Concurrency across processes stays capped by the database claim (one global `RUNNING`); no network work inside transactions — the child fetch happens between `claim()` and `complete()`/`fail()`.
+- `worker/tests/test_refresh.py` (17 tests) ports `RefreshWorkerTest` + `PriceFetchProcessTest` on real PostgreSQL and real child processes via `fetch_fixture.py` (which aborts if `NEMLAB_DB_PASSWORD` leaks): round-trip 288 slots + temp-file cleanup, stalled child killed before `FETCH_DEADLINE_EXCEEDED`, shutdown kills the active child and leaves the job `QUEUED` with zero COMPLETE attempts, crash/malformed/oversized outputs → safe codes, `HTTP_401` terminal after one attempt, expired-claim recovery with a fresh token, fixed-NEM-time schedule dedup across "restarts", a packaged `python -m nemlab_worker` end-to-end run reaching `FAILED/INVALID_SOURCE_DATA_OR_CONFIGURATION` with cleared env, and settings ValidationErrors before polling.
+- Credential delivery: child env is wiped except `OPEN_ELECTRICITY_API_KEY`; the key never reaches logs, the outcome file, or the database. Fetch resource bounds: 240 s deadline + watchdog, 256 KB result cap, single child per worker — measured fetch completes in <1 s for fixture loads; real OE fetch is bounded by the httpx timeouts (10 s connect/30 s read) inside the deadline.
+- Full suite: `uv run pytest` 223 passed; `ruff check`/`ruff format --check`/`mypy`/`lint-imports` clean. Shared scratch-DB helpers moved to `infrastructure/tests/db_fixture.py` (uniquely named to avoid cross-package `conftest` shadowing).
 
 <a id="nem-074"></a>
 

@@ -1,8 +1,9 @@
-"""Worker process entry point: ``nemlab-worker`` / ``python -m nemlab_worker.main``.
+"""Worker process entry point: ``nemlab-worker`` / ``python -m nemlab_worker``.
 
 Non-HTTP process, kept alive like the Java Spring ``web-application-type=none``
 worker. With every flag off it idles without credentials and exits cleanly on
-SIGTERM/SIGINT.
+SIGTERM/SIGINT. ``--fetch-price`` runs the isolated fetch child mode, which
+never sees database credentials.
 """
 
 import logging
@@ -12,6 +13,18 @@ import threading
 
 from pydantic import ValidationError
 
+from nemlab_core.prices import Region
+from nemlab_infrastructure.database import create_bounded_engine
+from nemlab_infrastructure.jobs import RefreshJobService
+from nemlab_infrastructure.prices.store import PriceStore
+from nemlab_worker.refresh import (
+    MODE,
+    PriceFetchProcess,
+    RefreshSchedule,
+    RefreshWorker,
+    _utc_now,
+    run_fetch_command,
+)
 from nemlab_worker.settings import WorkerSettings
 
 logging.basicConfig(
@@ -21,24 +34,45 @@ logger = logging.getLogger("nemlab_worker")
 
 
 def run(settings: WorkerSettings, stop: threading.Event) -> None:
-    if not (settings.worker_enabled or settings.simulation_enabled):
-        logger.info("worker idle: all features disabled")
+    if not settings.worker_enabled:
+        if settings.simulation_enabled:
+            logger.info("worker idle: simulation polling attaches in NEM-076")
+        else:
+            logger.info("worker idle: all features disabled")
         stop.wait()
         return
-    # NEM-072/NEM-076 attach refresh polling, daily schedules and simulation
-    # polling here; until then an enabled worker still just waits for shutdown.
-    logger.info(
-        "worker started: worker_enabled=%s schedule=%s "
-        "regions=%s simulation_enabled=%s",
-        settings.worker_enabled,
-        settings.worker_schedule_enabled,
-        ",".join(settings.regions),
-        settings.simulation_enabled,
-    )
-    stop.wait()
+    engine = create_bounded_engine(settings)
+    try:
+        jobs = RefreshJobService(engine, PriceStore(engine))
+        api_key = settings.open_electricity_api_key
+        if api_key is None:  # the settings validator guarantees this
+            raise ValueError("OPEN_ELECTRICITY_API_KEY is required")
+        fetcher = PriceFetchProcess(api_key)
+        regions = (
+            [Region[name] for name in settings.regions]
+            if settings.worker_schedule_enabled
+            else []
+        )
+        worker = RefreshWorker(
+            jobs,
+            RefreshSchedule(jobs, _utc_now, regions),
+            fetcher,
+            settings.worker_poll_ms / 1000,
+        )
+        worker.start()
+        try:
+            stop.wait()
+        finally:
+            worker.stop()
+    finally:
+        engine.dispose()
 
 
 def main() -> None:
+    argv = sys.argv[1:]
+    if argv and argv[0] == MODE:
+        sys.exit(run_fetch_command(argv))
+
     try:
         settings = WorkerSettings()
     except ValidationError as error:

@@ -8,7 +8,7 @@ from uuid import UUID
 
 import pytest
 import sqlalchemy as sa
-from conftest import apply_schema
+from db_fixture import apply_schema
 
 from nemlab_core.prices import Region
 from nemlab_infrastructure import jobs as jobs_module

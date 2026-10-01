@@ -14,7 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 import sqlalchemy as sa
-from conftest import REPO_ROOT, apply_schema
+from db_fixture import REPO_ROOT, apply_schema
 
 from nemlab_core.prices import NEM_OFFSET, Region
 from nemlab_infrastructure.prices import (
