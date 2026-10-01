@@ -2205,7 +2205,7 @@ Verified: all three images build; container API serves `/actuator/health` and co
 - Repository: both
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-078](#nem-078)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2222,7 +2222,7 @@ Adapt only runtime integration plumbing and prove existing visitor behavior agai
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+Done — `nemlab-ui/scripts/test-live.py` now launches the Python backend (`uv sync --all-packages --locked`, `python -m nemlab_infrastructure.migrate migrate`, `uv run nemlab-api` / `uv run nemlab-worker`) on a disposable PostgreSQL; contract provenance (`scripts/contract.mjs`, `contracts/provenance.json` sha256 pinning) unchanged and verified backend-compared at v1.3.0. `npm run check` fully green — contract check, prettier, tsc+vite build, all 102 Playwright tests (after `npx playwright install chromium`, an environment prerequisite). `npm run test:live`: all 6 live tests pass against the real Python API/worker/PostgreSQL — real simulation submit → worker-produced stored result with all three strategies (fixed/hindsight/threshold) and immutable saved-link reopen; incomplete day → visitor fetch → three permanent HTTP_401 attempts → terminal "could not be fetched" plus not-found recovery; complete/incomplete/absent price days through the real proxy with exact decimal strings and missing-gap states. No contract changes; no generated-type drift. Revisions: backend `af7c784` (HEAD at verification), frontend `8a39d18` (harness port).
 
 <a id="nem-080"></a>
 
