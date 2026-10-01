@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-072](#nem-072), then NEM-073–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-073](#nem-073), then NEM-074–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1972,7 +1972,7 @@ Restore bounded source retrieval and revision/coverage/snapshot persistence.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-070](#nem-070), [NEM-071](#nem-071)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1990,7 +1990,10 @@ Recreate durable refresh transitions, audit and bounded public refresh submissio
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+- New `infrastructure/src/nemlab_infrastructure/jobs.py` ports `RefreshJob`/`RefreshJobService` onto SQLAlchemy Core: identical constants (`MAX_PENDING_JOBS=100`, `MAX_ATTEMPTS=3`, `LEASE_SECONDS=300`, `MAX_VISITOR_PENDING=10`, `MAX_VISITOR_ATTEMPTS=3`, `visitor-price-v1:` keys, advisory `pg_advisory_xact_lock(735028)`), label/diagnostic validators, request-key dedup + `RequestKeyConflict`, shared-queue capacity, active-job aliasing, claim/recovery ordering, claim-token + live-lease fencing on every worker mutation, `30 * attempts` retry backoff, terminal `FAILED`/`CANCELLED` transitions, and `submit_visitor` server-side `visitor` actor with deterministic retry keys (`base:rN`).
+- `PriceStore` gained connection-taking internals (`_save_inside`, `_create_backfill`, `_backfill`, `_commit_day`, `_record_failure`) so `complete`/`fail` compose price persistence, backfill checkpoint and job transition in one transaction — fetch happens outside, matching the Java "no network inside transactions" rule.
+- `infrastructure/tests/test_refresh_jobs.py` (16 tests) ports `RefreshJobServiceTest` on real PostgreSQL 18.6 scratch DBs: 4-thread dedup'd submissions retaining aliases after completion, single-winner competing claims across pooled connections, expired-claim write rejection + fresh-token recovery with `LEASE_EXPIRED` diagnostic, retry exhaustion to `FAILED` with 3 recorded import attempts, final-expired-attempt fail-stop, cancel fencing + actor audit + `CANCEL_NOOP`, atomic rollback under an injected `BEFORE UPDATE` trigger (no revision/attempt/checkpoint leak, job stays RUNNING), lease-expiry-mid-write rollback for complete and incomplete fetches, incomplete-day visible-but-retrying (287 valid coverage, checkpoint held), label/future-day/100-job bounds, visitor dedup onto a scheduler job, visitor `r2`/`r3` retries after terminal jobs then `RefreshAttemptsExhausted`, the separate 10-job visitor cap, and legacy raw-SQL rows readable via `find`/`events`/`recent` post-adoption.
+- Full suite: `uv run pytest` 206 passed; `ruff check`/`ruff format --check`/`mypy`/`lint-imports` clean.
 
 <a id="nem-073"></a>
 

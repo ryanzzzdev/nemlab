@@ -284,6 +284,17 @@ class PriceStore:
         end: date,
         clock: Callable[[], datetime] | None = None,
     ) -> UUID:
+        with self.engine.begin() as conn:
+            return self._create_backfill(conn, region, start, end, clock)
+
+    def _create_backfill(
+        self,
+        conn: sa.Connection,
+        region: Region,
+        start: date,
+        end: date,
+        clock: Callable[[], datetime] | None = None,
+    ) -> UUID:
         now = (clock or _utc_now)().astimezone(NEM_OFFSET).date()
         if (
             start < EARLIEST_DAY
@@ -293,28 +304,30 @@ class PriceStore:
         ):
             raise ValueError("require 1..31 completed post-settlement days")
         id = uuid.uuid4()
-        with self.engine.begin() as conn:
-            conn.execute(
-                sa.text(
-                    "INSERT INTO price_backfill"
-                    " (id,region,start_day,end_exclusive,next_day,status)"
-                    " VALUES (:id,:region,:start,:end,:next,'ACTIVE')"
-                ),
-                {
-                    "id": id,
-                    "region": region.name,
-                    "start": start,
-                    "end": end,
-                    "next": start,
-                },
-            )
+        conn.execute(
+            sa.text(
+                "INSERT INTO price_backfill"
+                " (id,region,start_day,end_exclusive,next_day,status)"
+                " VALUES (:id,:region,:start,:end,:next,'ACTIVE')"
+            ),
+            {
+                "id": id,
+                "region": region.name,
+                "start": start,
+                "end": end,
+                "next": start,
+            },
+        )
         return id
 
     def backfill(self, id: UUID) -> Backfill:
         with self.engine.connect() as conn:
-            row = conn.execute(
-                sa.text("SELECT * FROM price_backfill WHERE id = :id"), {"id": id}
-            ).one()
+            return self._backfill(conn, id)
+
+    def _backfill(self, conn: sa.Connection, id: UUID) -> Backfill:
+        row = conn.execute(
+            sa.text("SELECT * FROM price_backfill WHERE id = :id"), {"id": id}
+        ).one()
         return Backfill(
             id,
             Region[row.region],
@@ -329,68 +342,78 @@ class PriceStore:
         """Optimistic checkpoint fence: concurrent/stale work rolls back its
         entire write."""
         with self.engine.begin() as conn:
-            row = conn.execute(
-                sa.text("SELECT * FROM price_backfill WHERE id = :id"),
-                {"id": id},
-            ).one()
-            batch = fetch.batch
-            if (
-                row.next_day != expected
-                or batch.day != expected
-                or row.region != batch.region.name
-                or not expected < row.end_exclusive
-            ):
-                raise ValueError("stale or mismatched backfill day")
-            self._save_inside(conn, fetch)
-            complete = batch.complete()
-            next_day = expected + timedelta(days=1) if complete else expected
-            status = (
-                ("COMPLETE" if next_day == row.end_exclusive else "ACTIVE")
+            return self._commit_day(conn, id, expected, fetch)
+
+    def _commit_day(
+        self, conn: sa.Connection, id: UUID, expected: date, fetch: Fetch
+    ) -> bool:
+        row = conn.execute(
+            sa.text("SELECT * FROM price_backfill WHERE id = :id"),
+            {"id": id},
+        ).one()
+        batch = fetch.batch
+        if (
+            row.next_day != expected
+            or batch.day != expected
+            or row.region != batch.region.name
+            or not expected < row.end_exclusive
+        ):
+            raise ValueError("stale or mismatched backfill day")
+        self._save_inside(conn, fetch)
+        complete = batch.complete()
+        next_day = expected + timedelta(days=1) if complete else expected
+        status = (
+            ("COMPLETE" if next_day == row.end_exclusive else "ACTIVE")
+            if complete
+            else "PAUSED"
+        )
+        changed = conn.execute(
+            sa.text(
+                "UPDATE price_backfill SET next_day=:next, status=:status,"
+                " diagnostic=:diag WHERE id=:id AND next_day=:expected"
+            ),
+            {
+                "next": next_day,
+                "status": status,
+                "diag": None
                 if complete
-                else "PAUSED"
-            )
-            changed = conn.execute(
-                sa.text(
-                    "UPDATE price_backfill SET next_day=:next, status=:status,"
-                    " diagnostic=:diag WHERE id=:id AND next_day=:expected"
-                ),
-                {
-                    "next": next_day,
-                    "status": status,
-                    "diag": None
-                    if complete
-                    else "Incomplete price day; refresh before advancing",
-                    "id": id,
-                    "expected": expected,
-                },
-            ).rowcount
-            if changed != 1:
-                raise ValueError("backfill checkpoint changed concurrently")
-            return complete
+                else "Incomplete price day; refresh before advancing",
+                "id": id,
+                "expected": expected,
+            },
+        ).rowcount
+        if changed != 1:
+            raise ValueError("backfill checkpoint changed concurrently")
+        return complete
 
     def record_failure(self, task: Backfill, at: datetime, category: str) -> None:
         with self.engine.begin() as conn:
-            conn.execute(
-                sa.text(
-                    "INSERT INTO price_import_attempt"
-                    " (id,region,market_day,retrieved_at,status,diagnostic)"
-                    " VALUES (:id,:region,:day,:at,'FAILED',:diag)"
-                ),
-                {
-                    "id": uuid.uuid4(),
-                    "region": task.region.name,
-                    "day": task.next,
-                    "at": at,
-                    "diag": category,
-                },
-            )
-            conn.execute(
-                sa.text(
-                    "UPDATE price_backfill SET status='PAUSED', diagnostic=:diag"
-                    " WHERE id=:id AND next_day=:next AND status<>'COMPLETE'"
-                ),
-                {"diag": category, "id": task.id, "next": task.next},
-            )
+            self._record_failure(conn, task, at, category)
+
+    def _record_failure(
+        self, conn: sa.Connection, task: Backfill, at: datetime, category: str
+    ) -> None:
+        conn.execute(
+            sa.text(
+                "INSERT INTO price_import_attempt"
+                " (id,region,market_day,retrieved_at,status,diagnostic)"
+                " VALUES (:id,:region,:day,:at,'FAILED',:diag)"
+            ),
+            {
+                "id": uuid.uuid4(),
+                "region": task.region.name,
+                "day": task.next,
+                "at": at,
+                "diag": category,
+            },
+        )
+        conn.execute(
+            sa.text(
+                "UPDATE price_backfill SET status='PAUSED', diagnostic=:diag"
+                " WHERE id=:id AND next_day=:next AND status<>'COMPLETE'"
+            ),
+            {"diag": category, "id": task.id, "next": task.next},
+        )
 
 
 def _utc_now() -> datetime:
