@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-065](#nem-065), then NEM-066–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-066](#nem-066), then NEM-067–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1766,7 +1766,7 @@ Added 2026-10-01. Scope and stack are accepted; implementation has not started. 
 - Repository: both
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: None
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1783,7 +1783,7 @@ Capture the exact delivered behavior before moving or replacing implementation.
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+2026-10-01: [Parity baseline](evidence/python-rebuild/parity.md) records backend `e93142c`, frontend `b48295e`, working-tree state, toolchain, 10 routes, 14 environment flags/defaults, command/schema/test inventories, operational constants and the capability parity matrix. Baseline verification: `gradlew clean build --offline` 150 tests pass; contract check validated 120 HTTP captures across 10 operations; `smoke_apps.py` passed; frontend `npm run check` passed (102 browser tests) after installing Playwright chromium (initial failure was a missing browser, not a regression); `npm run test:live` passed all 6 real-stack cases. Frozen fixtures under `evidence/python-rebuild/fixtures/` via the new `:infrastructure:parityExport` Gradle task (`infrastructure/.../parity/ParityExport.java`), covering decimal canonicalisation, request normalisation/errors, content hashes, scenario-key inputs, 10 full strategy runs and stored two-/three-strategy result JSON; legacy two-strategy shape reconstructed by removing the `threshold` key (recorded as representative, not provenance-captured). No live OE calls beyond the harness's designed 401 path; unrelated user edits preserved. Changes uncommitted.
 
 <a id="nem-066"></a>
 
@@ -1792,7 +1792,7 @@ Not started. Record actual verification and changed files/commit links here.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-065](#nem-065)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 

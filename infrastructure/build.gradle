@@ -29,4 +29,14 @@ tasks.register('prices', JavaExec) {
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
 }
 
+// Frozen parity fixtures for the Python rebuild; manual evidence run, not part of test.
+tasks.register('parityExport', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'au.nemlab.infrastructure.parity.ParityExport'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+    args rootProject.file('docs/project/evidence/python-rebuild/fixtures/parity-fixtures.json').absolutePath,
+            rootProject.file('core/src/test/resources/prices').absolutePath
+}
+
 sourceSets.test.resources { srcDir rootProject.file('docs/project/evidence/oe-validation'); include 'historical-price-response.json' }
