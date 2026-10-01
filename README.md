@@ -1,5 +1,7 @@
 # NEMLab
 
+Python rebuild planned: see the [migration plan](docs/project/python-backend-rebuild.md) and [ordered backlog](docs/project/backlog.md#python-rebuild-tasks). The setup below still runs the current Java implementation until the rebuild is verified.
+
 NEMLab explores Australia's National Electricity Market through historical analysis and experiments. BatteryLab compares simulated battery trading strategies; GridReplay helps visitors investigate notable market periods.
 
 This is the backend project and the home of shared project documentation. The Java/Spring Boot backend has separate runnable API and worker applications. The [frontend](../nemlab-ui/README.md) lives in the separate sibling `nemlab-ui` Git repository.

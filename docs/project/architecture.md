@@ -1,7 +1,13 @@
 # NEMLab architecture
 
-Updated: 2026-09-21
+Updated: 2026-10-01
 Status: Plain Java core, fixed schedule and ordered-window hindsight implemented and tested; separate API/worker application shells now run; versioned PostgreSQL price storage/import is implemented; opt-in scheduled worker execution is implemented; opt-in protected operator APIs are implemented; stored-price read endpoints are implemented; the separate frontend repository and build baseline are verified; simulation request normalisation and immutable price-input capture are implemented; durable simulation execution/results are implemented; simulation HTTP APIs are implemented; GridReplay APIs and frontend product integration remain planned.
+
+## Accepted Python replacement — implementation pending
+
+On 2026-10-01 the user selected a complete Python backend rebuild and delegated stack choice. [Decision 019](decisions/019-python-backend-rebuild.md) selects CPython/uv, FastAPI, PostgreSQL/SQLAlchemy Core/Psycopg, Alembic and SciPy/HiGHS with the existing core/infrastructure/API/worker boundaries. Java will remain under `reference/java/`; docs and `api/contracts/` stay in place. The [rebuild plan](python-backend-rebuild.md) owns target layout, compatibility and cutover gates; [NEM-065–NEM-080](backlog.md#python-rebuild-tasks) own task status.
+
+The sections below describe the currently implemented Java system and its remaining proposals. They are the rebuild baseline, not a recommendation to start new Java features. No Python parity, schema adoption or runtime replacement has yet been verified.
 
 ## Agreed boundaries
 

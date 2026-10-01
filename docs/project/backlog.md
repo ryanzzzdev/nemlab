@@ -1,6 +1,6 @@
 # NEMLab backlog
 
-Updated: 2026-09-25
+Updated: 2026-10-01
 
 Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-046: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts, the saved-result journey and visitor-triggered price refresh; M4’s local exit criteria are met. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
 
@@ -8,7 +8,26 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
-M5 next: [NEM-054](#nem-054). UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+- [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
+
+- [NEM-065 — Freeze the Java parity baseline and executable reference cases](#nem-065)
+- [NEM-066 — Preserve Java as a runnable reference in the existing repository](#nem-066)
+- [NEM-067 — Bootstrap the four Python packages and independent applications](#nem-067)
+- [NEM-068 — Port request semantics and deterministic battery strategies](#nem-068)
+- [NEM-069 — Prove the Python ordered-hindsight solver and budgets](#nem-069)
+- [NEM-070 — Adopt the existing PostgreSQL schema with Alembic](#nem-070)
+- [NEM-071 — Port OE prices, immutable revisions and resumable backfill](#nem-071)
+- [NEM-072 — Port fenced refresh jobs and visitor admission](#nem-072)
+- [NEM-073 — Run isolated price fetches and schedules in the Python worker](#nem-073)
+- [NEM-074 — Restore public price reads and protected operator HTTP](#nem-074)
+- [NEM-075 — Port immutable simulation inputs, jobs and saved results](#nem-075)
+- [NEM-076 — Execute and validate simulations in bounded Python children](#nem-076)
+- [NEM-077 — Restore simulation HTTP and visitor-triggered refresh](#nem-077)
+- [NEM-078 — Make Python the active local tooling and CI path](#nem-078)
+- [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
+- [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
+
+Python rebuild next: [NEM-065](#nem-065), then NEM-066–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1732,3 +1751,459 @@ Close M5 only when the real-data journey, demo fidelity and Admin decision are e
 ### Completion evidence
 
 Planned only; no implementation or verification evidence yet.
+
+
+<a id="python-rebuild-tasks"></a>
+
+## Python rebuild tasks
+
+Added 2026-10-01. Scope and stack are accepted; implementation has not started. Historical Done tasks describe the Java delivery and remain intact. Promote dependencies to Ready as their gates pass.
+
+<a id="nem-065"></a>
+
+## NEM-065 — Freeze the Java parity baseline and executable reference cases
+
+- Repository: both
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Ready
+- Depends on: None
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Capture the exact delivered behavior before moving or replacing implementation.
+
+### Done when
+
+- Record backend/frontend revisions, working-tree state, all routes, environment flags/defaults, commands, SQL objects and Java test inventory in evidence/python-rebuild/parity.md; preserve unrelated user edits.
+- Read the linked specs/decisions and Java production/tests for every capability; list discrepancies with their resolution or open gate.
+- Run the baseline Java build/contract/startup and available frontend checks; capture sanitised HTTP, canonical-hash, engine and old/new saved-result fixtures with generation commands and provenance. Report unavailable checks honestly.
+- Inventory populated-database/queue compatibility requirements and prerequisites (JDK, Node, Docker/PostgreSQL, Python wheels); keep database snapshots outside Git.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-066"></a>
+
+## NEM-066 — Preserve Java as a runnable reference in the existing repository
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-065](#nem-065)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Move only Java-specific tracked assets to reference/java while preserving repository history and stable shared paths.
+
+### Done when
+
+- Inventory tracked/hidden files and use git mv for Java module sources/tests/resources, Gradle files/wrapper/locks and Java module READMEs; leave docs, .git, api/contracts, root configuration and user files in place.
+- Preserve the Java smoke script/workflow as reference assets; document baseline SHA, old-to-new paths, setup and commands. Keep a separately reviewable move diff.
+- Run reference Java build and startup/contract verification with repaired paths; no secrets, caches, build output or database volumes enter the reference tree.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-067"></a>
+
+## NEM-067 — Bootstrap the four Python packages and independent applications
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-066](#nem-066)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Create a locked uv workspace matching core/infrastructure/api/worker boundaries.
+
+### Done when
+
+- Provision SQLAlchemy 2 Core with Psycopg 3; infrastructure owns explicit transaction contexts and one bounded Engine pool per process, without a second psycopg_pool or domain ORM dependencies.
+- Pin a supported CPython 3.13 patch, uv and stable compatible dependencies after Linux wheel/license checks; commit-ready pyproject files and uv.lock resolve reproducibly.
+- Provide API, worker and migration entry points; API starts with disabled optional features and no credentials; worker stays non-HTTP, idle by default, and shuts down cleanly.
+- Enforce imports: core independent of apps/persistence/web; infrastructure may depend on core; API/worker may depend on both but not each other. Configure Ruff, mypy, pytest and import-linter.
+- Validate a clean locked install, both process entry points, health compatibility and invalid-configuration diagnostics.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-068"></a>
+
+## NEM-068 — Port request semantics and deterministic battery strategies
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-067](#nem-067)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Implement exact market-day/request boundaries, fixed schedule, threshold strategy and accounting.
+
+### Done when
+
+- Port PriceDay, Battery, Efficiency, ScheduleWindows, SimulationRequest, Thresholds, FixedSchedule, PriceThreshold, DispatchValidator and Accounting using specs plus Java tests.
+- Preserve 288 interval-end slots, fixed UTC+10, decimal canonical strings/hashes, numeric bounds, null/missing rules, negative prices and strict threshold equality behavior.
+- Compare fixed/threshold interval outputs and accounting to frozen Java fixtures under existing tolerances; independently test physical limits, terminal-energy rules, fees/losses and property invariants.
+- Old requests without thresholds remain valid; thresholds keep unrestricted daily operation and unforced final energy.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-069"></a>
+
+## NEM-069 — Prove the Python ordered-hindsight solver and budgets
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-068](#nem-068)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Replace ojAlgo with a verified HiGHS LP adapter without changing the comparison model.
+
+### Done when
+
+- Port the actual ordered-window primal and independent dual certificate; verify objective/marginal signs and reconstruct dispatch/accounting independently.
+- Match exact synthetic optima and sampled-day objective/bounds under existing tolerances; tied optima may differ in dispatch only when independently feasible and equally optimal.
+- Test infeasible/error/unproven/time/iteration-limit cases, nonfinite output and invalid certificates; only certified OPTIMAL results publish.
+- Benchmark cold/warm 288-interval cases and abort probes against five-second cooperative and 15-second parent targets; record runtime/native-library versions and evidence. Any failure blocks solver acceptance, not a silent limit increase.
+- Select truthful Python solver/execution version metadata and prove scenario keys change when execution identity changes.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-070"></a>
+
+## NEM-070 — Adopt the existing PostgreSQL schema with Alembic
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-067](#nem-067)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Support both empty databases and validated populated Java database clones without data loss.
+
+### Done when
+
+- Use the selected SQLAlchemy/Psycopg migration connection; verify transaction/DDL behavior on the supported PostgreSQL version.
+- Port V1–V3 schema semantics including immutable triggers, checks, indexes and functions into an explicit Alembic baseline; preserve original Flyway SQL in Java reference.
+- Provide verified adoption: check Flyway versions/checksums and schema before stamping; refuse unknown/drifted/partial databases; preserve Flyway history and never replay create DDL on an existing schema.
+- Test fresh upgrade, repeated upgrade, transaction failure and populated-clone adoption with old results/revisions/audits intact using real PostgreSQL.
+- Document explicit single-run migration, backup and restore rehearsal commands; no automatic app-start migration or destructive live reset.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-071"></a>
+
+## NEM-071 — Port OE prices, immutable revisions and resumable backfill
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-068](#nem-068), [NEM-070](#nem-070)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Restore bounded source retrieval and revision/coverage/snapshot persistence.
+
+### Done when
+
+- Implement repositories through SQLAlchemy Core/parameterised SQL on the shared Engine; preserve exact Decimal mappings and avoid ORM entities crossing boundaries.
+- Read OePriceSource, PriceBatch, PriceStore, PriceBackfill and CLI tests plus data-foundation specification; preserve bounded windows, interval labels, validation and credential isolation.
+- Prove Java-equivalent content hashes and exact decimal values; preserve missing/source-null/zero distinctions, corrections, idempotency, provenance and snapshot references.
+- Port resumable checkpoint/status behavior through the supported queue boundary; do not revive retired direct production ingestion bypasses.
+- Test source failures, oversized/truncated payloads, duplicates/gaps, incomplete days and concurrent corrections on fixtures and real PostgreSQL; existing snapshots must stay unchanged.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-072"></a>
+
+## NEM-072 — Port fenced refresh jobs and visitor admission
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-070](#nem-070), [NEM-071](#nem-071)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Recreate durable refresh transitions, audit and bounded public refresh submissions.
+
+### Done when
+
+- Verify queue locks and fencing through actual SQLAlchemy transaction contexts, including rollback and pooled-connection reuse.
+- Port RefreshJobService and queue tests: advisory/row locks, claim tokens, leases, cancellation, atomic import/checkpoint/completion, deduplication, capacity, retry/backoff and recovery.
+- Preserve server-derived actors, stable request keys and visitor eligibility/day-attempt/global-cap rules from current code.
+- Use real PostgreSQL concurrent tests for competing claims/submissions, expired stale writers, cancellation races, rollback and retry exhaustion; no network work inside transactions.
+- Confirm existing job/audit records remain readable after schema adoption.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-073"></a>
+
+## NEM-073 — Run isolated price fetches and schedules in the Python worker
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-072](#nem-072)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Restore opt-in polling, fixed-market-time schedules and supervised fetch processes.
+
+### Done when
+
+- Port RefreshWorker, RefreshSchedule, PriceFetchProcess and FetchCommand behavior, including daily scheduling after 00:15 fixed UTC+10 and independent configuration flags.
+- Preserve 240-second deadline and HTTP/retry classification; bound child input/output, network bytes/time and logging; cap concurrency across processes through the database.
+- Test restart/lease recovery, duplicate schedules, terminal 4xx versus 429/transient errors, excessive Retry-After, timeout, child crash/orphan and parent shutdown; prove child termination and cleanup.
+- Record measured Python fetch resource bounds and safe credential delivery without logs or tracked fixtures containing secrets.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-074"></a>
+
+## NEM-074 — Restore public price reads and protected operator HTTP
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-071](#nem-071), [NEM-072](#nem-072), [NEM-067](#nem-067)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Serve the existing price and operator routes through FastAPI with compatible responses.
+
+### Done when
+
+- Port all PriceReadController/AdminRefreshController routes, filters, limits, errors and bearer security using baseline HTTP cases and canonical OpenAPI.
+- Keep opt-in flags independent, constant-time token comparison, server-derived audit identity, safe error envelopes and existing disabled/unauthorised semantics.
+- Validate actual HTTP status/body/headers against frozen fixtures and schema, including coverage gaps, malformed values, pagination and cancellation/audit behavior.
+- Keep api/contracts and generated TypeScript compatible; no automatic FastAPI schema/error changes.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-075"></a>
+
+## NEM-075 — Port immutable simulation inputs, jobs and saved results
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-068](#nem-068), [NEM-069](#nem-069), [NEM-070](#nem-070)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Persist reproducible scenarios and fenced simulation lifecycle with old-result compatibility.
+
+### Done when
+
+- Verify immutable JSON/Decimal mapping and atomic completion through the selected SQLAlchemy persistence boundary.
+- Port ScenarioPreparation and SimulationJobs canonical identity, revision capture, deduplication, queue caps/leases/retries and atomic immutable results.
+- New runs use Python solver/execution metadata; Java two-/three-strategy results retain stored provenance and UUIDs without recomputation.
+- Test source correction races, submission races, stale tokens, retry recovery, terminal deduplication and transaction rollback on real PostgreSQL.
+- Prove old JSON payload readers tolerate supported historical shapes; legacy queued execution is drained/blocked at cutover rather than silently converted.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-076"></a>
+
+## NEM-076 — Execute and validate simulations in bounded Python children
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-075](#nem-075)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Supervise independent compute and publish only independently validated outcomes.
+
+### Done when
+
+- Port SimulationWorker/Process/Command orchestration with independent refresh/simulation concurrency, bounded file exchange and cleared credential-free child environments.
+- Enforce initial 15-second deadline, five-second termination allowance, orphan/shutdown cleanup and native thread limits; measure native RSS and document enforceable Linux/container resource bounds.
+- Parent independently checks fixed and threshold policy identity, physical invariants, all accounting, solver bound/gap and supported versions before atomic publication.
+- Test hangs, crash, nonzero exit, malformed/oversized/nonfinite output, invalid dispatch/certificates, unsupported versions and retry classification through real subprocesses.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-077"></a>
+
+## NEM-077 — Restore simulation HTTP and visitor-triggered refresh
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-073](#nem-073), [NEM-074](#nem-074), [NEM-076](#nem-076)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Complete compatible public submission/status/result and missing-price refresh behavior.
+
+### Done when
+
+- Port strict SimulationJson behavior: 16384-byte bound, JSON media type, duplicate/unknown fields, trailing documents, decimal strings, integer-not-boolean windows and safe validation reasons.
+- Preserve 202/200 duplicate semantics, Location/Retry-After/no-store headers, pending/failed result conflicts, opaque IDs, optional thresholds and safe failure allowlists.
+- Preserve PRICE_REFRESH_PENDING/PRICE_REFRESH_FAILED/VISITOR_REFRESH_LIMIT and unchanged-scenario resubmission without exposing queue internals.
+- Validate real HTTP responses against canonical schema plus baseline success/error/disabled cases; old saved results and three-strategy new runs work end to end.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-078"></a>
+
+## NEM-078 — Make Python the active local tooling and CI path
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-073](#nem-073), [NEM-077](#nem-077)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Replace active Java commands with reproducible Python checks and clear operational documentation.
+
+### Done when
+
+- Build Docker packaging with independently runnable API and worker targets/commands; verify native HiGHS dependencies, non-root execution, shutdown and the same locked checks in containers. Keep production cloud/provider selection under NEM-020.
+- Update root README, running-locally, module READMEs, environment example, smoke scripts and backend workflow to locked Python install/lint/types/unit/integration/contract/process checks.
+- Keep active Compose data/volume continuity, documented flag mappings, safe logs and independent API/worker startup; update Java-only configuration names explicitly.
+- Run full local checks from a clean source copy without Java for the active path; verify reference Java remains optional and docs explain both paths.
+- Keep NEM-038 hosted CI outstanding until actual remote run evidence exists; do not infer hosted success from workflow syntax/local checks.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-079"></a>
+
+## NEM-079 — Verify the existing frontend against the Python backend
+
+- Repository: both
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-078](#nem-078)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Adapt only runtime integration plumbing and prove existing visitor behavior against Python.
+
+### Done when
+
+- Read frontend AGENTS; adapt scripts/test-live.py from Gradle/JAR launch to Python and preserve api/contracts provenance/sync paths.
+- Run frontend npm run check and npm run test:live against real Python API/worker/PostgreSQL, including default three strategies, missing-price refresh and old two-strategy saved links.
+- Validate prices, form errors, polling, failures, immutable reopen/share and displayed accounting agreement; avoid unrelated UI redesign.
+- Record exact backend/frontend revisions or uncommitted files, commands/results and any contract changes; no unexplained generated-type drift.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+<a id="nem-080"></a>
+
+## NEM-080 — Rehearse database cutover and close the Python parity gate
+
+- Repository: both
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-065](#nem-065), [NEM-069](#nem-069), [NEM-070](#nem-070), [NEM-078](#nem-078), [NEM-079](#nem-079)
+- References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
+
+### Outcome
+
+Demonstrate complete local parity, safe transition and recovery before resuming M5.
+
+### Done when
+
+- Complete every parity-matrix row with code/test/evidence links; explain intentional solver metadata/degenerate-optimum differences and resolve all material gaps.
+- Rehearse backup/restore, empty setup and populated Java-clone adoption; drain legacy jobs, stop Java schedulers/workers and verify Python reads historical prices/results and executes new work.
+- Exercise rollback on an isolated clone including Python-version jobs and post-switch writes; document recovery without automatic destructive restore.
+- Run final combined contract/domain/PostgreSQL/process/browser gates once against final changes; record numerical/performance/resource limits and pending hosted/deployment gates honestly.
+- Update architecture/decisions/runbooks as implemented only on evidence, mark rebuild milestone complete, retain M3/NEM-038 and launch gates, and make NEM-054 next.
+
+### Completion evidence
+
+Not started. Record actual verification and changed files/commit links here.
+
+
+<a id="nem-081"></a>
+
+## NEM-081 — Research energy-sector roles and refine the Python stack
+
+- Repository: backend
+- Milestone: Python backend rebuild
+- Priority: High
+- Status: Done
+- Depends on: None
+- References: [Research findings](evidence/python-rebuild/energy-python-stack-research.md), [decision 019](decisions/019-python-backend-rebuild.md), [rebuild plan](python-backend-rebuild.md).
+
+### Outcome
+
+Ground stack selection in relevant Australian, US, EU and UK energy-role evidence and NEMLab's scope.
+
+### Done when
+
+- Record named employers, roles, locations, stated technologies, source links and evidence limitations; separate employer usage from industry-wide popularity claims.
+- Compare utility/customer platforms with trading, battery optimisation and energy-data work, avoiding duplicate-employer counting.
+- Select the stack under delegated authority and reconcile affected plan, task, architecture and decision records.
+
+### Completion evidence
+
+2026-10-01: Reviewed employer/ATS evidence from Kraken, Powerline, Scale Microgrid Solutions, Joulea, Form Energy, trawa and Wattstor, plus explicitly historical Habitat Energy evidence. Recorded direct versus indexed/removed-page limitations. Retained FastAPI/PostgreSQL and added SQLAlchemy 2 Core over Psycopg 3; retained the PostgreSQL queue and SciPy/HiGHS parity design. NEM-067/070/071/072/075/078 now specify persistence/container implications. Markdown references and git diff whitespace checked; no runtime implementation or tests were performed. Changes are uncommitted.

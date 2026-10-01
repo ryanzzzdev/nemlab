@@ -2,7 +2,7 @@
 
 Date: 2026-09-13  
 Accepted: 2026-09-17  
-Status: Accepted
+Status: Superseded for the Python replacement by [decision 019](019-python-backend-rebuild.md); retained for the implemented Java reference
 
 ## Context and decision
 

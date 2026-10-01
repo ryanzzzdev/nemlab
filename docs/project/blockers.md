@@ -1,6 +1,6 @@
 # Blockers and open questions
 
-Updated: 2026-09-25
+Updated: 2026-10-01
 
 These records distinguish future decision gates from work that is blocked now. No failed implementation attempt is implied. Each record is Open until evidence and its resolution date are recorded. Task execution status belongs in the [backlog](backlog.md).
 
@@ -100,3 +100,17 @@ These records distinguish future decision gates from work that is blocked now. N
 - Blocking scope: Formal M3 completion; no missing local implementation was identified by this review.
 - Next action / owner: User supplies/authorises repository destinations and publication when ready; implementing agent then verifies hosted workflow runs and records commit/run links. No account creation or push is authorised by NEM-037.
 - Resolution: Pending.
+
+
+<a id="blk-008"></a>
+
+## BLK-008 — Python parity and existing-data transition gates
+
+- Identified: 2026-10-01.
+- Status: Open.
+- Impact: Python rebuild acceptance; not a blocker to starting NEM-065.
+- Affected tasks: [NEM-069](backlog.md#nem-069), [NEM-070](backlog.md#nem-070), [NEM-076](backlog.md#nem-076), [NEM-080](backlog.md#nem-080).
+- Evidence: Java uses ojAlgo-specific certificates/versions, Flyway V1–V3, immutable JSON results and JVM child limits. Python equivalents and populated-schema adoption have not yet been exercised. No failed attempt is implied.
+- Next action / owner: Implementing agent captures baseline fixtures, proves HiGHS certificates/budgets, verifies Alembic adoption on a populated clone and measures enforced Python/native resource bounds. Follow the [rebuild plan](python-backend-rebuild.md); record specific failures separately if discovered.
+- Blocking scope: Prevents claiming complete parity or cutting over until evidence passes; no user decision is currently needed for planning/scaffolding.
+- Resolution: Pending implementation evidence. Hosted CI remains separately tracked in BLK-007.

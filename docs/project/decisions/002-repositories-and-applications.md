@@ -7,6 +7,10 @@ Status: Accepted
 
 NEMLab lives in its own workspace and needs a shared backend for multiple features and a separately developed frontend.
 
+## 2026-10-01 amendment
+
+[Decision 019](019-python-backend-rebuild.md) replaces the Java language/tooling choice with Python. The existing backend/frontend repositories and separately runnable API/worker boundaries remain accepted. Implementation is pending.
+
 ## Decision
 
 Use one Java/Spring Boot backend repository with API and worker applications, plus one frontend repository. House an eventual Admin app in that frontend repository. The backend project folder is `nemlab`; the frontend project folder is `nemlab-ui`.

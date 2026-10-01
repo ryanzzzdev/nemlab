@@ -1,6 +1,6 @@
 # NEMLab roadmap
 
-Updated: 2026-09-25
+Updated: 2026-10-01
 
 The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
@@ -12,8 +12,17 @@ M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.m
 | M2 — Battery-engine proof | Correct, reproducible strategies and feasible solver | Complete | M1 price gate; synthetic design can proceed alongside M1 |
 | M3 — Shared foundation | Ingestion, jobs, persistence, API and frontend shells | In progress | M1 and M2 |
 | M4 — BatteryLab | Complete simulation experience | Complete | M3 local foundation; hosted CI remains a separate open gate |
+| Python backend rebuild | Verified Python parity with retained Java reference | Planned | Delivered Java baseline; before M5 |
 | M5 — GridReplay and Admin assessment | Replay experience and an explicit Admin scope decision | Planned | M4 and validated grid inputs |
 | M6 — Launch | Verified, operable release of both products | Planned | M5 |
+
+## Python backend rebuild — current priority
+
+Status: Planned. The user selected a complete Python rebuild on 2026-10-01 before continuing M5. Preserve the existing backend repository/history, runnable Java reference, canonical docs, API/worker split and delivered functionality including visitor refresh and thresholds. See the [execution plan](python-backend-rebuild.md) and [NEM-065–NEM-080](backlog.md#python-rebuild-tasks).
+
+Exit criteria: independent Python API/worker run with no Java dependency; existing HTTP/frontend behavior, domain correctness, durable recovery and immutable historical data/results pass the parity matrix; clean setup, populated-schema adoption and rollback are rehearsed; active runbooks/checks use Python. Hosted CI remains NEM-038 and deployment remains NEM-020. Completed M1/M2/M4 records remain historical Java-era evidence, not automatic Python verification.
+
+Sequence: NEM-065 baseline → reference/scaffold → domain/solver/schema → ingestion/queues/APIs → simulation → tooling/frontend/cutover. Resume NEM-054 after NEM-080.
 
 ## M1 — OE validation
 
