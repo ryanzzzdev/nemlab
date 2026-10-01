@@ -47,6 +47,21 @@ It honours the same flags as the Java worker (`NEMLAB_WORKER_ENABLED`,
 refresh polling is enabled. `python -m nemlab_worker --fetch-price REGION DAY
 OUT` is the isolated fetch child mode — it never sees database credentials.
 
+The Python API serves the public price reads and operator refresh endpoints:
+
+```sh
+set -a; . ./.env; set +a
+NEMLAB_DATA_ENABLED=true uv run python -m nemlab_api.main   # http://127.0.0.1:8080
+```
+
+It honours `NEMLAB_DATA_ENABLED` (public price reads), `NEMLAB_ADMIN_ENABLED`
+(operator routes, requiring `NEMLAB_ADMIN_OPERATOR` and a 43–128 character
+base64url `NEMLAB_ADMIN_TOKEN`) and `NEMLAB_SIMULATION_API_ENABLED`
+(simulation routes land with NEM-077). `SERVER_ADDRESS` and `PORT` match the
+Java listener contract; with all flags off the process starts health-only
+with no credentials, and any enabled flag requires `NEMLAB_DB_URL`/`USER`/
+`PASSWORD` and a migrated schema — startup fails fast otherwise.
+
 `docker compose stop postgres` stops the database while keeping its volume.
 Editing `NEMLAB_DB_PASSWORD` later does not change the existing database password;
 the `postgres` volume is initialised once.

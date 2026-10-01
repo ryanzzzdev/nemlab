@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-074](#nem-074), then NEM-075–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-075](#nem-075), then NEM-076–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -2033,7 +2033,7 @@ Restore opt-in polling, fixed-market-time schedules and supervised fetch process
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-071](#nem-071), [NEM-072](#nem-072), [NEM-067](#nem-067)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2050,7 +2050,37 @@ Serve the existing price and operator routes through FastAPI with compatible res
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+Done — port of `PriceReadController`/`AdminRefreshController` and their error
+advices, security filter chain, database smoke check and request logging onto
+FastAPI/Starlette (`api/src/nemlab_api/`). `prices.py` serves
+`GET /api/v1/prices/{region}/coverage` and `/{day}` only when
+`NEMLAB_DATA_ENABLED`; `admin.py` serves the five refresh routes under
+`OperatorBearer` middleware (SHA-256 + `hmac.compare_digest`, actor
+`operator:<name>` server-derived, `X-Actor` ignored) only when
+`NEMLAB_ADMIN_ENABLED`. Responses are hand-built dicts in the Java record
+field order — decimal-string prices, `Z` instants, `Cache-Control: no-store`,
+`Location` on 202, `Retry-After: 30` on 429, `WWW-Authenticate: Bearer` with
+`application/json;charset=ISO-8859-1` `{"code":"UNAUTHORISED"}` on 401, and
+Spring's security-header set (X-Content-Type-Options/X-Frame-Options/
+X-XSS-Protection plus the no-cache trio only when the endpoint set no
+`Cache-Control`). Framework-level misses (unmatched paths, wrong methods,
+disabled features) return a bare 404 like the denyAll chain.
+
+Verified against real PostgreSQL 18.6 scratch databases via `TestClient`
+(`api/tests/`): `test_price_http.py` ports `PriceReadHttpTest` (mixed
+coverage, exact 288-slot decimal-string series with `+10:00`→UTC instants,
+404/400 matrices, safe 503), `test_admin_http.py` ports `AdminHttpTest`
+(401 matrix, idempotent submit + `operator:alice` audit, spoofed `X-Actor`
+ignored, 409 conflict, cancel/revoke fencing, `not-a-uuid`→400, queue-full
+429 + `Retry-After: 30`, safe 503, fail-closed config validation,
+credentials-free disabled shell). `test_contract_captures.py` writes 25
+live captures in Java `ContractCapture` format to `api/build/contract-responses/`;
+`node api/contracts/verify.mjs` validates every one against the frozen
+schemas/headers and stops only at the not-yet-implemented simulation
+operations (NEM-076/077). Live `uvicorn` run against the compose database
+served real Java-era refresh jobs in the contract `JobView` shape. Full
+suite `uv run pytest` 240 passed; ruff/format/mypy/import-linter clean.
+Committed as the NEM-074 checkpoint; SHA recorded in the journal.
 
 <a id="nem-075"></a>
 

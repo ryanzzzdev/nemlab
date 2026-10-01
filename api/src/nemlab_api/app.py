@@ -3,24 +3,92 @@
 Health matches the Java actuator surface exactly: ``GET /actuator/health``
 returns ``{"status": "UP"}`` with no details. Feature routers are mounted only
 when their flag is enabled, so disabled routes return a plain 404 just like
-the Java filters.
+the Java filters. The bounded engine is created — and its smoke check run —
+only when a database-backed feature is enabled.
 """
 
-from fastapi import FastAPI
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
+import sqlalchemy as sa
+from fastapi import FastAPI
+from sqlalchemy.engine import Engine
+
+from nemlab_api.admin import admin_router
+from nemlab_api.errors import register_error_handlers
+from nemlab_api.middleware import (
+    OperatorBearer,
+    RequestLogging,
+    SecurityHeaders,
+)
+from nemlab_api.prices import prices_router
 from nemlab_api.settings import ApiSettings
+from nemlab_infrastructure.database import create_bounded_engine
+from nemlab_infrastructure.jobs import RefreshJobService
+from nemlab_infrastructure.prices.store import PriceStore
+
+
+def _smoke(engine: Engine, simulation: bool) -> None:
+    """Same probe as ``ApiDatabaseConfiguration``: fail startup fast when the
+    database is unreachable or the migrations have not run."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(sa.text("SELECT count(*) FROM refresh_job WHERE false"))
+            connection.execute(
+                sa.text("SELECT count(*) FROM price_current WHERE false")
+            )
+            if simulation:
+                connection.execute(
+                    sa.text("SELECT count(*) FROM simulation_job WHERE false")
+                )
+    except sa.exc.SQLAlchemyError as failure:
+        raise RuntimeError(
+            "API database unavailable or migrations missing (details omitted)"
+        ) from failure
 
 
 def create_app(settings: ApiSettings | None = None) -> FastAPI:
     if settings is None:
         settings = ApiSettings()
-    app = FastAPI(title="nemlab-api", docs_url=None, redoc_url=None, openapi_url=None)
+    engine: Engine | None = None
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        yield
+        if engine is not None:
+            engine.dispose()
+
+    app = FastAPI(
+        title="nemlab-api",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+        lifespan=lifespan,
+    )
+    register_error_handlers(app)
 
     @app.get("/actuator/health")
     def health() -> dict[str, str]:
         return {"status": "UP"}
 
-    # Feature routers land in NEM-074/NEM-077; while their flags are off or
-    # routes are unimplemented, requests hit FastAPI's default 404 — matching
-    # the Java behaviour for disabled endpoints.
+    if (
+        settings.data_enabled
+        or settings.admin_enabled
+        or settings.simulation_api_enabled
+    ):
+        engine = create_bounded_engine(settings)
+        _smoke(engine, settings.simulation_api_enabled)
+        prices = PriceStore(engine)
+        if settings.data_enabled:
+            app.include_router(prices_router(prices))
+        if settings.admin_enabled:
+            app.add_middleware(
+                OperatorBearer,
+                operator=settings.admin_operator,
+                token=settings.admin_token,
+            )
+            app.include_router(admin_router(RefreshJobService(engine, prices)))
+
+    app.add_middleware(RequestLogging)
+    app.add_middleware(SecurityHeaders)
     return app
