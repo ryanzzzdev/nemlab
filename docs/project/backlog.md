@@ -2279,8 +2279,9 @@ Demonstrate complete local parity, safe transition and recovery before resuming 
 - Rebuild milestone marked Complete in [roadmap](roadmap.md); NEM-054 is
   next; M3/NEM-038 and launch gates retained.
 
-Changes committed alongside this record (docs + two lint/typing repairs in
-`pyproject.toml` per-file ignores and `simulations.py` handler typing).
+Committed as `b4bbefe` — rehearsal/parity evidence docs, architecture,
+roadmap, backlog, journal, plus two lint/typing repairs (`pyproject.toml`
+`scripts/**` ignores; `FastAPI` typing on `register_simulation_errors`).
 
 
 <a id="nem-081"></a>
