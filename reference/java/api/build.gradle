@@ -25,10 +25,11 @@ test {
 dependencyLocking { lockAllConfigurations() }
 
 // Response captures are test outputs, so cached tests retain their contract evidence.
-def contractCaptures = layout.buildDirectory.dir('contract-responses')
+// Captures stay beside the canonical contract at the repository root for verify.mjs.
+def contractCaptures = rootProject.file('../../api/build/contract-responses')
 tasks.named('test') {
     outputs.dir(contractCaptures)
-    systemProperty 'nemlab.contract.captures', contractCaptures.get().asFile.absolutePath
+    systemProperty 'nemlab.contract.captures', contractCaptures.absolutePath
     doFirst {
         delete contractCaptures
     }
@@ -38,7 +39,7 @@ tasks.register('checkContract', Exec) {
     group = 'verification'
     description = 'Validate OpenAPI, generated types and actual HTTP test responses (run npm ci first).'
     dependsOn tasks.named('test')
-    workingDir 'contracts'
+    workingDir rootProject.file('../../api/contracts')
     commandLine 'npm', 'run', 'check'
 }
 

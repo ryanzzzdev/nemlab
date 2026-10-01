@@ -21,5 +21,5 @@ tasks.register('hindsightBenchmark', JavaExec) {
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
     maxHeapSize = '512m'
     jvmArgs '-XX:ActiveProcessorCount=2'
-    args rootProject.file('docs/project/evidence/engine/benchmark.csv').absolutePath
+    args rootProject.file('../../docs/project/evidence/engine/benchmark.csv').absolutePath
 }

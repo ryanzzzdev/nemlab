@@ -73,7 +73,7 @@ Spring JDBC 7.0.9, Flyway 12.4.0, PostgreSQL JDBC 42.7.13, Jackson 3.1.5 and Tes
 The infrastructure code is explicit Java/JDBC; no Spring data-source or migration auto-start is
 enabled in the API/worker shells. The local `prices` command invokes migrations/imports on request.
 
-See [operator instructions](../../../../infrastructure/README.md),
+See [operator instructions](../../../../reference/java/infrastructure/README.md),
 [storage decision](../../decisions/008-price-data-foundation.md) and [NEM-012](../../backlog.md#nem-012).
 
 ## Limits and next work

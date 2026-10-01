@@ -19,7 +19,7 @@ python3 -m http.server 8899
 
 `engine.test.js` extracts the embedded price table and engine from `index.html`
 and verifies them against the contract reference fixtures, the source CSV
-fixtures in `core/src/test/resources/prices/`, and the published Java benchmark
+fixtures in `reference/java/core/src/test/resources/prices/`, and the published Java benchmark
 margins. It has no dependencies:
 
 ```sh

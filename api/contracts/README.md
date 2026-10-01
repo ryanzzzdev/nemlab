@@ -14,7 +14,7 @@ for the HTTP/PostgreSQL tests. From the backend root:
 ```sh
 npm ci --ignore-scripts --prefix api/contracts
 npm run generate --prefix api/contracts
-./gradlew :api:checkContract
+cd reference/java && ./gradlew :api:checkContract
 ```
 
 The ordinary `./gradlew build` also runs this check. Once dependencies are installed,

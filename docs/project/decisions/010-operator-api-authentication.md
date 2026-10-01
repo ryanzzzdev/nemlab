@@ -30,5 +30,5 @@ Shared OpenAPI/client generation and public coverage/series resources remain NEM
 ## References and verification
 
 - [Spring Security opaque-token support](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/opaque-token.html)
-- [Operator guide](../../../api/README.md)
+- [Operator guide](../../../reference/java/api/README.md)
 - [HTTP and database evidence](../evidence/jobs/admin-findings.md)

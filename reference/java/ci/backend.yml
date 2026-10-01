@@ -24,6 +24,8 @@ jobs:
       - name: Install locked contract tooling
         run: npm ci --ignore-scripts --prefix api/contracts
       - name: Build and test all modules
+        working-directory: reference/java
         run: ./gradlew clean build --no-daemon
       - name: Verify packaged application startup
+        working-directory: reference/java
         run: python3 scripts/smoke_apps.py

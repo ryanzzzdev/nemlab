@@ -4,6 +4,11 @@ Frozen: 2026-10-01. Task: [NEM-065](../../backlog.md#nem-065). Scope: exact deli
 behavior of the Java backend before any move or port. Python-side rows are filled in as
 NEM-067–NEM-080 land.
 
+Layout note: this document records the baseline at the pre-move layout. NEM-066 moved all
+Java assets under `reference/java/`; module paths cited below (`core/`, `infrastructure/`,
+`api/`, `worker/`, `scripts/`, Gradle files) now resolve under `reference/java/`, and the
+`api/build/contract-responses/` capture output still lands at the repository root.
+
 ## Baseline record
 
 | Item | Value |

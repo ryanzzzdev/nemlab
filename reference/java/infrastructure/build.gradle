@@ -35,8 +35,8 @@ tasks.register('parityExport', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'au.nemlab.infrastructure.parity.ParityExport'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
-    args rootProject.file('docs/project/evidence/python-rebuild/fixtures/parity-fixtures.json').absolutePath,
+    args rootProject.file('../../docs/project/evidence/python-rebuild/fixtures/parity-fixtures.json').absolutePath,
             rootProject.file('core/src/test/resources/prices').absolutePath
 }
 
-sourceSets.test.resources { srcDir rootProject.file('docs/project/evidence/oe-validation'); include 'historical-price-response.json' }
+sourceSets.test.resources { srcDir rootProject.file('../../docs/project/evidence/oe-validation'); include 'historical-price-response.json' }

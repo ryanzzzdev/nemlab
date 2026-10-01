@@ -123,7 +123,7 @@ there is no public retry-reset operation. The real frontend remains unfinished.
 NEM-041 completes the backend lifecycle. Visitors can submit a valid scenario via HTTP,
 poll its opaque-ID status URL, and reopen the saved proven result. Pending/failed states,
 validation errors and unavailable coverage are explicit; worker tokens and raw diagnostics
-stay private. The [API guide](../../../api/README.md#public-simulation-lifecycle) defines
+stay private. The [API guide](../../../reference/java/api/README.md#public-simulation-lifecycle) defines
 transport/error semantics. Forms, progress presentation, real result charts and shared-link
 browser journeys remain NEM-017; the existing chart companion is still synthetic.
 

@@ -59,4 +59,4 @@ Pending submission returns 202 with Location/Retry-After; a terminal duplicate r
 The same scenario is deduplicated even after failure and resubmission does not reset it.
 GET result returns only a proven comparison (200), with explicit 409 pending/failed states.
 Saved input/price decimals remain exact strings and dispatch/accounting remain unrounded
-numbers. See [API setup](../../../api/README.md#public-simulation-lifecycle).
+numbers. See [API setup](../../../reference/java/api/README.md#public-simulation-lifecycle).

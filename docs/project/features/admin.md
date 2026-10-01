@@ -35,7 +35,7 @@ See [NEM-019](../backlog.md#nem-019), [BLK-006](../blockers.md#blk-006), and [ar
 
 ## Implemented operator API — NEM-030
 
-The opt-in [operator API](../../../api/README.md) now supports authenticated one-day price refreshes,
+The opt-in [operator API](../../../reference/java/api/README.md) now supports authenticated one-day price refreshes,
 bounded recent-job and audit-event lists, status and idempotent cancellation. Audit identity is
 server-derived from one configured operator token; browser login and multiple operator accounts
 remain outside this slice. Direct CLI execution is retired. Coverage inspection remains available

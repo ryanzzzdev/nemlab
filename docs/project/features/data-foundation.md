@@ -54,7 +54,7 @@ The [sampled grid gate](../evidence/oe-validation/grid-gate.md) closes M1 for tw
 NEM-024–NEM-027 implement immutable price-day revisions, explicit missing/null coverage,
 complete-day snapshot references, sanitized retrieval history and atomic backfill checkpoints.
 The [findings](../evidence/data-foundation/findings.md) record 64 passing tests and scope limits.
-The [local runner](../../../infrastructure/README.md) imports one day at a time and
+The [local runner](../../../reference/java/infrastructure/README.md) imports one day at a time and
 pauses on failures/incomplete days. NEM-028 adds a tested durable one-day refresh queue with
 deduplication, leases, retries, cancellation and transactional result fencing. NEM-029 implements opt-in daily scheduling and deadline-bounded execution;
 NEM-030 adds protected operator submission/status/cancellation and retires direct CLI execution; NEM-031 adds public coverage/current-day price reads; NEM-032 publishes the versioned [shared contract and generated types](../../../api/contracts/README.md) within NEM-014. GridReplay adapter storage will be scoped
@@ -67,7 +67,7 @@ Coverage distinguishes `NOT_IMPORTED` (null counts) from imported `COMPLETE`/`IN
 with valid/missing/source-null counts. Public day series preserve all 288 slots, with null gap prices
 and exact decimal strings for values. Fixed UTC+10 boundaries do not change for daylight saving.
 Read requests are bounded to one price day or 1–31 coverage days and never trigger ingestion.
-The [read API contract](../../../api/README.md#public-stored-price-reads) specifies fields/errors.
+The [read API contract](../../../reference/java/api/README.md#public-stored-price-reads) specifies fields/errors.
 
 ## Frontend price consumer
 

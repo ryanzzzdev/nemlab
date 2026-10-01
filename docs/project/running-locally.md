@@ -20,6 +20,7 @@ cd nemlab
 npm ci --ignore-scripts --prefix api/contracts   # contract tooling used by the build
 docker compose up -d postgres                    # PostgreSQL on 127.0.0.1:55432
 set -a; . ./.env; set +a
+cd reference/java
 ./gradlew :infrastructure:prices --args='migrate'  # schema, once per deployment
 ```
 
@@ -29,10 +30,12 @@ the `postgres` volume is initialised once.
 
 ## Run the backend
 
-From `nemlab/`, one process per terminal:
+From `nemlab/`, source the environment, then run Gradle under `reference/java/` —
+one process per terminal:
 
 ```sh
 set -a; . ./.env; set +a   # required in every backend terminal
+cd reference/java
 ./gradlew :api:bootRun     # http://127.0.0.1:8080 — curl /actuator/health
 ./gradlew :worker:bootRun  # no HTTP port; quiet between polls
 ```
@@ -70,7 +73,7 @@ Other commands: `npm run build` then `npm run preview` (port 4173);
 ## Detailed references
 
 - Backend overview and build: [README.md](../../README.md)
-- API endpoints and operator setup: [api/README.md](../../api/README.md)
-- Worker settings and simulation execution: [worker/README.md](../../worker/README.md)
-- Database, migrations and ingestion: [infrastructure/README.md](../../infrastructure/README.md)
+- API endpoints and operator setup: [api/README.md](../../reference/java/api/README.md)
+- Worker settings and simulation execution: [worker/README.md](../../reference/java/worker/README.md)
+- Database, migrations and ingestion: [infrastructure/README.md](../../reference/java/infrastructure/README.md)
 - Frontend setup, proxying and checks: [nemlab-ui README](../../../nemlab-ui/README.md)

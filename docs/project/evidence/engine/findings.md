@@ -12,7 +12,7 @@ export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ./gradlew clean build :core:hindsightBenchmark --offline --no-daemon
 ```
 
-The first dependency resolution requires network access; subsequent runs are offline. The benchmark intentionally overwrites [benchmark.csv](benchmark.csv) and [budget-probes.csv](budget-probes.csv). The [harness](../../../../core/src/test/java/au/nemlab/batterylab/HindsightBenchmark.java) runs in a separate JVM with `-Xmx512m -XX:ActiveProcessorCount=2`. These are local experiments, not production SLA/load tests.
+The first dependency resolution requires network access; subsequent runs are offline. The benchmark intentionally overwrites [benchmark.csv](benchmark.csv) and [budget-probes.csv](budget-probes.csv). The [harness](../../../../reference/java/core/src/test/java/au/nemlab/batterylab/HindsightBenchmark.java) runs in a separate JVM with `-Xmx512m -XX:ActiveProcessorCount=2`. These are local experiments, not production SLA/load tests.
 
 Environment: Linux 7.0.0-31-generic x86_64, Intel Core Ultra 5 225H, OpenJDK 25.0.4+7 Ubuntu, Gradle 9.7.1, ojAlgo 57.3.0, JUnit 6.1.3. No API, database or network request is part of measured solving.
 

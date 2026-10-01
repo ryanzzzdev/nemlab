@@ -37,7 +37,7 @@ The worker implementation was committed first as `dc170bf`; this operator implem
 
 This is a single configured operator credential, not a multi-user identity provider or browser
 login system. Remote access requires HTTPS; credential generation/rotation is documented in the
-[operator guide](../../../../api/README.md). Optional Admin UI work remains NEM-019. Public coverage,
+[operator guide](../../../../reference/java/api/README.md). Optional Admin UI work remains NEM-019. Public coverage,
 series resources and formal generated API/client contracts remain NEM-014. Hosted CI has not run.
 
 Administrative mutation audit records share the queue transaction. Read requests and rejected

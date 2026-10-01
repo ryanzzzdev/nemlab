@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild next: [NEM-066](#nem-066), then NEM-067–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild next: [NEM-067](#nem-067), then NEM-068–NEM-080 in dependency order. See the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) after the local parity gate. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -346,7 +346,7 @@ Build the minimal Java proof with a deterministic feasible baseline and independ
 
 Implemented a Java 25 `core` module, checksum-pinned Gradle 9.7.1 wrapper and locked JUnit 6.1.3 dependencies. Immutable battery/efficiency/window/price-day types enforce input and full-day semantics. `FixedSchedule.plan` cannot access prices/costs; separate validation reconstructs energy and checks bounds, power, windows, exclusivity and terminal energy. Accounting is recomputed from dispatch.
 
-Verification: `JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./gradlew clean build --no-daemon --offline` passed on 2026-09-17: **33 tests, zero failures/errors/skips**, including 200 seeded scenarios inside one invariant test and both validated NSW1 price days. [Tests](../../core/src/test/java/au/nemlab/batterylab/BatteryEngineTest.java) cover negative/zero/losing prices, efficiency/fees, connection limits, partial allocation, terminal inventory, price independence, missing/duplicate/wrong-region data, DST-independent market days, invalid windows, overflow and tampered dispatch. No solver or API is claimed. Changes are uncommitted; setup is in [README](../../README.md).
+Verification: `JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./gradlew clean build --no-daemon --offline` passed on 2026-09-17: **33 tests, zero failures/errors/skips**, including 200 seeded scenarios inside one invariant test and both validated NSW1 price days. [Tests](../../reference/java/core/src/test/java/au/nemlab/batterylab/BatteryEngineTest.java) cover negative/zero/losing prices, efficiency/fees, connection limits, partial allocation, terminal inventory, price independence, missing/duplicate/wrong-region data, DST-independent market days, invalid windows, overflow and tampered dispatch. No solver or API is claimed. Changes are uncommitted; setup is in [README](../../README.md).
 
 <a id="nem-010"></a>
 
@@ -429,7 +429,7 @@ Refine migrations, source provenance, observation versions, bounded polling and 
 
 ### Completion evidence
 
-Price-first implementation complete through NEM-024–NEM-027. [Findings](evidence/data-foundation/findings.md) record 64 passing tests, real PostgreSQL migrations/revision/snapshot/checkpoint tests, bounded HTTP stub tests and packaged application smoke checks. [Operator instructions](../../infrastructure/README.md) cover explicit migration/import/resume/coverage/history. GridReplay adapters remain NEM-018; worker integration and scheduling remain NEM-013. No live OE request or hosted CI run was performed. Changes are uncommitted.
+Price-first implementation complete through NEM-024–NEM-027. [Findings](evidence/data-foundation/findings.md) record 64 passing tests, real PostgreSQL migrations/revision/snapshot/checkpoint tests, bounded HTTP stub tests and packaged application smoke checks. [Operator instructions](../../reference/java/infrastructure/README.md) cover explicit migration/import/resume/coverage/history. GridReplay adapters remain NEM-018; worker integration and scheduling remain NEM-013. No live OE request or hosted CI run was performed. Changes are uncommitted.
 
 ### Implementation breakdown
 
@@ -828,7 +828,7 @@ Verify startup configuration, scheduled deduplication, bounded execution, recove
 
 ### Completion evidence
 
-Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10 daily submission, child-process fetch deadlines and shutdown/restart recovery. Full offline build: 88 passing tests, including real child-process and PostgreSQL worker tests plus executable-jar child launching without live OE calls. See [worker evidence](evidence/jobs/worker-findings.md) and [setup](../../worker/README.md). Committed as `dc170bf`.
+Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10 daily submission, child-process fetch deadlines and shutdown/restart recovery. Full offline build: 88 passing tests, including real child-process and PostgreSQL worker tests plus executable-jar child launching without live OE calls. See [worker evidence](evidence/jobs/worker-findings.md) and [setup](../../reference/java/worker/README.md). Committed as `dc170bf`.
 
 <a id="nem-030"></a>
 
@@ -851,7 +851,7 @@ HTTP tests reject unauthorised requests and verify valid/invalid submissions, st
 
 ### Completion evidence
 
-Implemented opt-in bearer authentication, server-derived audit identity, refresh submission, status/recent jobs, paginated events and idempotent cancellation. Direct CLI ingestion is retired. Full build: 97 passing tests; see [HTTP/PostgreSQL evidence](evidence/jobs/admin-findings.md) and [operator guide](../../api/README.md). Committed as `8d7c4b1`.
+Implemented opt-in bearer authentication, server-derived audit identity, refresh submission, status/recent jobs, paginated events and idempotent cancellation. Direct CLI ingestion is retired. Full build: 97 passing tests; see [HTTP/PostgreSQL evidence](evidence/jobs/admin-findings.md) and [operator guide](../../reference/java/api/README.md). Committed as `8d7c4b1`.
 
 <a id="nem-031"></a>
 
@@ -1792,7 +1792,7 @@ Capture the exact delivered behavior before moving or replacing implementation.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-065](#nem-065)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -1808,7 +1808,7 @@ Move only Java-specific tracked assets to reference/java while preserving reposi
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+2026-10-01: All Java-specific tracked assets moved to `reference/java/` via `git mv` (rename history preserved): `core/`, `infrastructure/`, `api/` module sources/tests/resources/READMEs/lockfiles, root `build.gradle`/`settings.gradle`/wrapper/`gradle/`, `scripts/smoke_apps.py`, and `.github/workflows/backend.yml` → `reference/java/ci/backend.yml` (repaired to `working-directory: reference/java`; it is a reference copy — hosted CI is NEM-078's gate). `api/contracts/`, `docs/`, `compose.yaml`, `.env*` and user files stay at the root. Path repairs: module `build.gradle` files resolve evidence/contract output via `../../` to the repo root; contract captures still land at `api/build/contract-responses/` so `api/contracts/verify.mjs` is unchanged. Doc link repairs across README, `running-locally.md`, `api/contracts/README.md`, architecture, features, evidence and decision files; parity.md carries a pre-move layout note. New [reference README](../../reference/java/README.md) records baseline SHA, old→new path map, setup and commands. Verification from `reference/java/` with JDK 25: `./gradlew clean build --offline` passes (150 tests, module boundaries, contract check validating 120 captures against the unchanged root `api/contracts/`); `python3 scripts/smoke_apps.py` passes packaged api+worker startup. No secrets, caches, build outputs or database volumes moved into the reference tree. Committed as `4e45b598dff89d4367c9d3290884e1ba12ce829c`.
 
 <a id="nem-067"></a>
 

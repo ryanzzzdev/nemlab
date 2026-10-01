@@ -69,4 +69,4 @@ expose a user retry endpoint. NEM-041 owns public HTTP submission/status/results
 response DTOs, retry semantics and generated contracts. Claim tokens and internal solver
 diagnostic text must not leak through those DTOs. No frontend simulation workflow, hosted
 CI run, commit, push or deployment is implied. See [decision 016](../../decisions/016-durable-simulations.md)
-and [worker setup](../../../../worker/README.md#simulation-execution).
+and [worker setup](../../../../reference/java/worker/README.md#simulation-execution).

@@ -84,7 +84,7 @@ Use UTC instants in storage and explicit fixed UTC+10 NEM market-day interpretat
 
 Implemented for one-day price refreshes: queued, running, succeeded, failed, cancelled. The Spring-managed `RefreshJobService` uses `@Transactional` and PostgreSQL row/advisory locks. A five-minute lease and unique claim token fence price writes, checkpoint advancement and job completion in one transaction. Expired claims recover on the next claim request, with at most three attempts and 30/60-second retry backoff. The queue caps pending work at 100 and allows one current ingestion claim across worker processes. Network calls must happen outside these transactions.
 
-Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. NEM-029 wires opt-in worker polling and daily submissions after 00:15 fixed UTC+10 through this service. Fetches run in a separate 128 MiB-heap JVM with a 240-second parent deadline, child watchdog and shutdown cleanup. Non-429 HTTP 4xx, invalid source/configuration and excessive Retry-After delays fail terminally; other failures retain bounded retries. NEM-030 adds opt-in bearer-authenticated operator submission, status, recent jobs, audit events and cancellation. The configured principal supplies audit identity; no client actor is trusted. Direct CLI ingestion is retired. See [operator setup](../../api/README.md). See [decision 009](decisions/009-durable-refresh-queue.md), [queue verification](evidence/jobs/findings.md), and [worker verification](evidence/jobs/worker-findings.md).
+Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. NEM-029 wires opt-in worker polling and daily submissions after 00:15 fixed UTC+10 through this service. Fetches run in a separate 128 MiB-heap JVM with a 240-second parent deadline, child watchdog and shutdown cleanup. Non-429 HTTP 4xx, invalid source/configuration and excessive Retry-After delays fail terminally; other failures retain bounded retries. NEM-030 adds opt-in bearer-authenticated operator submission, status, recent jobs, audit events and cancellation. The configured principal supplies audit identity; no client actor is trusted. Direct CLI ingestion is retired. See [operator setup](../../reference/java/api/README.md). See [decision 009](decisions/009-durable-refresh-queue.md), [queue verification](evidence/jobs/findings.md), and [worker verification](evidence/jobs/worker-findings.md).
 
 Deduplicate equivalent refreshes and scenario submissions using stable input keys. Save backfill checkpoints. Keep simulation and ingestion concurrency separately bounded; prevent overlap from repeated schedules. Manual triggers return job IDs immediately. Cancellation and progress detail can be refined with actual job types. NEM-046 lets public simulation submissions trigger refreshes for eligible uncovered days: `submitVisitor` uses `visitor-price-v1` request keys, deduplicates onto any active day job, allows three attempts per day via `:rN` suffixes and ten pending visitor jobs globally, all inside the same advisory-locked queue transaction. The API answers `PRICE_REFRESH_PENDING`/`PRICE_REFRESH_FAILED`/`VISITOR_REFRESH_LIMIT` instead of exposing queue internals, and the browser resubmits the unchanged scenario after each `Retry-After`.
 
@@ -113,7 +113,7 @@ boundary remains intact. Coverage uses one bounded query for 1–31 completed NE
 load the captured immutable revision and return exactly 288 slots with explicit gap states.
 Prices are decimal strings in AUD/MWh; interval boundaries are UTC instants with fixed +10:00
 market-day metadata. Reads neither enqueue work nor contact OE. Responses are not cacheable
-across corrections. See the [endpoint contract](../../api/README.md#public-stored-price-reads).
+across corrections. See the [endpoint contract](../../reference/java/api/README.md#public-stored-price-reads).
 NEM-032 implements the versioned [OpenAPI contract and generated TypeScript declarations](../../api/contracts/README.md). The checked-in contract owns the seven enabled price/operator operations; Java HTTP tests provide response captures validated against it during the Gradle build. Generation and validation are pinned Node development tooling, not application runtime dependencies. See the contract guide for compatibility, regeneration and the future frontend handoff.
 
 ## Frontend foundation
@@ -169,7 +169,7 @@ rechecks fixed dispatch, physical/accounting invariants and optimality metadata 
 an atomic immutable result/terminal-status transaction. Publication rechecks lease/token
 so expired workers cannot commit. Only OPTIMAL succeeds; unproven/failed solver outcomes
 remain diagnostic results on failed jobs. See [decision 016](decisions/016-durable-simulations.md),
-[worker setup](../../worker/README.md#simulation-execution) and [verification](evidence/engine/execution-findings.md).
+[worker setup](../../reference/java/worker/README.md#simulation-execution) and [verification](evidence/engine/execution-findings.md).
 
 
 ## Simulation HTTP lifecycle — NEM-041
@@ -185,7 +185,7 @@ Only successful OPTIMAL comparisons have a public result; pending/failed runs re
 409. Exact normalised inputs/prices, immutable revision/version metadata and unrounded
 engine dispatch/accounting are returned with units/time boundaries. OpenAPI 1.1.0 adds
 three operations and generated TypeScript inputs without changing price/operator schemas.
-See [decision 017](decisions/017-simulation-http-contract.md), [API setup](../../api/README.md#public-simulation-lifecycle)
+See [decision 017](decisions/017-simulation-http-contract.md), [API setup](../../reference/java/api/README.md#public-simulation-lifecycle)
 and [verification](evidence/engine/http-findings.md).
 
 
