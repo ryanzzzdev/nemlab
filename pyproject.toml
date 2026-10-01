@@ -40,6 +40,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ASYNC", "S", "TID"]
 "core/src/nemlab_core/comparison.py" = ["S101"]
 "core/src/nemlab_core/hindsight.py" = ["S101"]
 "infrastructure/src/nemlab_infrastructure/simulations.py" = ["S101"]
+"api/src/nemlab_api/simulations.py" = ["S101"]
 
 [tool.mypy]
 mypy_path = ["core/src", "infrastructure/src", "api/src", "worker/src"]

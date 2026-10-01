@@ -65,6 +65,30 @@ def _is_admin(request: Request) -> bool:
     return _ADMIN_PATH.match(request.url.path) is not None
 
 
+_SIMULATION_PATH = re.compile(r"^/api/v1/simulations(?:/|$)")
+
+
+def is_simulation_path(request: Request) -> bool:
+    return _SIMULATION_PATH.match(request.url.path) is not None
+
+
+def simulation_error(
+    status: int,
+    code: str,
+    message: str,
+    field: str,
+    reason: str,
+    **headers: str,
+) -> Response:
+    """The four-field ``SimulationError`` envelope — distinct from the
+    price/admin two-field shape."""
+    return JSONResponse(
+        {"code": code, "message": message, "field": field, "reason": reason},
+        status_code=status,
+        headers={"Cache-Control": "no-store", **headers},
+    )
+
+
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(Unauthorised)
     async def _unauthorised(_request: Request, _error: Unauthorised) -> Response:
@@ -84,7 +108,16 @@ def register_error_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(QueueFull)
-    async def _full(_request: Request, _error: QueueFull) -> Response:
+    async def _full(request: Request, _error: QueueFull) -> Response:
+        if is_simulation_path(request):
+            return simulation_error(
+                429,
+                "QUEUE_FULL",
+                "Wait for pending simulations to finish",
+                "request",
+                "QUEUE_FULL",
+                **{"Retry-After": "5"},
+            )
         return envelope(
             "QUEUE_FULL",
             "Wait for existing refresh jobs to finish",
@@ -106,6 +139,14 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(sa.exc.SQLAlchemyError)
     async def _storage(request: Request, _error: sa.exc.SQLAlchemyError) -> Response:
+        if is_simulation_path(request):
+            return simulation_error(
+                503,
+                "STORAGE_UNAVAILABLE",
+                "Simulation storage is unavailable",
+                "request",
+                "STORAGE_UNAVAILABLE",
+            )
         return envelope(
             "STORAGE_UNAVAILABLE",
             STORAGE_ADMIN if _is_admin(request) else STORAGE_PRICE,

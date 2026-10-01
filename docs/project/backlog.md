@@ -2148,7 +2148,7 @@ Measured child footprint on a real run: ~110 MiB RSS, ~1.9 GiB peak VmSize, ~0.6
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-073](#nem-073), [NEM-074](#nem-074), [NEM-076](#nem-076)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2165,7 +2165,9 @@ Complete compatible public submission/status/result and missing-price refresh be
 
 ### Completion evidence
 
-Not started. Record actual verification and changed files/commit links here.
+Done — `api/src/nemlab_api/simulations.py` ports `SimulationController`, `SimulationJson` and `SimulationErrors` to FastAPI. Strict parse boundary: `application/json` only (415), 16384-byte body cap (413), duplicate-field and trailing-token rejection via `object_pairs_hook`, unknown-field rejection, decimal strings preserved via `Decimal`, integer-not-boolean windows, strict `YYYY-MM-DD` days. Submit dedupes on scenario key (202 pending + `Retry-After: 2`, 200 terminal dedup, `Location`, `Cache-Control: no-store` everywhere). Coverage `Invalid` (`PRICE_DAY_UNAVAILABLE`/`PRICE_DAY_INCOMPLETE`) triggers `submit_visitor` → 409 `PRICE_REFRESH_PENDING` + `Retry-After: 30`; `RefreshAttemptsExhausted` → 409 `PRICE_REFRESH_FAILED`; `VisitorLimited` → 429 `VISITOR_REFRESH_LIMIT` + `Retry-After: 60`; sim `QueueFull` → 429 `QUEUE_FULL` + `Retry-After: 5`. Status/result project only public fields — diagnostic codes filtered through a whitelist; claim tokens/leases never leave. Shared handlers in `errors.py` branch on `/api/v1/simulations` paths for `SQLAlchemyError` (503 `STORAGE_UNAVAILABLE`) and request errors without disturbing price/admin envelopes. Router mounts only under `NEMLAB_SIMULATION_API_ENABLED`; startup smoke adds `simulation_job`.
+
+Verified: `api/tests/test_simulation_http.py` (12 tests) ports `SimulationHttpTest` on real PostgreSQL — submit/poll/complete/reopen, decimal-exact price echo, threshold round-trip, strict-parse matrix, visitor refresh dedup/retry/exhaustion/10-cap, ineligible-day rejection without refresh, failure-code projection, queue saturation with working dedup, and storage-failure 503s across all three ops. `test_contract_captures.py` now writes sim captures; `api/contracts/verify.mjs` is fully green: 61 HTTP responses, all 10 operations, every error code. `uv run pytest` 285 passed; ruff/format/mypy/lint-imports clean.
 
 <a id="nem-078"></a>
 

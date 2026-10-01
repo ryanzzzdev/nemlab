@@ -56,6 +56,7 @@ def settings(scratch_db: sa.Engine, clean: None) -> ApiSettings:
         admin_enabled=True,
         admin_operator="alice",
         admin_token=TOKEN,
+        simulation_api_enabled=True,
     )
 
 

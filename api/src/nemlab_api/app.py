@@ -23,9 +23,11 @@ from nemlab_api.middleware import (
 )
 from nemlab_api.prices import prices_router
 from nemlab_api.settings import ApiSettings
+from nemlab_api.simulations import register_simulation_errors, simulations_router
 from nemlab_infrastructure.database import create_bounded_engine
 from nemlab_infrastructure.jobs import RefreshJobService
 from nemlab_infrastructure.prices.store import PriceStore
+from nemlab_infrastructure.simulations import SimulationJobs
 
 
 def _smoke(engine: Engine, simulation: bool) -> None:
@@ -81,6 +83,13 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
         prices = PriceStore(engine)
         if settings.data_enabled:
             app.include_router(prices_router(prices))
+        if settings.simulation_api_enabled:
+            register_simulation_errors(app)
+            app.include_router(
+                simulations_router(
+                    SimulationJobs(engine), RefreshJobService(engine, prices)
+                )
+            )
         if settings.admin_enabled:
             app.add_middleware(
                 OperatorBearer,
