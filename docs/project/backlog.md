@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). Resume M5 at [NEM-054](#nem-054) — the local parity gate is closed. UI work [NEM-060](#nem-060) starts after the scope/fixture contract, without waiting for all backend tasks. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors; next ready — [NEM-055](#nem-055), [NEM-057](#nem-057), [NEM-060](#nem-060). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1477,7 +1477,7 @@ Planned on 2026-09-25. Only NEM-054 is ready to start; downstream records remain
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-006](#nem-006), [NEM-053](#nem-053)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1494,7 +1494,29 @@ Turn the proposed NSW1 scope into an implementable contract and small labelled f
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+2026-10-02 — all "Done when" criteria met:
+
+- **Catalogue window**: NSW1, 2023-09-01..30 — a bounded six-request live
+  probe ([evidence/m5-coverage](evidence/m5-coverage/findings.md)) shows all
+  16 required series complete 288/288 on all 30 days; negative prices occur
+  on all 30 days and a genuine spike (>1000 AUD/MWh) occurs on 2023-09-04.
+  Remaining pre-import checks listed in the findings.
+- **Detectors frozen** in [decision 020](decisions/020-gridreplay-scope-and-detectors.md):
+  negative_price_run (<0, >=3 consecutive), price_spike (>1000, contiguous
+  grouping), demand_ramp (36-step window, all 37 observations required,
+  earliest-tie, insufficient-coverage withholds the claim). Cross-midnight
+  ownership = start market day; chunk boundaries never close runs; edge runs
+  recorded as `edge_incomplete`, excluded from complete claims.
+- **Fixture contract**: `fixtures/gridreplay/` — run-length-encoded labelled
+  inputs (8 files: complete runs, absent/null interruptions, cross-midnight,
+  strict thresholds, ramp tie, insufficient coverage, no-event, edge), all
+  explicitly synthetic.
+- **Bounds frozen**: imports ≤31 market days/request, replay ≤7 market days,
+  catalogue page 24 default/100 max; event identity and immutable
+  version/snapshot contract defined for NEM-055–058.
+- Exclusions recorded: renewable-peak detector, battery aggregation, named
+  interconnectors, causal annotations; retention bound deferred to
+  NEM-055/058.
 
 <a id="nem-055"></a>
 
@@ -1503,7 +1525,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1553,7 +1575,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1629,7 +1651,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 

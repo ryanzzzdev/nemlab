@@ -1,0 +1,17 @@
+{
+  "description": "A negative run reaching the left edge of the imported window is edge-incomplete: recorded, excluded from complete claims, not shown as a finished run.",
+  "synthetic": true,
+  "marketDays": ["2023-09-11"],
+  "series": {
+    "price": {
+      "semantics": "interval_end",
+      "runs": [[10, -10.0], [278, 50.0]]
+    }
+  },
+  "expected": {
+    "events": [
+      {"type": "negative_price_run", "startIndex": 0, "intervals": 10, "value": -10.0, "ownerDay": "2023-09-11", "edgeIncomplete": true}
+    ],
+    "notes": "the run may extend into 2023-09-10, which is outside the evaluated window"
+  }
+}

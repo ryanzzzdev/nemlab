@@ -1,0 +1,21 @@
+{
+  "description": "Complete day: two qualifying negative runs; a 2-interval dip and an exact-zero boundary do not qualify.",
+  "synthetic": true,
+  "marketDays": ["2023-09-11"],
+  "series": {
+    "price": {
+      "semantics": "interval_end",
+      "runs": [
+        [100, 50.0], [5, -10.0], [50, 20.0], [2, -5.0],
+        [3, 0.0], [57, 30.0], [4, -30.0], [67, 40.0]
+      ]
+    }
+  },
+  "expected": {
+    "events": [
+      {"type": "negative_price_run", "startIndex": 100, "intervals": 5, "value": -10.0, "ownerDay": "2023-09-11", "edgeIncomplete": false},
+      {"type": "negative_price_run", "startIndex": 217, "intervals": 4, "value": -30.0, "ownerDay": "2023-09-11", "edgeIncomplete": false}
+    ],
+    "notes": "indices 155-156 (2 intervals) below minimum; indices 157-159 are exactly 0.0 and do not extend or qualify"
+  }
+}

@@ -1,8 +1,8 @@
 # GridReplay
 
-Updated: 2026-09-25
+Updated: 2026-10-02 — NEM-054 froze the initial catalogue (NSW1, September 2023 — verified complete on all required series) and the three v1 detector definitions; see [decision 020](../decisions/020-gridreplay-scope-and-detectors.md), the [coverage evidence](../evidence/m5-coverage/findings.md) and `fixtures/gridreplay/`. Renewable peaks and battery aggregation remain deferred.
 
-Status: M5 delivery plan drafted; demo fidelity is accepted. Detector defaults and initial catalogue coverage below are recommendations to validate in NEM-054, not implemented capabilities.
+Status: M5 delivery plan drafted; demo fidelity is accepted. Detector defaults and initial catalogue coverage are frozen by decision 020; nothing below is implemented yet.
 
 ## Visitor outcome
 
@@ -69,13 +69,13 @@ Keep this a small personal project: the existing API, worker, PostgreSQL, React 
 
 ### Initial data and event recommendation — settle in NEM-054
 
-- Start with NSW1. Reuse the validated 2023-09-11 and 2026-09-11 evidence for offline fixtures. Recommend September 2023 as the first bounded real catalogue month, subject to an explicit coverage report; do not promise that every day or event type will be available. Imports are operator-controlled and bounded, not an automatic sweep of history.
-- Ship three detector types: **negative-price run, price spike, positive scheduled-demand ramp**. Defer renewable peaks because the denominator/storage/rooftop methodology remains unverified. Do not copy the demo's synthetic renewable formula into production. New event types can follow later without blocking this first experience.
+- Start with NSW1. Reuse the validated 2023-09-11 and 2026-09-11 evidence for offline fixtures. **Accepted in NEM-054**: September 2023 is the first catalogue month — the [coverage probe](../evidence/m5-coverage/findings.md) verified all required series complete on all 30 days. Imports are operator-controlled and bounded (≤31 days per request), not an automatic sweep of history.
+- Ship three detector types: **negative-price run, price spike, positive scheduled-demand ramp**. **Frozen in decision 020** (v1 rules below). Defer renewable peaks because the denominator/storage/rooftop methodology remains unverified. Do not copy the demo's synthetic renewable formula into production. New event types can follow later without blocking this first experience.
 - Keep four visible replay panels: regional price, scheduled demand, generation by technology and regional flows. Price and scheduled demand are the core context. Generation/flow panels explicitly show unavailable series or gaps when absent; missing optional context does not erase a valid price event.
 - Use provider technology series with signed values and documented labels. Do not combine overlapping battery representations into regional totals. Unsupported battery aggregates are omitted with an explanation; rooftop solar is optional, separately labelled as an estimate/resampled feed. Stacking must not bridge missing categories or imply complete supply coverage. No supply-demand balance claim.
 - Store prices with their verified interval-end semantics; preserve grid observations' source timestamps and metric-specific timing notes. The shared cursor means **same displayed timestamp**, not proof of identical physical measurement windows. Missing observations stay gaps; never interpolate or substitute zero for detection/readouts.
 
-Recommended detector v1 rules, to be frozen with labelled examples before implementation:
+Detector v1 rules — **frozen by [decision 020](../decisions/020-gridreplay-scope-and-detectors.md) on 2026-10-02** with labelled examples in `fixtures/gridreplay/`; the demand-ramp completeness rule was tightened (any missing observation in the eligible domain withholds the daily-largest claim) and edge-incomplete runs are recorded rather than shown as complete:
 
 | Type | Rule | Event value and edge behavior |
 | --- | --- | --- |

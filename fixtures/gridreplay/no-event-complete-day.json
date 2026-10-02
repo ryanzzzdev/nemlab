@@ -1,0 +1,20 @@
+{
+  "description": "Complete day with positive prices and flat demand: no events of any type.",
+  "synthetic": true,
+  "marketDays": ["2023-09-11"],
+  "series": {
+    "price": {
+      "semantics": "interval_end",
+      "runs": [[288, 42.5]]
+    },
+    "demand": {
+      "semantics": "source_label",
+      "runs": [[288, 5200.0]]
+    }
+  },
+  "expected": {
+    "events": [],
+    "noEventReason": "none",
+    "notes": "a complete nonpositive-ramp day produces no demand_ramp event"
+  }
+}

@@ -48,7 +48,7 @@ Create documents when they have useful content. This guide does not require empt
 | `blockers.md` | Unresolved questions and obstacles, their impact, affected tasks, evidence, and the next action needed to resolve them. | When an obstacle is found, new evidence arrives, or it is resolved. |
 | `features/*.md` | User-visible behaviour, inputs, outputs, business rules, edge cases, scope exclusions, and feature acceptance criteria. | Before implementation and whenever agreed behaviour changes. Link to tasks rather than duplicating their status. |
 | `decisions/*.md` | A significant choice, context, alternatives, consequences, and its acceptance status. | When proposing or accepting an important decision, or replacing a previous decision. |
-| `journal/YYYY-MM.md` | Short dated entries identifying the LLM model and coding agent used, completed work, verification, unresolved issues, and links to tasks and commits/PRs. | At the end of a meaningful work session. It is a historical record, not the next-work list. |
+| `journal/YYYY-MM.md` | Short entries titled with UTC date and time, identifying the LLM model and coding agent used, completed work, verification, unresolved issues, and links to tasks and commits/PRs. | At the end of a meaningful work session. It is a historical record, not the next-work list. |
 
 The existing documents in `docs/initial-ideas/` remain idea and discussion records. Link to them as background when drafting feature specifications. A discussion summary is not automatically an approved specification. If a later accepted specification replaces a proposal, make that relationship clear; avoid maintaining two current specifications for the same behaviour.
 
@@ -189,7 +189,7 @@ Review the exit criteria, outstanding tasks, and blockers. Mark completion only 
 ## Journal example
 
 ```markdown
-## YYYY-MM-DD — Regional price ingestion
+## YYYY-MM-DD HH:MM UTC — Regional price ingestion
 
 - LLM model: Model name/version reported by the session, or Unknown.
 - Coding agent: Agent/application used, with version if available.
@@ -199,6 +199,8 @@ Review the exit criteria, outstanding tasks, and blockers. Mark completion only 
 - Remaining: Link to unfinished tasks or blockers, if any.
 - Changes: Commit/PR links, or changed files if uncommitted.
 ```
+
+Entry titles carry the UTC date and time (`YYYY-MM-DD HH:MM UTC`). Take the timestamp from the system clock (for example `date -u`) rather than estimating it or converting local time manually. Entries recorded under earlier title conventions keep their original titles.
 
 Every entry must include separate `LLM model` and `Coding agent` fields. Record the model identity available from reliable session metadata or explicit session instructions; do not infer it from the agent's name, available-model lists, or default settings. If only the model family is known, record that family and note that the exact variant is unavailable. Use `Unknown (not recorded)` for historical entries without reliable evidence. The coding agent is the tool/application running the work, such as Codex desktop; include its version only when known. If several agents or models contributed, list their roles and identities where known.
 

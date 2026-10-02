@@ -1,0 +1,19 @@
+{
+  "description": "A continuous negative run across the market-day boundary; owned by its start day and included in filters overlapping either day.",
+  "synthetic": true,
+  "marketDays": ["2023-09-11", "2023-09-12"],
+  "series": {
+    "price": {
+      "semantics": "interval_end",
+      "runs": [
+        [280, 50.0], [8, -10.0], [4, -10.0], [284, 30.0]
+      ]
+    }
+  },
+  "expected": {
+    "events": [
+      {"type": "negative_price_run", "startIndex": 280, "intervals": 12, "value": -10.0, "ownerDay": "2023-09-11", "edgeIncomplete": false}
+    ],
+    "notes": "the run is day1 indices 280-287 plus day2 indices 0-3; a chunk boundary at the day seam must not close it"
+  }
+}

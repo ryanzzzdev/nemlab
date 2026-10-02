@@ -1,0 +1,23 @@
+{
+  "description": "Strict >1000 qualifies; exactly 1000 does not; contiguous spikes group, a gap splits.",
+  "synthetic": true,
+  "marketDays": ["2023-09-11"],
+  "series": {
+    "price": {
+      "semantics": "interval_end",
+      "runs": [
+        [50, 50.0], [1, 1500.0], [10, 60.0], [1, 1000.0],
+        [5, 60.0], [1, 2000.0], [1, 5000.0], [30, 70.0],
+        [2, 1500.0], [187, 40.0]
+      ]
+    }
+  },
+  "expected": {
+    "events": [
+      {"type": "price_spike", "startIndex": 50, "intervals": 1, "value": 1500.0, "ownerDay": "2023-09-11", "edgeIncomplete": false},
+      {"type": "price_spike", "startIndex": 67, "intervals": 2, "value": 5000.0, "ownerDay": "2023-09-11", "edgeIncomplete": false},
+      {"type": "price_spike", "startIndex": 99, "intervals": 2, "value": 1500.0, "ownerDay": "2023-09-11", "edgeIncomplete": false}
+    ],
+    "notes": "index 61 (exactly 1000.0) does not qualify; indices 67-68 adjacent spikes merge into one event"
+  }
+}

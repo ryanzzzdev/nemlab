@@ -68,8 +68,8 @@ These records distinguish future decision gates from work that is blocked now. N
 - Affected tasks: [NEM-002](backlog.md#nem-002), [NEM-016](backlog.md#nem-016), [NEM-018](backlog.md#nem-018), [NEM-020](backlog.md#nem-020).
 - Evidence / attempts: M1 validated bounded NSW1 samples on 2023-09-11 and 2026-09-11; this does not establish complete catalogue/launch coverage. Energy-curious visitors and employers are a working audience assumption. GridReplay thresholds/grouping remain proposals until NEM-054 freezes them.
 - Blocking scope: Can be resolved incrementally; does not require pausing all work for a full product specification.
-- Next action / owner: Implementing agent completes NEM-054: confirm initial NSW1 window, metric coverage and negative-run/spike/demand-ramp definitions using the M5 plan. NEM-020 still owns promised launch coverage. Renewable peaks and regional battery aggregation remain excluded until their methodology is evidenced.
-- Resolution: Not yet resolved.
+- Next action / owner: NEM-054 (Done 2026-10-02) froze the NSW1 September-2023 window and the three v1 detector definitions — see [decision 020](decisions/020-gridreplay-scope-and-detectors.md) and the [coverage probe](evidence/m5-coverage/findings.md). Remaining open scope: promised launch coverage (NEM-020) and renewable/battery methodology exclusions. Renewable peaks and regional battery aggregation remain excluded until their methodology is evidenced.
+- Resolution: Partially resolved 2026-10-02 — GridReplay v1 event definitions and initial coverage are frozen; launch-coverage breadth stays open under NEM-020.
 
 
 - M1 follow-up: NEM-018 owns battery-population overlap, physical-window timing and renewable-detector methodology; NEM-020 owns promised coverage validation. See [grid gate](evidence/oe-validation/grid-gate.md). Solar curtailment and unexplained signed-gas attribution are excluded until validated.
@@ -107,10 +107,10 @@ These records distinguish future decision gates from work that is blocked now. N
 ## BLK-008 — Python parity and existing-data transition gates
 
 - Identified: 2026-10-01.
-- Status: Open.
+- Status: Resolved.
 - Impact: Python rebuild acceptance; not a blocker to starting NEM-065.
 - Affected tasks: [NEM-069](backlog.md#nem-069), [NEM-070](backlog.md#nem-070), [NEM-076](backlog.md#nem-076), [NEM-080](backlog.md#nem-080).
 - Evidence: Java uses ojAlgo-specific certificates/versions, Flyway V1–V3, immutable JSON results and JVM child limits. Python equivalents and populated-schema adoption have not yet been exercised. No failed attempt is implied.
 - Next action / owner: Implementing agent captures baseline fixtures, proves HiGHS certificates/budgets, verifies Alembic adoption on a populated clone and measures enforced Python/native resource bounds. Follow the [rebuild plan](python-backend-rebuild.md); record specific failures separately if discovered.
 - Blocking scope: Prevents claiming complete parity or cutting over until evidence passes; no user decision is currently needed for planning/scaffolding.
-- Resolution: Pending implementation evidence. Hosted CI remains separately tracked in BLK-007.
+- Resolution: 2026-10-02 — NEM-069, NEM-070 and NEM-076 established the solver, schema-adoption and process-budget evidence. NEM-080 then closed the [parity matrix](evidence/python-rebuild/parity.md) and rehearsed populated-clone adoption, both-direction reads, post-switch writes and non-destructive rollback; see the [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md). Hosted CI remains separately tracked in BLK-007.

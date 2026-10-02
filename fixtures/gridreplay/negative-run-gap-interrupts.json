@@ -1,0 +1,22 @@
+{
+  "description": "Absent and null rows each terminate a run; runs on either side are independent events.",
+  "synthetic": true,
+  "marketDays": ["2023-09-11"],
+  "series": {
+    "price": {
+      "semantics": "interval_end",
+      "runs": [
+        [100, 50.0], [3, -10.0], [1, "ABSENT"], [3, -10.0],
+        [43, 20.0], [3, -20.0], [1, null], [2, -20.0], [132, 40.0]
+      ]
+    }
+  },
+  "expected": {
+    "events": [
+      {"type": "negative_price_run", "startIndex": 100, "intervals": 3, "value": -10.0, "ownerDay": "2023-09-11", "edgeIncomplete": false},
+      {"type": "negative_price_run", "startIndex": 104, "intervals": 3, "value": -10.0, "ownerDay": "2023-09-11", "edgeIncomplete": false},
+      {"type": "negative_price_run", "startIndex": 150, "intervals": 3, "value": -20.0, "ownerDay": "2023-09-11", "edgeIncomplete": false}
+    ],
+    "notes": "indices 154-155 after the null form a 2-interval run — does not qualify"
+  }
+}

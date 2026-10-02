@@ -1,0 +1,17 @@
+{
+  "description": "Step-up demand: windows starting 64-99 all see +800; ties resolve to the earliest start (64).",
+  "synthetic": true,
+  "marketDays": ["2023-09-11"],
+  "series": {
+    "demand": {
+      "semantics": "source_label",
+      "runs": [[100, 5000.0], [188, 5800.0]]
+    }
+  },
+  "expected": {
+    "events": [
+      {"type": "demand_ramp", "startIndex": 64, "intervals": 37, "value": 800.0, "ownerDay": "2023-09-11", "edgeIncomplete": false}
+    ],
+    "notes": "candidate window i..i+36 (37 observations); i in [64,99] all give +800; earliest wins"
+  }
+}
