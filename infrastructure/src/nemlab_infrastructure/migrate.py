@@ -13,8 +13,9 @@ Actions:
 - ``check`` — report database state: empty / java-managed (adoption status)
   / alembic-managed at revision / unknown.
 - ``adopt`` — verify a Java-managed database (Flyway history, checksums and
-  schema objects) then stamp the baseline revision. Refuses drifted, partial
-  or unknown databases; Flyway history is preserved, never replayed.
+  schema objects), stamp the baseline revision, then apply later
+  migrations. Refuses drifted, partial or unknown databases; Flyway
+  history is preserved, never replayed.
 - ``stamp`` — force-stamp head without validation (explicit operator repair
   escape hatch; prefer ``adopt``).
 """
@@ -28,6 +29,7 @@ from alembic.config import Config
 from sqlalchemy import create_engine, text
 
 from nemlab_infrastructure.schema import (
+    BASELINE_REVISION,
     AdoptionError,
     State,
     inspect_state,
@@ -107,7 +109,10 @@ def _adopt(config: Config, settings: DatabaseSettings) -> int:
             return 1
     finally:
         engine.dispose()
-    command.stamp(config, "head")
+    # Stamp only the baseline so the V1-V3 DDL is never replayed over the
+    # existing tables, then apply any later revisions for real.
+    command.stamp(config, BASELINE_REVISION)
+    command.upgrade(config, "head")
     print("stamped baseline; flyway_schema_history preserved")
     return 0
 

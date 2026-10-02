@@ -306,6 +306,29 @@ def test_migrate_on_java_managed_rolls_back(
     validate_java_database(scratch_db)
 
 
+def test_adopt_command_applies_post_baseline_migrations(
+    scratch_db: sa.Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`adopt` stamps only the baseline — later revisions (grid tables)
+    must still be applied, not skipped by a head stamp."""
+    from nemlab_infrastructure import migrate
+
+    _apply_java_schema(scratch_db)
+    _alembic_config(monkeypatch, scratch_db)
+    monkeypatch.chdir(REPO_ROOT)
+    assert migrate.main(["adopt"]) == 0
+    assert inspect_state(scratch_db) is State.ALEMBIC_MANAGED
+    with scratch_db.connect() as conn:
+        assert (
+            conn.execute(sa.text("SELECT to_regclass('grid_revision')")).scalar()
+            == "grid_revision"
+        )
+        assert (
+            conn.execute(sa.text("SELECT count(*) FROM flyway_schema_history")).scalar()
+            == 3
+        )
+
+
 def test_migrate_command_refuses_java_managed(
     scratch_db: sa.Engine,
     monkeypatch: pytest.MonkeyPatch,

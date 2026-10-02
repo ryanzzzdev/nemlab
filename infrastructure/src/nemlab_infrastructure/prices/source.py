@@ -96,11 +96,7 @@ class OePriceSource:
         self._sleeper = sleeper
 
     def fetch(self, region: Region, day: date) -> Fetch:
-        today = self._clock().astimezone(NEM_OFFSET).date()
-        if day < EARLIEST_DAY or not day < today:
-            raise ValueError(
-                "require a completed post-five-minute-settlement market day"
-            )
+        self.check_day(day)
         start = f"{day}T00:00:00"
         end = f"{day + timedelta(days=1)}T00:05:00"
         uri = (
@@ -109,6 +105,17 @@ class OePriceSource:
             f"&date_start={urllib.parse.quote(start, safe='')}"
             f"&date_end={urllib.parse.quote(end, safe='')}"
         )
+        return parse(region, day, self._request(uri), self._clock())
+
+    def check_day(self, day: date) -> None:
+        today = self._clock().astimezone(NEM_OFFSET).date()
+        if day < EARLIEST_DAY or not day < today:
+            raise ValueError(
+                "require a completed post-five-minute-settlement market day"
+            )
+
+    def _request(self, uri: str) -> str:
+        """GET with the shared retry policy; returns the response body."""
         headers = {
             "Authorization": f"Bearer {self._key}",
             "User-Agent": "NEMLab-data-ingestion/0.1",
@@ -129,7 +136,7 @@ class OePriceSource:
                 continue
             LOG.info("OE response: HTTP %d", status)
             if status == 200:
-                return parse(region, day, body, self._clock())
+                return body
             if (status == 429 or status >= 500) and attempt < ATTEMPTS - 1:
                 delay = max(1000 << attempt, _retry_after_ms(retry_after, self._clock))
                 if delay > 60_000:

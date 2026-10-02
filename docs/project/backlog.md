@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors; next ready — [NEM-055](#nem-055), [NEM-057](#nem-057), [NEM-060](#nem-060). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-057 implemented detectors; next ready — [NEM-056](#nem-056), [NEM-060](#nem-060). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1527,7 +1527,7 @@ Committed as `fb58da1` (plus `c5fdd0a` recording the SHA/UTC title).
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1543,7 +1543,28 @@ Store the required grid context alongside the existing price foundation, preserv
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+- **V4 schema** (`infrastructure/src/nemlab_infrastructure/db/migration/V4__grid_observations.sql`,
+  Alembic `nemlab_v4_grid_observations`): `grid_revision` (immutable,
+  content-hash deduped per region/metric/series/day), `grid_current`
+  (freshness-fenced pointer), `grid_import_attempt` (per-request audit,
+  `FAILED ⇔ revision_count=0`). Region/metric/series/day/source-revision
+  identity plus per-series valid/missing/null counts.
+- **`nemlab_infrastructure.grid`** package: `batch` (288-slot source-label
+  `GridBatch` — zero, source-null and missing stay distinct), `source`
+  (`OeGridSource` reusing `OePriceSource` transport unchanged;
+  `fetch_market` = demand+flows, `fetch_power` = all fueltech series on the
+  data endpoint), `store` (`GridStore` save/coverage/history/pinned-revision
+  reads). No generic all-metric framework; no new service.
+- Missing expected market metric → explicit all-MISSING series revision;
+  absent fetch → no row (missing series); power keeps every returned
+  fueltech; signed anomalies (e.g. negative MW) preserved.
+- **Adopt fix**: `adopt` now stamps only `nemlab_baseline_v1_v3` then
+  upgrades to head, so post-baseline migrations apply to adopted
+  Java-managed databases instead of being skipped by a head stamp.
+- Tests: `infrastructure/tests/test_grid.py` (31) cover parsing boundaries,
+  idempotence, corrections, stale-fetch fencing, malformed input, gaps,
+  metadata/units, pinned revision reads; `test_schema.py` gained an
+  adopt-applies-later-migrations case. Full suite 340 passed.
 
 <a id="nem-056"></a>
 
@@ -1552,7 +1573,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-055](#nem-055)
 - References: [Delivery specification](features/gridreplay.md)
 
