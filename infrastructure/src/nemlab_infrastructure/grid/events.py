@@ -662,15 +662,164 @@ class GridCatalogue:
             ).all()
         return [_stored_event(row) for row in rows]
 
-    def replay(self, event_id: UUID) -> dict[str, object] | None:
+    def replay(
+        self, event_id: UUID, start: date | None = None, end: date | None = None
+    ) -> dict[str, object] | None:
+        """Immutable replay snapshot; an optional sub-window must fit inside
+        the stored window."""
         with self.engine.connect() as conn:
             row = conn.execute(
-                sa.text("SELECT manifest, payload FROM grid_replay WHERE event_id=:id"),
+                sa.text(
+                    "SELECT start_day, end_exclusive, manifest, payload"
+                    " FROM grid_replay WHERE event_id=:id"
+                ),
                 {"id": event_id},
             ).first()
         if row is None:
             return None
-        return {"manifest": row.manifest, "payload": row.payload}
+        if (start is not None or end is not None) and (
+            start is None
+            or end is None
+            or start < row.start_day
+            or end > row.end_exclusive
+            or not start < end
+        ):
+            raise ValueError("Replay window must fit the stored snapshot")
+        manifest = row.manifest
+        payload = row.payload
+        if start is not None and end is not None:
+            days = {
+                (start + timedelta(days=i)).isoformat()
+                for i in range((end - start).days)
+            }
+            manifest = {
+                **manifest,
+                "window": {
+                    "start_day": start.isoformat(),
+                    "end_exclusive": end.isoformat(),
+                },
+                "series": [
+                    {
+                        **series,
+                        "days": {d: r for d, r in series["days"].items() if d in days},
+                    }
+                    for series in manifest["series"]
+                ],
+            }
+            payload = {
+                key: {d: v for d, v in by_day.items() if d in days}
+                for key, by_day in payload.items()
+            }
+        return {
+            "startDay": row.start_day,
+            "endExclusive": row.end_exclusive,
+            "manifest": manifest,
+            "payload": payload,
+        }
+
+    # -- public catalogue reads ---------------------------------------------------
+
+    def current_publication(self, region: Region) -> Publication | None:
+        """The newest current catalogue publication for a region."""
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                sa.text(
+                    "SELECT p.* FROM grid_catalogue_current c"
+                    " JOIN grid_publication p ON p.id = c.publication_id"
+                    " WHERE c.region=:region"
+                    " ORDER BY c.published_at DESC, p.id LIMIT 1"
+                ),
+                {"region": region.name},
+            ).first()
+        if row is None:
+            return None
+        return Publication(
+            row.id,
+            Region[row.region],
+            row.start_day,
+            row.end_exclusive,
+            row.detector_version,
+            self._event_count(row.id),
+            row.coverage,
+            _instant_utc(row.created_at),
+        )
+
+    def catalogue_events(
+        self,
+        publication: UUID,
+        event_type: EventType | None,
+        start: date | None,
+        end: date | None,
+        limit: int,
+        cursor: tuple[datetime, UUID] | None,
+    ) -> tuple[list[StoredEvent], bool]:
+        """Newest-first page of a pinned publication; returns the page and
+        whether more events follow."""
+        params: dict[str, object] = {
+            "publication": publication,
+            "limit": limit + 1,
+            "type": event_type.value if event_type else None,
+            "from_start": (
+                datetime.combine(start, datetime.min.time(), tzinfo=NEM_OFFSET)
+                if start
+                else None
+            ),
+            "to_end": (
+                datetime.combine(
+                    end + timedelta(days=1), datetime.min.time(), tzinfo=NEM_OFFSET
+                )
+                if end
+                else None
+            ),
+            "cur_start": cursor[0] if cursor else None,
+            "cur_id": str(cursor[1]) if cursor else None,
+        }
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT e.*, NOT EXISTS"
+                    " (SELECT 1 FROM grid_event s WHERE s.supersedes = e.id)"
+                    " AS current FROM grid_event e"
+                    " JOIN grid_publication_event pe ON pe.event_id = e.id"
+                    " WHERE pe.publication_id = :publication"
+                    " AND (CAST(:type AS text) IS NULL OR e.type = :type)"
+                    " AND (CAST(:from_start AS timestamptz) IS NULL"
+                    "      OR e.end_at > :from_start)"
+                    " AND (CAST(:to_end AS timestamptz) IS NULL"
+                    "      OR e.start_at < :to_end)"
+                    " AND (CAST(:cur_start AS timestamptz) IS NULL"
+                    "      OR e.start_at < :cur_start"
+                    "      OR (e.start_at = :cur_start"
+                    "          AND e.id::text < :cur_id))"
+                    " ORDER BY e.start_at DESC, e.id DESC LIMIT :limit"
+                ),
+                params,
+            ).all()
+        return [_stored_event(row) for row in rows[:limit]], len(rows) > limit
+
+    def replay_window(self, event_id: UUID) -> tuple[date, date] | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                sa.text(
+                    "SELECT start_day, end_exclusive FROM grid_replay"
+                    " WHERE event_id=:id"
+                ),
+                {"id": event_id},
+            ).first()
+        return None if row is None else (row.start_day, row.end_exclusive)
+
+    def event(self, id: UUID) -> StoredEvent | None:
+        """Any stored version — superseded ids remain reproducible."""
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                sa.text(
+                    "SELECT e.*, NOT EXISTS"
+                    " (SELECT 1 FROM grid_event s WHERE s.supersedes = e.id)"
+                    " AS current FROM grid_event e WHERE e.id=:id"
+                ),
+                {"id": id},
+            ).first()
+        return None if row is None else _stored_event(row)
 
 
 def _instant_utc(value: datetime) -> datetime:

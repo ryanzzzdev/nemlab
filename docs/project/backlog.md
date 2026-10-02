@@ -1707,7 +1707,7 @@ Committed as `81bde29`.
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: In progress — backend contract done; frontend type sync and browser checks remain
 - Depends on: [NEM-058](#nem-058)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1723,7 +1723,19 @@ Offer read-only typed public endpoints for catalogue filters, event details and 
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+In progress. `api/src/nemlab_api/events.py` adds read-only
+`GET /api/v1/events` (region/type/inclusive-day overlap filters, page 24/100,
+base64 cursor pinning the publication so a republish cannot shift pages),
+`GET /api/v1/events/{id}` (immutable detail; superseded ids stay readable)
+and `GET /api/v1/events/{id}/replay` (materialised snapshot, optional
+validated sub-window). `GridCatalogue` gained `current_publication`,
+`catalogue_events`, `event`, `replay_window` and bounded `replay`.
+`CATALOGUE_NOT_PUBLISHED` vs empty page and `EVENT_NOT_FOUND` vs
+`PUBLICATION_NOT_FOUND` (stale cursor) are distinct states. OpenAPI 1.4.0
+gains 3 operations (21 total); verifier passes 103 captures.
+`test_events_http.py` covers filters, pinned pagination across
+republication, replay bounds and error states. Frontend contract sync and
+browser checks remain for the task.
 
 <a id="nem-060"></a>
 

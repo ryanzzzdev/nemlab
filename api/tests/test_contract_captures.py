@@ -185,6 +185,96 @@ def test_contract_captures(
     get(f"{PUBS}/{uuid.uuid4()}", auth)  # 404 PUBLICATION_NOT_FOUND
     get(f"{PUBS}/not-a-uuid", auth)
 
+    # -- public GridReplay catalogue --------------------------------------------
+
+    from nemlab_infrastructure.grid.batch import (
+        GridBatch,
+        Metric,
+    )
+    from nemlab_infrastructure.grid.batch import (
+        Slot as GridSlot,
+    )
+    from nemlab_infrastructure.grid.events import GridCatalogue
+    from nemlab_infrastructure.grid.source import GridFetch
+    from nemlab_infrastructure.grid.store import GridStore
+
+    # A day with one negative-price run and one spike, plus flat demand/flows.
+    event_prices = [Decimal("50")] * 288
+    event_prices[10] = event_prices[11] = event_prices[12] = Decimal("-7")
+    event_prices[100] = Decimal("1500")
+    store.save(
+        Fetch(
+            PriceBatch(
+                Region.NSW1,
+                DAY + timedelta(days=1),
+                tuple(Slot(Kind.VALUE, v) for v in event_prices),
+            ),
+            RETRIEVED,
+            response_hash("capture-grid-day"),
+            "test-1",
+        )
+    )
+    flat = tuple(GridSlot(Kind.VALUE, Decimal("12")) for _ in range(288))
+    GridStore(scratch_db).save(
+        GridFetch(
+            (
+                GridBatch(
+                    Region.NSW1, Metric.DEMAND, "", DAY + timedelta(days=1), flat
+                ),
+                GridBatch(
+                    Region.NSW1,
+                    Metric.FLOW_IMPORTS,
+                    "",
+                    DAY + timedelta(days=1),
+                    flat,
+                ),
+                GridBatch(
+                    Region.NSW1,
+                    Metric.FLOW_EXPORTS,
+                    "",
+                    DAY + timedelta(days=1),
+                    flat,
+                ),
+            ),
+            RETRIEVED,
+            response_hash("capture-grid-market"),
+            "test-1",
+        )
+    )
+    catalogue = GridCatalogue(scratch_db)
+    catalogue.publish(Region.NSW1, DAY + timedelta(days=1), DAY + timedelta(days=2))
+
+    EV = "/api/v1/events"
+    get(f"{EV}?region=VIC1")  # 404 CATALOGUE_NOT_PUBLISHED
+    page = get(f"{EV}?region=NSW1")
+    assert page.status_code == 200
+    get(f"{EV}?region=NSW1&type=price_spike")
+    get(f"{EV}?region=NSW1&from=2023-10-02&to=2023-10-02")
+    get(f"{EV}?region=NSW1&limit=101")  # 400 INVALID_REQUEST
+    get(f"{EV}?region=NSW1&from=2023-10-02")  # 400 INVALID_REQUEST
+    get(f"{EV}?region=NSW1&cursor=bogus")  # 400 INVALID_REQUEST
+    import base64
+
+    stale = base64.urlsafe_b64encode(
+        f"{uuid.uuid4()}:2023-10-02T14:55:00+00:00:{uuid.uuid4()}".encode()
+    ).decode()
+    get(f"{EV}?region=NSW1&cursor={stale}")  # 404 PUBLICATION_NOT_FOUND
+    page2 = get(f"{EV}?region=NSW1&limit=1")
+    if page2.json()["nextCursor"]:
+        get(f"{EV}?region=NSW1&cursor={page2.json()['nextCursor']}")
+    event_id = next(
+        e["id"] for e in page.json()["events"] if e["type"] == "price_spike"
+    )
+    get(f"{EV}/{event_id}")
+    get(f"{EV}/{uuid.uuid4()}")  # 404 EVENT_NOT_FOUND
+    get(f"{EV}/not-a-uuid")  # 400 INVALID_REQUEST
+    get(f"{EV}/{event_id}/replay")
+    get(f"{EV}/{event_id}/replay?startDay=2023-10-02&endExclusive=2023-10-03")
+    get(
+        f"{EV}/{event_id}/replay?startDay=2023-10-01&endExclusive=2023-10-10"
+    )  # 400 INVALID_REQUEST
+    get(f"{EV}/{uuid.uuid4()}/replay")  # 404 EVENT_NOT_FOUND
+
     jobs = RefreshJobService(scratch_db, store)
 
     with scratch_db.begin() as conn:
