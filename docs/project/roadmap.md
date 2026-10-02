@@ -69,11 +69,14 @@ Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-
 
 ## M5 — GridReplay and Admin assessment
 
+Status: Complete (2026-10-02). NSW1 September 2023 catalogue published with 99 real events; replay, sharing and BatteryLab handoff verified live ([NEM-054–NEM-064](backlog.md#m5-delivery-tasks)); Admin UI deferred with a tested operator API alternative ([decision 021](decisions/021-admin-ui-deferred.md)). Renewable peaks stay deferred pending methodology (BLK-005).
+
+
 Scope: a bounded NSW1 catalogue, three evidence-backed event types, a replay closely matching the selected demo, and navigation into BatteryLab. The recommended first detectors are negative-price runs, price spikes and scheduled-demand ramps; NEM-054 freezes definitions/coverage before implementation. Renewable peaks remain deferred pending methodology. Assess Admin through actual operational workflows; a separate UI is not yet committed.
 
 Exit criteria: event results are repeatable and coverage-aware; linked charts align; observations do not imply unsupported causal claims; a replay can open the corresponding BatteryLab day. Record whether Admin UI is included or deferred, with an operational alternative if deferred.
 
-Delivery plan (2026-09-25): [NEM-054–NEM-064](backlog.md#m5-delivery-tasks) refine parent packages [NEM-018](backlog.md#nem-018) and [NEM-019](backlog.md#nem-019). Start NEM-054, then build storage/ingestion/detectors and the demo-faithful UI in independent tracks; connect publication/API/replay, finish sharing/BatteryLab handoff, rehearse Admin operations and review exit evidence. UI design starts at NEM-060 after the scope/fixture contract, rather than waiting for all backend implementation. M5 remains Planned: this update establishes executable tasks, not delivered features. See the [feature plan](features/gridreplay.md#m5-delivery-plan--2026-09-25).
+Delivery plan (2026-09-25): [NEM-054–NEM-064](backlog.md#m5-delivery-tasks) refine parent packages [NEM-018](backlog.md#nem-018) and [NEM-019](backlog.md#nem-019). Start NEM-054, then build storage/ingestion/detectors and the demo-faithful UI in independent tracks; connect publication/API/replay, finish sharing/BatteryLab handoff, rehearse Admin operations and review exit evidence. UI design starts at NEM-060 after the scope/fixture contract, rather than waiting for all backend implementation. The tasks delivered M5 on 2026-10-02; exit review evidence is under [NEM-064](backlog.md#nem-064). See the [feature plan](features/gridreplay.md#m5-delivery-plan--2026-09-25).
 
 ## M6 — Launch readiness and release
 
