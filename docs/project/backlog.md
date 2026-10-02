@@ -1518,6 +1518,8 @@ Turn the proposed NSW1 scope into an implementable contract and small labelled f
   interconnectors, causal annotations; retention bound deferred to
   NEM-055/058.
 
+Committed as `fb58da1` (plus `c5fdd0a` recording the SHA/UTC title).
+
 <a id="nem-055"></a>
 
 ## NEM-055 — Persist versioned GridReplay observations and coverage
