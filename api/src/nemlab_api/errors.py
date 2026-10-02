@@ -127,9 +127,15 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _invalid_request(
-        request: Request, _error: RequestValidationError
+        request: Request, error: RequestValidationError
     ) -> Response:
-        message = INVALID_ADMIN_REQUEST if _is_admin(request) else INVALID_PRICE_REQUEST
+        if not _is_admin(request):
+            return envelope("INVALID_REQUEST", INVALID_PRICE_REQUEST, 400)
+        message = INVALID_ADMIN_REQUEST
+        missing = [e for e in error.errors() if e.get("type") == "missing"]
+        if missing:
+            where, name, *_ = missing[0].get("loc", ())
+            message += f" Missing {where} {name!r}."
         return envelope("INVALID_REQUEST", message, 400)
 
     @app.exception_handler(ValueError)

@@ -53,3 +53,7 @@ Rehearse: inspect metric/day coverage → request a bounded import → follow jo
 If this remains comfortable through documented commands/endpoints for a single operator, recommend deferring the UI and keeping that tested runbook. If repeated inspection/recovery proves awkward, propose a minimal separate `apps/admin`: coverage, jobs/detail, bounded refresh, eligible recovery action and audit list. Add authentication/session/CSRF requirements appropriate to the selected mechanism before any browser implementation; the current server token must never be embedded in the public application or a Vite bundle. No account-management suite, arbitrary SQL or generic CRUD console.
 
 Record the include/defer decision explicitly after the rehearsal. If included, split it into focused tasks and make their completion part of M5 acceptance; if deferred, the tested operator alternative is the deliverable. Hosting, retention and final launch identity policy remain M6/BLK-006 work.
+
+## M5 decision — 2026-10-02
+
+**Deferred.** [Decision 021](../decisions/021-admin-ui-deferred.md) records the outcome of the NEM-063 rehearsal: the operator API was exercised end-to-end on the live stack (imports, dedupe, cancel, crash recovery, publication, link preservation) and is the documented operational path. Revisit triggers and the grid-coverage gap (NEM-082) are listed there.

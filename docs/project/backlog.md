@@ -9,6 +9,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 ## Task index
 
 - [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
+- [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
 
 - [NEM-065 — Freeze the Java parity baseline and executable reference cases](#nem-065)
 - [NEM-066 — Preserve Java as a runnable reference in the existing repository](#nem-066)
@@ -27,7 +28,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; NEM-058–NEM-062 delivered the versioned catalogue, replay contract, real-data connection and shareable links; next — [NEM-063](#nem-063) (operations rehearsal and Admin scope decision), then [NEM-064](#nem-064) exit review. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; NEM-058–NEM-062 delivered the versioned catalogue, replay contract, real-data connection and shareable links; NEM-063 rehearsal passed and deferred the Admin UI ([decision 021](decisions/021-admin-ui-deferred.md)); next — [NEM-064](#nem-064) M5 exit review, plus gap task [NEM-082](#nem-082). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -596,7 +597,7 @@ A static mock-data demo of the catalogue/replay concept lives at [docs/demos/gri
 - Repository: both
 - Milestone: M5
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-013](#nem-013), [NEM-063](#nem-063)
 - References: [Specification / decision](features/admin.md)
 
@@ -612,7 +613,7 @@ Decide whether a minimal UI is needed before launch and record a usable operatio
 
 ### Completion evidence
 
-Assessment split into NEM-063 on 2026-09-25. Recommend proving operator endpoints/commands first; no Admin UI inclusion or deferral has yet been decided. If included, create and complete focused UI tasks before closing this parent package.
+Assessment completed by the NEM-063 live rehearsal on 2026-10-02. Decision: Admin UI **deferred** — [decision 021](decisions/021-admin-ui-deferred.md); the authenticated `/api/admin/v1/*` endpoints plus the documented runbook are the verified operational path. No Admin app was built; revisit triggers are recorded in the decision.
 
 <a id="nem-020"></a>
 
@@ -1865,7 +1866,7 @@ prefill — 124/124 pass.
 - Repository: both
 - Milestone: M5
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-056](#nem-056), [NEM-058](#nem-058), [NEM-059](#nem-059)
 - References: [Delivery specification](features/admin.md)
 
@@ -1882,7 +1883,24 @@ Prove an operator can maintain both products and make an explicit include/defer 
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+Done. Full live rehearsal recorded in
+[evidence/m5-ops-rehearsal.md](evidence/m5-ops-rehearsal.md): 401s for
+missing/wrong tokens; idempotency-key replay returns the same job while
+reuse on a different window is rejected (`IDEMPOTENCY_CONFLICT`) and an
+identical active window dedupes to the running job; cancellation of a
+queued job is audited (`SUBMITTED → CANCELLED`) and clears the claim
+fence; a pre-NEM window fails permanently
+(`INVALID_SOURCE_DATA_OR_CONFIGURATION`, no retry); a SIGKILLed worker
+mid-import recovered via lease expiry and resumed from the `next_day`
+checkpoint to SUCCEEDED; republication minted a new publication while
+event ids, detail and replay payloads stayed pinned and reproducible.
+Manual recovery is a fresh keyed `POST` — there is no in-place retry
+endpoint (documented, not claimed). Rehearsal fix: admin validation
+errors now name the missing field (e.g. `Missing header
+'idempotency-key'`). Gap split to [NEM-082](#nem-082) (grid coverage
+inspection). **Admin decision: deferred** —
+[decision 021](decisions/021-admin-ui-deferred.md); the tested endpoint
+runbook is the deliverable.
 
 <a id="nem-064"></a>
 
@@ -1910,6 +1928,34 @@ Close M5 only when the real-data journey, demo fidelity and Admin decision are e
 
 Planned only; no implementation or verification evidence yet.
 
+
+<a id="nem-082"></a>
+
+## NEM-082 — Expose grid-observation coverage inspection
+
+- Repository: backend
+- Milestone: M5
+- Priority: Normal
+- Status: Ready
+- Depends on: [NEM-055](#nem-055)
+- References: [Rehearsal gap](evidence/m5-ops-rehearsal.md)
+
+### Outcome
+
+Let an operator see which grid days/series are stored without creating a
+publication.
+
+### Done when
+
+- An admin-scoped endpoint returns per-day, per-metric/series coverage
+  (evaluated/missing or revision presence) over a bounded window,
+  mirroring the price-coverage shape.
+- Contract and HTTP tests cover bounds and empty coverage; the runbook
+  references it for pre-import inspection.
+
+### Completion evidence
+
+Gap identified in the NEM-063 rehearsal; not yet implemented.
 
 <a id="python-rebuild-tasks"></a>
 
