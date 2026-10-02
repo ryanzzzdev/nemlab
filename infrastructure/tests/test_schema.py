@@ -304,3 +304,36 @@ def test_migrate_on_java_managed_rolls_back(
         )
     # The database is still adoptable after the failed upgrade.
     validate_java_database(scratch_db)
+
+
+def test_migrate_command_refuses_java_managed(
+    scratch_db: sa.Engine,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The `migrate` entry point refuses a Java-managed database with a clear
+    message instead of crashing on duplicate-table DDL."""
+    from nemlab_infrastructure import migrate
+
+    _apply_java_schema(scratch_db)
+    _alembic_config(monkeypatch, scratch_db)
+    monkeypatch.chdir(REPO_ROOT)
+    assert migrate.main(["migrate"]) == 1
+    assert "run `adopt`" in capsys.readouterr().err
+    assert inspect_state(scratch_db) is State.JAVA_MANAGED
+
+
+def test_migrate_command_refuses_unknown_provenance(
+    scratch_db: sa.Engine,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from nemlab_infrastructure import migrate
+
+    with scratch_db.begin() as conn:
+        conn.execute(sa.text("CREATE TABLE stray (id int)"))
+    _alembic_config(monkeypatch, scratch_db)
+    monkeypatch.chdir(REPO_ROOT)
+    assert migrate.main(["migrate"]) == 1
+    assert "unknown provenance" in capsys.readouterr().err
+    assert inspect_state(scratch_db) is State.UNKNOWN

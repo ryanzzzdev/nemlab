@@ -7,8 +7,9 @@ this command locates it by walking up from the working directory.
 Actions:
 
 - ``migrate`` — apply pending revisions (creates the schema on an empty
-  database; never touches an unstamped Java-managed database — Alembic sees
-  no ``alembic_version`` and refuses to replay DDL only via ``adopt``).
+  database; no-ops once Alembic-managed). Refuses a Java-managed or
+  unknown-provenance database — run ``adopt`` on a valid V1-V3 Java
+  database first rather than replaying DDL over existing tables.
 - ``check`` — report database state: empty / java-managed (adoption status)
   / alembic-managed at revision / unknown.
 - ``adopt`` — verify a Java-managed database (Flyway history, checksums and
@@ -71,6 +72,31 @@ def _check(settings: DatabaseSettings) -> int:
         engine.dispose()
 
 
+def _migrate(config: Config, settings: DatabaseSettings) -> int:
+    engine = create_engine(settings.sqlalchemy_url())
+    try:
+        state = inspect_state(engine)
+    finally:
+        engine.dispose()
+    if state is State.JAVA_MANAGED:
+        print(
+            "nemlab-migrate: database is Java-managed — run `adopt` to stamp "
+            "the baseline; `migrate` would replay DDL over existing tables",
+            file=sys.stderr,
+        )
+        return 1
+    if state is State.UNKNOWN:
+        print(
+            "nemlab-migrate: schema objects exist with neither "
+            "flyway_schema_history nor alembic_version — refusing to migrate "
+            "a database of unknown provenance; inspect it manually",
+            file=sys.stderr,
+        )
+        return 1
+    command.upgrade(config, "head")
+    return 0
+
+
 def _adopt(config: Config, settings: DatabaseSettings) -> int:
     engine = create_engine(settings.sqlalchemy_url())
     try:
@@ -99,8 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     config = Config(str(_find_config(Path.cwd())))
     settings = DatabaseSettings()
     if args.action == "migrate":
-        command.upgrade(config, "head")
-        return 0
+        return _migrate(config, settings)
     if args.action == "stamp":
         command.stamp(config, "head")
         return 0

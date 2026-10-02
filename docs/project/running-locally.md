@@ -24,9 +24,10 @@ npm ci --ignore-scripts --prefix api/contracts   # contract tooling
 uv sync --all-packages --locked                  # Python 3.13.14 + locked deps
 docker compose up -d postgres                    # PostgreSQL on 127.0.0.1:55432
 set -a; . ./.env; set +a
-uv run python -m nemlab_infrastructure.migrate check    # report DB state
-uv run python -m nemlab_infrastructure.migrate migrate  # empty database only
-uv run python -m nemlab_infrastructure.migrate adopt    # adopt a Java-managed DB
+uv run python -m nemlab_infrastructure.migrate check    # report DB state first
+# then exactly one of:
+uv run python -m nemlab_infrastructure.migrate migrate  # if check reports `empty`
+uv run python -m nemlab_infrastructure.migrate adopt    # if check reports `java-managed`
 ```
 
 See [infrastructure/README.md](../../infrastructure/README.md) for the adoption
