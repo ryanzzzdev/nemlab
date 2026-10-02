@@ -440,6 +440,9 @@ class GridCatalogue:
         if (
             latest is not None
             and _canonical(latest.source_revisions) == canonical_sources
+            # Detector inputs can be unchanged while replay context (e.g. a
+            # later price import) differs — pin drift still versions the event.
+            and self._pins_match(conn, latest.id, inputs, event)
         ):
             return cast(UUID, latest.id)  # identical inputs — dedupe
         event_id = uuid.uuid4()
@@ -478,6 +481,53 @@ class GridCatalogue:
 
     # -- replay snapshots ------------------------------------------------------
 
+    @staticmethod
+    def _pin_map(
+        inputs: "_Inputs", days: list[date]
+    ) -> dict[str, dict[str, str | None]]:
+        """Revision id (or None) pinned per series key per member day."""
+        pins: dict[str, dict[str, str | None]] = {
+            _PRICE: {
+                day.isoformat(): (
+                    str(rev) if (rev := inputs.price_revs.get(day)) else None
+                )
+                for day in days
+            }
+        }
+        for metric, series in sorted({(m, s) for (m, s, _d) in inputs.grid_revs}):
+            pins[f"{metric}:{series}" if series else metric] = {
+                day.isoformat(): (
+                    str(rev)
+                    if (rev := inputs.grid_revs.get((metric, series, day)))
+                    else None
+                )
+                for day in days
+            }
+        return pins
+
+    def _pins_match(
+        self,
+        conn: sa.Connection,
+        event_id: UUID,
+        inputs: "_Inputs",
+        event: Event,
+    ) -> bool:
+        manifest_row = conn.execute(
+            sa.text("SELECT manifest FROM grid_replay WHERE event_id=:id"),
+            {"id": event_id},
+        ).first()
+        if manifest_row is None:
+            return False
+        days = _member_days(event)
+        window_end = min(
+            days[-1] + timedelta(days=1), days[0] + timedelta(days=REPLAY_MAX_DAYS)
+        )
+        stored = {
+            s["metric"] + (f":{s['series']}" if s.get("series") else ""): s["days"]
+            for s in manifest_row.manifest["series"]
+        }
+        return stored == self._pin_map(inputs, _days(days[0], window_end))
+
     def _materialise_replay(
         self,
         conn: sa.Connection,
@@ -490,6 +540,8 @@ class GridCatalogue:
         window_end = min(
             days[-1] + timedelta(days=1), days[0] + timedelta(days=REPLAY_MAX_DAYS)
         )
+        span = _days(days[0], window_end)
+        pins = self._pin_map(inputs, span)
         price_revs, grid_revs, slots = (
             inputs.price_revs,
             inputs.grid_revs,
@@ -498,10 +550,8 @@ class GridCatalogue:
         manifest_series: list[dict[str, object]] = []
         payload: dict[str, dict[str, list[object]]] = {}
         price_payload: dict[str, list[object]] = {}
-        price_days: dict[str, str | None] = {}
-        for day in _days(days[0], window_end):
+        for day in span:
             rev = price_revs.get(day)
-            price_days[day.isoformat()] = str(rev) if rev else None
             if rev in slots:
                 price_payload[day.isoformat()] = [
                     None if v is None else decimal_text.to_plain_string(v)
@@ -514,22 +564,20 @@ class GridCatalogue:
                 "metric": _PRICE,
                 "unit": "AUD/MWh",
                 "grid": "interval_end",
-                "days": price_days,
+                "days": pins[_PRICE],
             }
         )
         seen = sorted({(m, s) for (m, s, _d) in grid_revs})
         for metric, series in seen:
-            day_map: dict[str, str | None] = {}
+            key = f"{metric}:{series}" if series else metric
             series_payload: dict[str, list[object]] = {}
-            for day in _days(days[0], window_end):
+            for day in span:
                 rev = grid_revs.get((metric, series, day))
-                day_map[day.isoformat()] = str(rev) if rev else None
                 if rev in slots:
                     series_payload[day.isoformat()] = [
                         None if v is None else decimal_text.to_plain_string(v)
                         for v in _values(slots[rev], "value")
                     ]
-            key = f"{metric}:{series}" if series else metric
             if series_payload:
                 payload[key] = series_payload
             manifest_series.append(
@@ -538,7 +586,7 @@ class GridCatalogue:
                     "series": series or None,
                     "unit": "MW",
                     "grid": "source_label",
-                    "days": day_map,
+                    "days": pins[key],
                 }
             )
         manifest = {

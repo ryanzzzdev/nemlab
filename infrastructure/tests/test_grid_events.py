@@ -153,6 +153,36 @@ def test_demand_ramp_event(catalogue: GridCatalogue, engine: sa.Engine) -> None:
     assert ramp.source_revisions["demand"][DAY.isoformat()]
 
 
+def test_late_price_arrival_reversions_context_snapshot(
+    catalogue: GridCatalogue, engine: sa.Engine
+) -> None:
+    """A demand ramp pins no price revision when price was never imported.
+    A later price import changes the replay context, so republication must
+    mint a new event version whose snapshot carries the price series —
+    detector inputs alone cannot dedupe a context drift."""
+    demand = [Decimal("5000")] * 36 + [Decimal("5600")] * 252
+    GridStore(engine).save(_grid_fetch(DAY, demand))  # grid only, no price
+    end = DAY + timedelta(days=1)
+    first = catalogue.publish(REGION, DAY, end)
+    ramp = next(e for e in catalogue.events(first.id) if e.type.value == "demand_ramp")
+    old_replay = catalogue.replay(ramp.id)
+    assert old_replay is not None
+    assert old_replay["manifest"]["series"][0]["days"] == {DAY.isoformat(): None}
+    assert "price" not in old_replay["payload"]
+
+    PriceStore(engine).save(
+        _price_fetch(DAY, _flat_prices(), AT + timedelta(minutes=1))
+    )
+    second = catalogue.publish(REGION, DAY, end)
+    updated = next(
+        e for e in catalogue.events(second.id) if e.type.value == "demand_ramp"
+    )
+    assert updated.id != ramp.id and updated.version == 2
+    new_replay = catalogue.replay(updated.id)
+    assert new_replay is not None
+    assert new_replay["payload"]["price"][DAY.isoformat()][0] == "50"
+
+
 def test_incomplete_demand_withholds_ramp(
     catalogue: GridCatalogue, engine: sa.Engine
 ) -> None:
