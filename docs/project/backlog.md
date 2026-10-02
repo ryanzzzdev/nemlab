@@ -1698,6 +1698,8 @@ materialisation/bounds, immutability triggers, failure rollback + audit) and
 `test_grid_publication_http.py` (4). Contract: 86 responses, 18 operations.
 Full suite 393 passed.
 
+Committed as `81bde29`.
+
 <a id="nem-059"></a>
 
 ## NEM-059 — Expose the GridReplay catalogue and replay contract
