@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; next ready — [NEM-058](#nem-058), [NEM-060](#nem-060). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; NEM-058–NEM-062 delivered the versioned catalogue, replay contract, real-data connection and shareable links; next — [NEM-063](#nem-063) (operations rehearsal and Admin scope decision), then [NEM-064](#nem-064) exit review. [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1734,8 +1734,9 @@ validated sub-window). `GridCatalogue` gained `current_publication`,
 `PUBLICATION_NOT_FOUND` (stale cursor) are distinct states. OpenAPI 1.4.0
 gains 3 operations (21 total); verifier passes 103 captures.
 `test_events_http.py` covers filters, pinned pagination across
-republication, replay bounds and error states. Frontend contract sync and
-browser checks remain for the task.
+republication, replay bounds and error states. Contract 1.4.0 verified;
+frontend types regenerated (`7e38c3a` in nemlab-ui) and consumed by the
+GridReplay client built under NEM-060 with full browser coverage.
 
 <a id="nem-060"></a>
 
@@ -1744,7 +1745,7 @@ browser checks remain for the task.
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1761,7 +1762,23 @@ Establish the real React page visually against the demo before live backend inte
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+Done. `nemlab-ui/apps/public/src/gridreplay/` adds a strict openapi-fetch
+client (catalogue + replay validation, same-origin, no credentials,
+15s timeout), `GridReplayWorkspace` (region/type/date filters, event cards
+with detector badge/type/title, interval count, duration, extreme value,
+coverage state, detector version and source revisions, pinned "Show more
+events" pagination) and `ReplaySection`/`ReplayCharts` (four shared-cursor
+ECharts panels — price, demand, generation by fueltech, interconnector
+flow — with event markArea, Play/Pause, three speeds, slider scrub,
+pointer/touch and arrow-key cursor control, exact-string readouts and a
+provenance details disclosure). Badge palette and card hierarchy matched
+to `docs/demos/gridreplay/index.html`; screenshots compared against the
+demo at 1440/768/390/320px in light and dark. Deliberate differences:
+renewable-share readout uses real observed series (the demo's synthetic
+formula was not copied); causal labels omitted by design. 16
+fixture-driven Playwright tests in `tests/gridreplay.spec.ts` cover
+complete/gapped/empty/error catalogue states, replay loading, cursor and
+pagination; all synthetic data stays in test fixtures.
 
 <a id="nem-061"></a>
 
@@ -1770,7 +1787,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-059](#nem-059), [NEM-060](#nem-060)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1787,7 +1804,22 @@ Replace the empty public shell with the stored catalogue and working replay inte
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+Done on the real stack. Rehearsal: `POST /api/v1/admin/grid-imports` ran
+NSW1 2023-09-01..30 through the worker (job SUCCEEDED, ~75s for 30 days);
+30 per-day price refreshes supplied the separate price store;
+`POST /api/v1/admin/grid-publications` produced publication
+`c81f0287-…` with 99 real events, including the 2023-09-04 spike
+(`47af4f63-…`, value 16599.89 — replay `price[210]` verified). The Vite
+proxy now covers `/api/v1/events` for live development. Client validation
+was corrected against real payloads (replay manifest omits `series` when
+absent; `pumps` fueltech mapped). Play/Pause/speeds/scrub, pointer/touch,
+arrow keys, end-of-replay stop, pause-on-scrub and
+pause-on-hidden-tab (`visibilitychange`) are implemented; missing series
+render as gaps. 124 Playwright tests pass including theme changes,
+missing-catalogue, stale-cursor and removed-event states. Known
+limitations carried to NEM-064: no prefers-reduced-motion playback
+adjustment, no chart-render-failure fixture, max-window payload/render
+measurement outstanding.
 
 <a id="nem-062"></a>
 
@@ -1796,7 +1828,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-061](#nem-061)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1813,7 +1845,18 @@ Make an investigation reloadable and complete the catalogue-to-BatteryLab journe
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+Done (nemlab-ui `6afc7d3`). Catalogue filters (region/type/from/to) and
+the selected event are URL-driven: direct loads, reload, Back/Forward and
+copy-link reproduce the view; playback ticks never touch history. Invalid
+query values fall back to defaults without a request for the bogus value.
+`?day=` on `/batterylab` prefills valid completed market days and reports
+ignored ones; the existing `?simulation=` restore path is unchanged and
+still takes precedence by simply running. Replay heading links
+"Open in BatteryLab" with the event's market day (UTC+10), which is the
+owning day for cross-midnight events; instants are interval-end
+timestamps so a 00:00-owned event links its own day. New browser tests:
+filter/event URL round-trip, invalid-param fallback, BatteryLab day
+prefill — 124/124 pass.
 
 <a id="nem-063"></a>
 
@@ -1822,7 +1865,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: both
 - Milestone: M5
 - Priority: Normal
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-056](#nem-056), [NEM-058](#nem-058), [NEM-059](#nem-059)
 - References: [Delivery specification](features/admin.md)
 
