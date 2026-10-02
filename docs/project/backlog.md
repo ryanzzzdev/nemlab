@@ -1577,7 +1577,7 @@ Planned only; no implementation or verification evidence yet.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1593,7 +1593,23 @@ Calculate negative-price runs, price spikes and scheduled-demand ramps from fixe
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+2026-10-02 — `nemlab_core/detectors.py` implements the frozen v1 rules from
+decision 020 as pure code: `RunScanner` (stateful negative-run/spike run
+detection with continuation across chunks — a gap in grid position, a null or
+absent value, or a non-qualifying value closes a run; runs open at the
+window's left edge or still open at `finish()` are `edge_incomplete`) and
+`evaluate_demand_ramp` (per-day 36-step window, all-288-required completeness
+else `insufficient_coverage`, earliest tie, no event on nonpositive max).
+`DETECTOR_PARAMS`/`DETECTOR_VERSION` expose the canonical params for storage.
+
+`core/tests/test_detectors.py` (21 tests) replays every `fixtures/gridreplay/`
+file — strict thresholds (0 and 1000 do not qualify), minimum length,
+no-event days, ties-to-earliest, absent/null interruption, cross-midnight
+ownership, edge-incomplete flagging — plus chunked-vs-unchunked equivalence
+at nine split points and single-interval/adjacent spike grouping. ruff,
+format and mypy clean; full core suite 91 passed.
+
+No synthetic renewable ratio or causal titles introduced.
 
 <a id="nem-058"></a>
 
