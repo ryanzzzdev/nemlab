@@ -85,33 +85,38 @@ class GridStore:
         """Persist every series revision + current pointers + one attempt
         row, atomically. Identical content dedupes to the same revision."""
         with self.engine.begin() as conn:
-            revisions = {}
-            for batch in fetch.series:
-                revisions[(batch.metric, batch.series)] = self._save_series(
-                    conn, batch, fetch.retrieved_at
-                )
-            conn.execute(
-                sa.text(
-                    "INSERT INTO grid_import_attempt"
-                    " (id,region,market_day,metrics,retrieved_at,status,"
-                    "  revision_count,response_hash,source_version)"
-                    " VALUES (:id,:region,:day,:metrics,:at,:status,:count,"
-                    "  :resp,:version)"
-                ),
-                {
-                    "id": uuid.uuid4(),
-                    "region": fetch.series[0].region.name,
-                    "day": fetch.series[0].day,
-                    "metrics": sorted({b.metric.value for b in fetch.series}),
-                    "at": fetch.retrieved_at,
-                    "status": "COMPLETE"
-                    if all(b.complete() for b in fetch.series)
-                    else "INCOMPLETE",
-                    "count": len(fetch.series),
-                    "resp": fetch.response_hash,
-                    "version": fetch.source_version,
-                },
+            return self._save_inside(conn, fetch)
+
+    def _save_inside(
+        self, conn: sa.Connection, fetch: GridFetch
+    ) -> dict[SeriesKey, UUID]:
+        revisions = {}
+        for batch in fetch.series:
+            revisions[(batch.metric, batch.series)] = self._save_series(
+                conn, batch, fetch.retrieved_at
             )
+        conn.execute(
+            sa.text(
+                "INSERT INTO grid_import_attempt"
+                " (id,region,market_day,metrics,retrieved_at,status,"
+                "  revision_count,response_hash,source_version)"
+                " VALUES (:id,:region,:day,:metrics,:at,:status,:count,"
+                "  :resp,:version)"
+            ),
+            {
+                "id": uuid.uuid4(),
+                "region": fetch.series[0].region.name,
+                "day": fetch.series[0].day,
+                "metrics": sorted({b.metric.value for b in fetch.series}),
+                "at": fetch.retrieved_at,
+                "status": "COMPLETE"
+                if all(b.complete() for b in fetch.series)
+                else "INCOMPLETE",
+                "count": len(fetch.series),
+                "resp": fetch.response_hash,
+                "version": fetch.source_version,
+            },
+        )
         return revisions
 
     def _save_series(
@@ -188,22 +193,33 @@ class GridStore:
         category: str,
     ) -> None:
         with self.engine.begin() as conn:
-            conn.execute(
-                sa.text(
-                    "INSERT INTO grid_import_attempt"
-                    " (id,region,market_day,metrics,retrieved_at,status,"
-                    "  revision_count,diagnostic)"
-                    " VALUES (:id,:region,:day,:metrics,:at,'FAILED',0,:diag)"
-                ),
-                {
-                    "id": uuid.uuid4(),
-                    "region": region.name,
-                    "day": day,
-                    "metrics": list(metrics),
-                    "at": at,
-                    "diag": category,
-                },
-            )
+            self._record_failure_inside(conn, region, day, metrics, at, category)
+
+    def _record_failure_inside(
+        self,
+        conn: sa.Connection,
+        region: Region,
+        day: date,
+        metrics: tuple[str, ...],
+        at: datetime,
+        category: str,
+    ) -> None:
+        conn.execute(
+            sa.text(
+                "INSERT INTO grid_import_attempt"
+                " (id,region,market_day,metrics,retrieved_at,status,"
+                "  revision_count,diagnostic)"
+                " VALUES (:id,:region,:day,:metrics,:at,'FAILED',0,:diag)"
+            ),
+            {
+                "id": uuid.uuid4(),
+                "region": region.name,
+                "day": day,
+                "metrics": list(metrics),
+                "at": at,
+                "diag": category,
+            },
+        )
 
     # -- reads ----------------------------------------------------------------
 

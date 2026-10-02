@@ -15,9 +15,19 @@ from pydantic import ValidationError
 
 from nemlab_core.prices import Region
 from nemlab_infrastructure.database import create_bounded_engine
+from nemlab_infrastructure.grid.imports import GridImportJobs
+from nemlab_infrastructure.grid.store import GridStore
 from nemlab_infrastructure.jobs import RefreshJobService
 from nemlab_infrastructure.prices.store import PriceStore
 from nemlab_infrastructure.simulations import SimulationJobs
+from nemlab_worker.grid import (
+    MODE as GRID_MODE,
+)
+from nemlab_worker.grid import (
+    GridFetchProcess,
+    GridImportWorker,
+    run_grid_fetch_command,
+)
 from nemlab_worker.refresh import (
     MODE,
     PriceFetchProcess,
@@ -41,16 +51,20 @@ logger = logging.getLogger("nemlab_worker")
 
 
 def run(settings: WorkerSettings, stop: threading.Event) -> None:
-    if not settings.worker_enabled and not settings.simulation_enabled:
+    if (
+        not settings.worker_enabled
+        and not settings.simulation_enabled
+        and not settings.grid_import_enabled
+    ):
         logger.info("worker idle: all features disabled")
         stop.wait()
         return
     engine = create_bounded_engine(settings)
-    workers: list[RefreshWorker | SimulationWorker] = []
+    workers: list[RefreshWorker | SimulationWorker | GridImportWorker] = []
     try:
+        api_key = settings.open_electricity_api_key
         if settings.worker_enabled:
             jobs = RefreshJobService(engine, PriceStore(engine))
-            api_key = settings.open_electricity_api_key
             if api_key is None:  # the settings validator guarantees this
                 raise ValueError("OPEN_ELECTRICITY_API_KEY is required")
             fetcher = PriceFetchProcess(api_key)
@@ -65,6 +79,16 @@ def run(settings: WorkerSettings, stop: threading.Event) -> None:
                     RefreshSchedule(jobs, _utc_now, regions),
                     fetcher,
                     settings.worker_poll_ms / 1000,
+                )
+            )
+        if settings.grid_import_enabled:
+            if api_key is None:
+                raise ValueError("OPEN_ELECTRICITY_API_KEY is required")
+            workers.append(
+                GridImportWorker(
+                    GridImportJobs(engine, GridStore(engine)),
+                    GridFetchProcess(api_key),
+                    settings.grid_import_poll_ms / 1000,
                 )
             )
         if settings.simulation_enabled:
@@ -92,6 +116,8 @@ def main() -> None:
         sys.exit(run_fetch_command(argv))
     if argv and argv[0] == SIMULATE_MODE:
         sys.exit(run_simulation_command(argv))
+    if argv and argv[0] == GRID_MODE:
+        sys.exit(run_grid_fetch_command(argv))
 
     try:
         settings = WorkerSettings()

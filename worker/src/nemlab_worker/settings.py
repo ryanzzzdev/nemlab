@@ -21,6 +21,8 @@ class WorkerSettings(DatabaseSettings):
     worker_schedule_enabled: bool = False
     worker_regions: str = "NSW1"
     worker_poll_ms: int = Field(default=5000, ge=1)
+    grid_import_enabled: bool = False
+    grid_import_poll_ms: int = Field(default=5000, ge=1)
     simulation_enabled: bool = False
     simulation_poll_ms: int = Field(default=5000, ge=1)
     open_electricity_api_key: str | None = Field(
@@ -37,14 +39,20 @@ class WorkerSettings(DatabaseSettings):
             raise ValueError(
                 "Simulation poll interval must be between 1000 and 60000 ms"
             )
-        if not self.worker_enabled:
+        if self.grid_import_enabled and not 1000 <= self.grid_import_poll_ms <= 60_000:
+            raise ValueError(
+                "Grid import poll interval must be between 1000 and 60000 ms"
+            )
+        needs_key = self.worker_enabled or self.grid_import_enabled
+        if not needs_key:
             return self
-        if not 1000 <= self.worker_poll_ms <= 60_000:
+        if self.worker_enabled and not 1000 <= self.worker_poll_ms <= 60_000:
             raise ValueError("worker poll interval must be between 1000 and 60000 ms")
         key = self.open_electricity_api_key
         if key is None or not key.strip() or "\n" in key or "\r" in key:
             raise ValueError(
-                "OPEN_ELECTRICITY_API_KEY is required when the worker is enabled"
+                "OPEN_ELECTRICITY_API_KEY is required when the worker or grid"
+                " import poller is enabled"
             )
         if self.worker_schedule_enabled:
             for name in self.regions:

@@ -16,18 +16,20 @@ sys.path.insert(
     0, str(Path(__file__).resolve().parents[2] / "infrastructure" / "tests")
 )
 
-from db_fixture import apply_schema, scratch_db
+from db_fixture import apply_grid_schema, apply_schema, scratch_db
 
 from nemlab_api.app import create_app
 from nemlab_api.settings import ApiSettings
 from nemlab_infrastructure.settings import DatabaseSettings
 
-__all__ = ["apply_schema", "scratch_db"]
+__all__ = ["apply_grid_schema", "apply_schema", "scratch_db"]
 
 TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
 
 TRUNCATE = (
-    "TRUNCATE simulation_result, simulation_job, simulation_input,"
+    "TRUNCATE grid_import_job_event, grid_import_request, grid_import_job,"
+    " grid_import_attempt, grid_current, grid_revision,"
+    " simulation_result, simulation_job, simulation_input,"
     " refresh_job_event, refresh_request, refresh_job,"
     " price_snapshot, price_current, price_import_attempt,"
     " price_revision, price_backfill"
@@ -36,7 +38,7 @@ TRUNCATE = (
 
 @pytest.fixture(autouse=True)
 def clean(scratch_db: sa.Engine) -> None:
-    apply_schema(scratch_db)
+    apply_grid_schema(scratch_db)
     with scratch_db.begin() as conn:
         conn.execute(sa.text(TRUNCATE))
 

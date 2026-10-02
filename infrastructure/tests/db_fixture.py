@@ -58,3 +58,13 @@ def apply_schema(engine: sa.Engine) -> None:
     with engine.begin() as conn:
         for _version, _description, script in EXPECTED_HISTORY:
             conn.exec_driver_sql(migration_text(script))
+
+
+def apply_grid_schema(engine: sa.Engine) -> None:
+    """The Java baseline plus the Python-only V4/V5 grid tables."""
+    from nemlab_infrastructure.schema import migration_text
+
+    apply_schema(engine)
+    with engine.begin() as conn:
+        conn.exec_driver_sql(migration_text("V4__grid_observations.sql"))
+        conn.exec_driver_sql(migration_text("V5__grid_import_jobs.sql"))

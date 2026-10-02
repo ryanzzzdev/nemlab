@@ -119,6 +119,49 @@ def test_contract_captures(
     post(f"{BASE}/{id}/cancel", "", auth)
     post(f"{BASE}/{uuid.uuid4()}/cancel", "", auth)
 
+    # -- operator grid imports ------------------------------------------------
+
+    GRID = "/api/admin/v1/grid-imports"
+    grid_window = {
+        "region": "NSW1",
+        "startDay": "2023-09-01",
+        "endExclusive": "2023-09-03",
+    }
+    for route in (GRID, f"{GRID}/{uuid.uuid4()}", f"{GRID}/{uuid.uuid4()}/events"):
+        get(route)
+    post(GRID, grid_window)  # 401 without a token
+    grid_submitted = post(GRID, grid_window, {**auth, "Idempotency-Key": "grid-1"})
+    assert grid_submitted.status_code == 202
+    grid_id = grid_submitted.json()["id"]
+    post(GRID, grid_window, {**auth, "Idempotency-Key": "grid-1"})  # replay
+    post(
+        GRID,
+        {**grid_window, "endExclusive": "2023-09-04"},
+        {**auth, "Idempotency-Key": "grid-1"},
+    )  # 409 IDEMPOTENCY_CONFLICT
+    post(
+        GRID,
+        "{",
+        {**auth, "Idempotency-Key": "grid-bad", "Content-Type": "application/json"},
+    )
+    get(GRID, auth)
+    get(f"{GRID}/{grid_id}", auth)
+    get(f"{GRID}/not-a-uuid", auth)
+    get(f"{GRID}/{uuid.uuid4()}", auth)
+    get(f"{GRID}/{grid_id}/events", auth)
+    get(f"{GRID}/{uuid.uuid4()}/events", auth)
+    post(f"{GRID}/{grid_id}/cancel", "", auth)
+    post(f"{GRID}/{uuid.uuid4()}/cancel", "", auth)
+    with scratch_db.begin() as conn:
+        conn.execute(sa.text("ALTER TABLE grid_import_job RENAME TO missing_grid_job"))
+    try:
+        get(GRID, auth)
+    finally:
+        with scratch_db.begin() as conn:
+            conn.execute(
+                sa.text("ALTER TABLE missing_grid_job RENAME TO grid_import_job")
+            )
+
     jobs = RefreshJobService(scratch_db, store)
 
     with scratch_db.begin() as conn:

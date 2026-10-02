@@ -53,10 +53,28 @@ health-only; any enabled flag requires `NEMLAB_DB_*` and a migrated schema.
 
 The worker honours `NEMLAB_WORKER_ENABLED` (refresh polling — requires
 `OPEN_ELECTRICITY_API_KEY`), `NEMLAB_WORKER_SCHEDULE_ENABLED`,
-`NEMLAB_WORKER_REGIONS`, `NEMLAB_WORKER_POLL_MS`, `NEMLAB_SIMULATION_ENABLED`
-and `NEMLAB_SIMULATION_POLL_MS`. Fetch and simulation children run isolated
+`NEMLAB_WORKER_REGIONS`, `NEMLAB_WORKER_POLL_MS`, `NEMLAB_GRID_IMPORT_ENABLED`
+(GridReplay imports — also requires `OPEN_ELECTRICITY_API_KEY`),
+`NEMLAB_GRID_IMPORT_POLL_MS`, `NEMLAB_SIMULATION_ENABLED` and
+`NEMLAB_SIMULATION_POLL_MS`. Fetch and simulation children run isolated
 with cleared environments and bounded deadlines; stopping the worker releases
 claims as `WORKER_STOPPED`.
+
+Operator grid imports are submitted on the admin surface:
+
+```sh
+curl -X POST http://localhost:8080/api/admin/v1/grid-imports \
+  -H "Authorization: Bearer $NEMLAB_ADMIN_TOKEN" \
+  -H "Idempotency-Key: sep2023-nsw1" \
+  -H "Content-Type: application/json" \
+  -d '{"region":"NSW1","startDay":"2023-09-01","endExclusive":"2023-10-01"}'
+```
+
+The returned job view carries `nextDay` (the durable resume checkpoint),
+`optionalFailures` (power-series fetch failures, distinct from core market
+failures) and `status`; `GET .../events` audits it and `POST .../{id}/cancel`
+revokes a running claim. A `FAILED` job keeps `nextDay` — resubmitting the
+remaining window is safe: day saves deduplicate by content hash.
 
 Packaged startup smoke check:
 

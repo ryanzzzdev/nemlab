@@ -27,7 +27,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-057 implemented detectors; next ready — [NEM-056](#nem-056), [NEM-060](#nem-060). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; next ready — [NEM-058](#nem-058), [NEM-060](#nem-060). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 - [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
 - [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
@@ -1573,7 +1573,7 @@ Store the required grid context alongside the existing price foundation, preserv
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-055](#nem-055)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1589,7 +1589,29 @@ Let the operator request and inspect durable GridReplay imports with the existin
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+- **V5 schema** (`V5__grid_import_jobs.sql`): `grid_import_job` with the
+  refresh queue's lease/claim-token fencing plus a durable `next_day`
+  checkpoint, `optional_failures` counter, window CHECKs (1–31 days) and an
+  active-window dedupe index; `grid_import_request` idempotency keys;
+  `grid_import_job_event` audit.
+- **`GridImportJobs`** (`infrastructure/.../grid/imports.py`): bounded
+  submissions (1–31 completed days, ≤20 pending), one running import
+  globally, lease renewal inside each `complete_day`, retryable core
+  failures requeue at the checkpoint (≤3 attempts), optional power failures
+  record FAILED attempts without blocking the window, cancellation revokes
+  the claim.
+- **Worker** (`worker/grid.py`): `--fetch-grid market|power` child mode on
+  the cleared-environment isolated process; `GridFetchProcess` bounds
+  runtime/output; `GridImportWorker` claims, then commits one market day
+  per iteration. `NEMLAB_GRID_IMPORT_ENABLED`/`_POLL_MS` in settings; OE key
+  required only when enabled.
+- **API**: `/api/admin/v1/grid-imports` submit/list/status/events/cancel
+  behind the existing `OperatorBearer`; no visitor surface. OpenAPI bumped
+  to 1.4.0 with the five operations; verifier validates 78 captures/15 ops.
+- Tests: `test_grid_jobs.py` (15), `test_grid_worker.py` (11 real child
+  processes: timeout kills, no DB-credential inheritance, optional-power
+  continuation, retry/recovery, shutdown recoverability),
+  `test_grid_import_http.py` (8). Full suite 374 passed.
 
 <a id="nem-057"></a>
 
@@ -1639,7 +1661,7 @@ No synthetic renewable ratio or causal titles introduced.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Ready
 - Depends on: [NEM-055](#nem-055), [NEM-056](#nem-056), [NEM-057](#nem-057)
 - References: [Delivery specification](features/gridreplay.md)
 

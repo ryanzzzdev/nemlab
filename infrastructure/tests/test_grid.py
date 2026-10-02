@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 import sqlalchemy as sa
-from db_fixture import apply_schema
+from db_fixture import apply_grid_schema
 
 from nemlab_core.prices import NEM_OFFSET, Region
 from nemlab_infrastructure.grid.batch import Metric
@@ -21,22 +21,15 @@ from nemlab_infrastructure.grid.source import (
 )
 from nemlab_infrastructure.grid.store import GridStore
 from nemlab_infrastructure.prices.batch import Kind
-from nemlab_infrastructure.schema import migration_text
 
 DAY = date(2023, 9, 4)
 AT = datetime(2026, 9, 17, tzinfo=UTC)
 REGION = Region.NSW1
 
 
-def _apply_grid_schema(engine: sa.Engine) -> None:
-    apply_schema(engine)
-    with engine.begin() as conn:
-        conn.exec_driver_sql(migration_text("V4__grid_observations.sql"))
-
-
 @pytest.fixture
 def store(scratch_db: sa.Engine) -> GridStore:
-    _apply_grid_schema(scratch_db)
+    apply_grid_schema(scratch_db)
     return GridStore(scratch_db)
 
 
