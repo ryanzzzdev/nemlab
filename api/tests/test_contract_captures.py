@@ -162,6 +162,29 @@ def test_contract_captures(
                 sa.text("ALTER TABLE missing_grid_job RENAME TO grid_import_job")
             )
 
+    # -- operator grid publications --------------------------------------------
+
+    PUBS = "/api/admin/v1/grid-publications"
+    pub_window = {
+        "region": "NSW1",
+        "startDay": "2023-10-01",
+        "endExclusive": "2023-10-02",
+    }
+    get(PUBS)  # 401
+    post(PUBS, pub_window)  # 401
+    published = post(PUBS, pub_window, auth)
+    assert published.status_code == 201
+    pub_id = published.json()["id"]
+    post(
+        PUBS,
+        {"region": "NSW1", "startDay": "2023-10-02", "endExclusive": "2023-10-01"},
+        auth,
+    )  # 400 INVALID_REQUEST
+    get(PUBS, auth)
+    get(f"{PUBS}/{pub_id}", auth)
+    get(f"{PUBS}/{uuid.uuid4()}", auth)  # 404 PUBLICATION_NOT_FOUND
+    get(f"{PUBS}/not-a-uuid", auth)
+
     jobs = RefreshJobService(scratch_db, store)
 
     with scratch_db.begin() as conn:
@@ -318,5 +341,5 @@ def test_contract_captures(
 
     written = list(CAPTURES.glob("*.json"))
     statuses = sorted({json.loads(f.read_text())["status"] for f in written})
-    assert statuses == [200, 202, 400, 401, 404, 409, 413, 415, 429, 503]
+    assert statuses == [200, 201, 202, 400, 401, 404, 409, 413, 415, 429, 503]
     assert len(written) >= 45

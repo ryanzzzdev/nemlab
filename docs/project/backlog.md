@@ -1663,7 +1663,7 @@ No synthetic renewable ratio or causal titles introduced.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-055](#nem-055), [NEM-056](#nem-056), [NEM-057](#nem-057)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1680,7 +1680,23 @@ Produce a catalogue whose event links retain the same evidence after source refr
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+Done. `V6__grid_events.sql` adds immutable `grid_event` versions (identity
+region/type/version/start_at, `supersedes` chains), materialised
+`grid_replay` manifests bounded to 7 days, `grid_publication` +
+`grid_publication_event`, the `grid_catalogue_current` pointer flipped inside
+the same transaction, and `grid_detection_run` audit rows that survive
+rollback for failed runs.
+`infrastructure/src/nemlab_infrastructure/grid/events.py` runs the `v1`
+detectors inside a REPEATABLE-READ transaction over pinned current revisions,
+materialises exact values into replay payloads, dedupes identical reruns,
+and supersedes on corrected inputs. `api/src/nemlab_api/grid_publications.py`
+exposes `POST/GET /api/admin/v1/grid-publications` behind operator auth.
+Retention: all event versions retained; deletion is not implemented and stays
+blocked pending explicit reference-protection rules. Verified by
+`test_grid_events.py` (15: dedupe, correction supersede, replay
+materialisation/bounds, immutability triggers, failure rollback + audit) and
+`test_grid_publication_http.py` (4). Contract: 86 responses, 18 operations.
+Full suite 393 passed.
 
 <a id="nem-059"></a>
 
