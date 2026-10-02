@@ -1613,6 +1613,8 @@ Let the operator request and inspect durable GridReplay imports with the existin
   continuation, retry/recovery, shutdown recoverability),
   `test_grid_import_http.py` (8). Full suite 374 passed.
 
+Committed as `b7cf536`.
+
 <a id="nem-057"></a>
 
 ## NEM-057 — Implement the three deterministic event detectors
