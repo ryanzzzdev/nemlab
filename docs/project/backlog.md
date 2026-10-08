@@ -3524,7 +3524,7 @@ until NEM-112 drawers land; legacy pages remain reachable meanwhile.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-111](#nem-111)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3540,7 +3540,26 @@ Move owner load and publication into contextual drawers, preserving delivered Ad
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-09. `workspace/LoadDrawer.tsx` (480px) captures the applied scope
+on open, persists edits through the shared `admin.loadDraft` sessionStorage key
+(dirty draft survives close + reload), reviews against live coverage
+("N of M days already stored — overlap deduplicates"), then calls
+`beginLoadOperation`; "Open Loads & Jobs" closes the drawer and switches the
+workspace atomically. Baseline demand-history import moved in as a collapsed
+section with the same chunked `baseline:{region}:{day}` idempotent keys.
+`workspace/PublishDrawer.tsx` (560px wide) carries the full publish flow:
+region locked to scope, ≤31-day bound, coverage preview with per-day gap list
+and explicit partial acknowledgement, v1/v2 suite naming, pointer-replacement
+warning, and the persisted `admin.publishAttempt` key reconciling lost
+responses against detection runs (4xx clears; unknown outcomes stay pending).
+Toolbar "Load data"/"Review & publish" and the day inspector's Load action now
+open drawers in place; phase/child dispatch controls live in the jobs
+inspector. Browser-verified on the real API: scope seeding, review, create,
+jobs-view jump, close/reopen draft restore, Escape + focus return; viewers
+still see zero owner affordances. `npm run check` green — both builds,
+contract, format, 126/126 public browser tests. Legacy `/load` and
+`/publications` pages remain mounted until NEM-114 retires them; queue-full
+and session-expiry paths route through the same verified API layer.
 
 <a id="nem-113"></a>
 
