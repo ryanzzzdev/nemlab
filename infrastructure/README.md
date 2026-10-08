@@ -83,6 +83,35 @@ docker compose exec postgres dropdb -U nemlab nemlab_restore_test
 
 Never reset a live database destructively; there is no `reset` command.
 
+## Admin identity
+
+The V8 migration adds the M6 Admin account tables (`admin_*`): users,
+access requests, viewer grants, hashed one-use tokens, sessions, the email
+outbox, access audit and persisted rate-limit counters. Owner bootstrap and
+recovery are **server-side commands** — there is no public route, no
+default password and no account is created unless the owner identity is
+supplied explicitly:
+
+```sh
+# Create the single enabled owner (idempotent for the same email):
+uv run python -m nemlab_infrastructure.admin bootstrap-owner \
+    --name "Owner Name" --email "owner@example.com" --confirm
+
+# Audited recovery: disables the current owner, revokes its sessions and
+# installs the replacement (requires a recorded reason):
+uv run python -m nemlab_infrastructure.admin recover-owner \
+    --name "Owner Name" --email "owner@example.com" \
+    --reason "lost mailbox" --confirm
+```
+
+A partial unique index enforces exactly one enabled owner; concurrent
+bootstraps race safely onto the same row. Bootstrap with a different email
+than the enabled owner refuses and points at `recover-owner`, which writes
+`OWNER_DISABLED`/`OWNER_RECOVERED` audit rows before the change commits.
+Last-owner protection is an application rule on ordinary revoke/disable
+paths — the recovery command itself is the escape hatch and always leaves
+exactly one enabled owner.
+
 ## Tests
 
 `uv run pytest infrastructure/tests` — schema/adoption integration tests

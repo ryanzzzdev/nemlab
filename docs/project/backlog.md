@@ -2916,7 +2916,7 @@ Pending. These limits were recorded in the 2026-10-02 journal and retained at th
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: In progress
+- Status: Done
 - Depends on: [NEM-093](#nem-093)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -2932,7 +2932,13 @@ Add Admin identity storage and secure owner bootstrap. Deliver the corresponding
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. V8 migration (`infrastructure/src/nemlab_infrastructure/db/migration/V8__admin_identity.sql`, Alembic `nemlab_v8_admin_identity`) adds `admin_user`, `admin_access_request`, `admin_viewer_grant`, `admin_token`, `admin_session`, `admin_email_outbox`, `admin_access_audit` and `admin_rate_limit` with enforcing constraints: single enabled owner via partial unique index, case-insensitive email uniqueness, one undecided request per normalised email, exactly-one-subject checks on tokens/sessions with purpose-subject matching, grant revocation pairing and outbox dedupe. No market/job table is touched; a populated-schema test proves a stored price revision survives V8 and all new tables exist.
+
+`nemlab_infrastructure.admin` package adds `AdminIdentity` (SQLAlchemy Core over the V8 tables) and `python -m nemlab_infrastructure.admin` with `bootstrap-owner`/`recover-owner`. Bootstrap is CLI-only (no public route, no password), validates name/email, requires `--confirm`, creates exactly one enabled owner inside a transaction that also writes `OWNER_BOOTSTRAPPED` to `admin_access_audit`, and is idempotent — a repeated or concurrently-losing call for the same email returns the existing row; a different email refuses with `OwnerExists` pointing at recovery. `recover-owner` is the audited escape hatch: it disables the current owner, revokes its live sessions and writes `OWNER_DISABLED`/`OWNER_RECOVERED` audit rows with the recorded reason; it also works for first setup. Last-owner protection is documented as an application rule for ordinary disable paths in [infrastructure README](../../infrastructure/README.md#admin-identity).
+
+Tests: `infrastructure/tests/test_admin_identity.py` (14 tests) covers bootstrap creation/idempotency/validation, two-thread concurrent bootstrap landing on one owner, single-owner and case-insensitive-email constraints, request/token/session check violations under savepoints, active-request uniqueness and reapplication after decision, recovery session revocation + audit ordering, recovery-without-owner, the packaged CLI end-to-end (refusal without `--confirm`, unchanged replay, wrong-email refusal, recovery) against a scratch database, a real Alembic upgrade-to-head/downgrade cycle, and data preservation. `db_fixture.apply_admin_schema` composes V8 on the grid schema for later M6 tests.
+
+Verified: `uv run pytest infrastructure/tests/test_admin_identity.py infrastructure/tests/test_schema.py infrastructure/tests/test_grid.py` 67 passed (schema tests upgrade to head through the new revision); `uv run mypy --strict`, `uv run ruff check`, `uv run ruff format --check`, `uv run lint-imports` clean; full suite 488 passed. No API surface changed, so contract files are untouched. Note: `uv run mypy api core infrastructure worker --strict` as written in backend.yml fails on a pre-existing duplicate-`conftest` module collision unrelated to this change; the configured `uv run mypy` invocation passes.
 
 <a id="nem-096"></a>
 
