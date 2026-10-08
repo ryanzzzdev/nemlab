@@ -27,6 +27,18 @@ Before the final response following implementation, a substantive investigation,
 
 Update only affected records. If an answer is purely explanatory, a status check reveals no change, or the same outcome has already been recorded, make no documentation edit. If repeating this workflow for the same work unit, amend the existing entry rather than append a duplicate. Documentation updates do not themselves trigger another round of journaling.
 
+## Campaign checkpoints
+
+A campaign — one continuous push across several accepted backlog tasks — applies the update rhythm above **per task**, not once at the end. Each task is a checkpoint:
+
+1. Implement the task's scope; do not absorb neighbouring tasks.
+2. Verify with the relevant tests and project checks.
+3. Update the affected records — task status plus completion evidence, affected specifications/decisions, and a journal entry naming model and coding agent.
+4. Commit the coherent unit. A checkpoint is incomplete while the tree is dirty.
+5. Update the in-progress ledger, then start the next checkpoint.
+
+Independent, cleanly-bounded tasks may be delegated to sub-agents — on their own git branches when parallel work risks conflicts — but the main agent keeps ownership of sequencing, integration, review of delegated output, and the project records. Stop mid-campaign only for genuine human decisions (unplanned product choices, destructive operations, plan assumptions disproven by evidence); record partial outcomes honestly rather than inflating completion.
+
 ## Evidence and scope
 
 - A task is Done only when acceptance criteria and required verification are satisfied. Report failed, skipped, or unavailable checks; do not claim that a commit, deployment, or test occurred without evidence.
