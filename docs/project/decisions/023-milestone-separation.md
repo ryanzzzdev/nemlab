@@ -16,3 +16,7 @@ Reconcile stale NEM-018/NEM-059/NEM-064 records with delivered evidence. Track r
 - Keeping Admin bundled with M5 would obscure completed GridReplay delivery; marking the whole project release-ready would conceal known verification and operational work. Separate milestones preserve both distinctions.
 
 See the [roadmap](../roadmap.md), [Admin specification](../features/admin.md), and [backlog](../backlog.md).
+
+## Admin scope settled — 2026-10-08
+
+[Decision 024](024-admin-experience-and-access.md) supersedes the undecided-UI position above; milestone sequencing is unchanged. M6 now has an accepted specification and implementation tasks.

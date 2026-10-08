@@ -35,3 +35,7 @@ See the rehearsal table for commands and observed results.
 - Repeated manual recovery proves error-prone (needs the coverage
   endpoint NEM-082 and possibly an in-place retry action).
 - Pre-launch hardening under NEM-020 wants an operator console.
+
+## 2026-10-08 — UI deferral superseded
+
+[Decision 024](024-admin-experience-and-access.md) accepts the separate M6 Admin UI with owner and approved read-only visitor access. The rehearsal and rationale above remain historical evidence.

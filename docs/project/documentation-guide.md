@@ -64,7 +64,7 @@ Use these agreed implementation milestones as the starting sequence:
 6. Agree and deliver the Admin operator experience.
 7. Complete launch readiness and release.
 
-BatteryLab and GridReplay are intended for the initial public launch. Admin's UI is optional before launch; the operational controls required to run the system are still part of launch readiness.
+BatteryLab and GridReplay are intended for the initial public launch. Admin's UI is agreed M6 scope under decision 024; deployment and operational release verification remain M7.
 
 For each milestone, record its outcome, scope, dependencies, exit criteria, and status: `Planned`, `In progress`, or `Complete`. Do not mark a milestone complete merely because coding has stopped; check its exit criteria and linked tasks.
 

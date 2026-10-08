@@ -18,6 +18,10 @@ succeeds — run/spike detectors have nothing to detect and ramp snapshots pin
 identity), so the safe recovery is always *import the missing data, then
 republish* — never database edits.
 
+## M6 planning note — 2026-10-08
+
+The [accepted Admin plan](features/admin.md) supersedes the UI deferral referenced below. This manual runbook remains the existing operational path. The publication example below defaults to v1; v2 is already supported by explicitly adding `"detectorSuite":"v2"` and requires the detector-v2 migration (V7 or current migration head). Highlights are a separate selection policy over published events. NEM-105 will reconcile all examples and add browser-account instructions when implemented; those accounts do not exist yet.
+
 ## Prerequisites
 
 - API running with `NEMLAB_ADMIN_ENABLED=true`, `NEMLAB_ADMIN_OPERATOR` and a

@@ -76,16 +76,15 @@ These records distinguish future decision gates from work that is blocked now. N
 
 <a id="blk-006"></a>
 
-## BLK-006 — Hosting, public limits and Admin scope
+## BLK-006 — Production hosting and Admin setup inputs
 
-- Identified: 2026-09-13
-- Status: Open
-- Impact: M6 Admin scope and M7 release.
-- Affected tasks: [NEM-019](backlog.md#nem-019), [NEM-020](backlog.md#nem-020).
-- Evidence / attempts: No hosting provider/budget, identity mechanism, public compute quotas, retention policy or decision to ship Admin UI is recorded.
-- Blocking scope: Not an immediate blocker. Blocks final launch readiness if unresolved.
-- Next action / owner: NEM-063 rehearses price/grid import, recovery and event publication through protected controls, then records the Admin include/defer decision with the user. Recommend proving commands/endpoints before creating an Admin app; this is not a final deferral. NEM-020 separately settles hosting, quotas, identity and retention using measured workloads.
-- Resolution: Not yet resolved.
+- Identified: 2026-09-13; updated 2026-10-08.
+- Status: Open.
+- Impact: M6 external setup and M7 release; local implementation can proceed.
+- Affected tasks: NEM-096, NEM-105, NEM-020.
+- Evidence: Admin UI, roles, email sessions and retention defaults are now selected in decision 024. Hosting/budget, production origin/TLS, sender domain/email transport credentials and actual owner name/email remain unspecified.
+- Next action: implement against captured local mail and explicit configuration; obtain owner identity at bootstrap and configure the selected email transport/sender before real invitations. NEM-020 verifies production mail delivery, quotas, backups/retention and deployed identity boundary. Do not guess credentials, create a default account or purchase services.
+- Resolution: Admin scope portion resolved by NEM-093; deployment/setup inputs remain open.
 
 
 <a id="blk-007"></a>

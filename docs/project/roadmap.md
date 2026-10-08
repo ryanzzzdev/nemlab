@@ -2,7 +2,7 @@
 
 Updated: 2026-10-08
 
-The accepted product sequence is BatteryLab (M4), GridReplay (M5), Admin (M6), then launch (M7). The user separated Admin from GridReplay on 2026-10-08; detailed Admin scope is the next discussion. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
+The accepted product sequence is BatteryLab (M4), GridReplay (M5), Admin (M6), then launch (M7). The user separated Admin from GridReplay on 2026-10-08; Admin scope is now accepted in [decision 024](decisions/024-admin-experience-and-access.md). See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
 M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. M2 now passes for the ordered-window comparison; see [engine evidence](evidence/engine/findings.md). The API/worker foundation now passes [NEM-011](backlog.md#nem-011); [NEM-012](backlog.md#nem-012) now implements the price-storage/backfill slice. [NEM-013](backlog.md#nem-013) is split into focused tasks: the durable queue is verified in NEM-028; NEM-029 adds verified worker scheduling/execution; NEM-030 verifies protected operator controls and completes this price-refresh package. NEM-031 implements public stored-price reads; NEM-032 verifies formal contracts and generated client inputs, completing NEM-014. NEM-015 is split into NEM-033–NEM-036: the separate frontend repository/tooling is verified in NEM-033; NEM-034 verifies public navigation and shell; NEM-035 verifies typed public price integration; NEM-036 verifies synchronised charts and completes NEM-015. NEM-037 has reviewed the aggregate M3 exit evidence: local foundation checks pass, while NEM-038 must verify hosted CI before M3 closes. See the [exit review](evidence/foundation/m3-exit-review.md). Optional unrestricted hindsight remains deferred. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
 
@@ -14,7 +14,7 @@ M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.m
 | M4 — BatteryLab | Complete simulation experience | Complete | M3 local foundation; hosted CI remains a separate open gate |
 | Python backend rebuild | Verified Python parity with retained Java reference | Complete | Delivered Java baseline; before M5 |
 | M5 — GridReplay | Working catalogue, replay, sharing and discovery | Complete (local feature milestone) | M4 and validated grid inputs |
-| M6 — Admin | Agreed operator experience and supporting controls | Planned — scope discussion next | M5 and existing operator APIs |
+| M6 — Admin | Agreed operator experience and supporting controls | Planned — scope agreed | M5 and existing operator APIs |
 | M7 — Launch | Verified, operable public release | Planned | M6 outcome and launch gates |
 
 ## Python backend rebuild — complete
@@ -80,11 +80,13 @@ NEM-018, NEM-059 and NEM-064 records are reconciled with delivered evidence. NEM
 
 ## M6 — Admin
 
-Status: Planned; discuss and settle the Admin experience next under [NEM-093](backlog.md#nem-093). This milestone is distinct from completed GridReplay and from deployment readiness. Creating the milestone does not preselect a particular UI, authentication mechanism or hosting architecture.
+Status: Planned; NEM-093 scope planning is complete. Deliver the [Admin specification](features/admin.md) through NEM-095–107 and NEM-082. NEM-092 bounded price windows are already delivered.
 
-Starting point: existing authenticated operator APIs and [data-loading runbook](runbook-grid-data.md), with the M5-era deferral retained as history in decision 021. Likely scope to discuss: coverage inspection, bounded grid/price imports, job progress/failure recovery, detection/publication and audit visibility. Existing operator follow-ups NEM-082 (coverage inspection) and NEM-092 (bounded price-date ranges) belong here. Preserve any ongoing work on those tasks.
+Scope: coverage-led separate Admin UI, embedded workflow guide, securely bootstrapped owner, verified/approved expiring read-only visitors, public Admin entry, safe operational reads, bounded imports/recovery and explicit v2 publication. Existing API/worker/jobs remain the execution path. Decision 024 supersedes the earlier UI deferral; two human roles and email-link sign-in are selected defaults.
 
-Exit criteria: agree the Admin scope; split it into focused implementation tasks; deliver and verify the agreed operator journey, server-side authorization and audit/recovery behavior. If discussion concludes no UI is needed, record that explicitly with a verified operational alternative. The NEM-093 planning task alone does not complete M6 when implementation is agreed.
+Sequence: NEM-095 identity → NEM-096 sessions/mail → NEM-097 permissions → NEM-098 requests/grants and NEM-099 reads (with NEM-082) → NEM-100 console → NEM-101 entry/auth, NEM-102–103 load workflow and NEM-104 access UI → NEM-105 public entry/runbook → NEM-106 verification → NEM-107 visual/exit review. Independent API slices may proceed concurrently once their dependencies are satisfied.
+
+Exit criteria: owner bootstrap and full operator journey verified; visitor request/verification/approval/sign-in/revocation works; all backend capabilities and viewer redaction tested; bounded load/recovery and explicit publication preserve links; guide explains v2 and Highlights accurately; local integrated and responsive/accessibility checks pass with recorded evidence. Scope planning alone does not complete M6. Provider credentials/owner identity are setup inputs, not default secrets; production deployment and hosted verification remain M7.
 
 ## M7 — Launch readiness and release
 

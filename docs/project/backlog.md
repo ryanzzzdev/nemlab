@@ -103,9 +103,23 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-093 — Agree the M6 Admin experience and delivery tasks](#nem-093)
 - [NEM-094 — Close carried GridReplay launch-hardening evidence gaps](#nem-094)
 
+- [NEM-095 — Add Admin identity storage and secure owner bootstrap](#nem-095)
+- [NEM-096 — Deliver email verification and browser sessions](#nem-096)
+- [NEM-097 — Enforce Admin capabilities and safe viewer responses](#nem-097)
+- [NEM-098 — Implement access requests approvals and grant lifecycle](#nem-098)
+- [NEM-099 — Expose bounded console reads and publication provenance](#nem-099)
+- [NEM-100 — Build Admin shell and guided read-only console](#nem-100)
+- [NEM-101 — Build request-access and sign-in experience](#nem-101)
+- [NEM-102 — Track resumable bounded load operations](#nem-102)
+- [NEM-103 — Build guided owner import and publication workflow](#nem-103)
+- [NEM-104 — Build owner access management and audit screens](#nem-104)
+- [NEM-105 — Publish Admin entry link and reconcile operator guidance](#nem-105)
+- [NEM-106 — Verify Admin access boundaries and resilience](#nem-106)
+- [NEM-107 — Polish Admin UI and review M6 exit evidence](#nem-107)
+
 ## Delivery notes
 
-- Current milestone sequence: M5 GridReplay complete locally; M6 Admin scope discussion next ([NEM-093](#nem-093)); M7 launch includes [NEM-094](#nem-094) and existing release gates. See [decision 023](decisions/023-milestone-separation.md).
+- Current milestone sequence: M5 GridReplay complete locally; M6 Admin scope accepted ([NEM-093](#nem-093)); deliver [NEM-095–107](#nem-095) plus NEM-082; M7 launch includes [NEM-094](#nem-094) and existing release gates. See [decision 023](decisions/023-milestone-separation.md).
 - Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). All tasks delivered and verified 2026-10-08; see [NEM-091](#nem-091) for checkpoint evidence.
 - Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). GridReplay M5 was built through NEM-054–NEM-063 (detectors, observation persistence, bounded worker imports, versioned catalogue, replay contract, real-data connection, shareable links, and an operations rehearsal that deferred the Admin UI — [decision 021](decisions/021-admin-ui-deferred.md)), verified by [NEM-064](#nem-064) and extended by the discovery work above; see the [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25).
 - Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
@@ -2838,7 +2852,7 @@ Done 2026-10-08. Both checkpoints recorded in `journal/2026-10.md` ("GridReplay 
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-018](#nem-018), [NEM-063](#nem-063)
 - References: [Admin specification](features/admin.md), [milestone separation](decisions/023-milestone-separation.md)
 
@@ -2854,7 +2868,7 @@ Discuss Admin independently of delivered GridReplay, then record an agreed scope
 
 ### Completion evidence
 
-Not started. Milestone created at the user's request on 2026-10-08; Admin discussion is next.
+Completed 2026-10-08: user accepted coverage-led Admin, guided explanations, owner account, approved read-only visitors and public entry. Detailed scope/defaults in [Admin specification](features/admin.md), decision 024 and NEM-095–107. Planning only; no accounts or implementation created. M6 remains Planned.
 
 <a id="nem-094"></a>
 
@@ -2881,3 +2895,328 @@ Complete the known accessibility, failure-state and maximum-window checks carrie
 ### Completion evidence
 
 Pending. These limits were recorded in the 2026-10-02 journal and retained at the 2026-10-08 milestone review; no claim of completed hardening is made.
+
+<a id="nem-095"></a>
+
+## NEM-095 — Add Admin identity storage and secure owner bootstrap
+
+- Repository: backend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Ready
+- Depends on: [NEM-093](#nem-093)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Add Admin identity storage and secure owner bootstrap. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Migration-backed users, grants, requests, tokens, sessions, outbox and access audit preserve all existing market/job data.
+- Server-side bootstrap creates exactly one owner from explicit identity, is idempotent, has no public route/default password, and documents recovery/last-owner protection.
+- Constraint, migration and concurrent-bootstrap tests pass; no real account is created without deployment identity input.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-096"></a>
+
+## NEM-096 — Deliver email verification and browser sessions
+
+- Repository: backend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-095](#nem-095)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Deliver email verification and browser sessions. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Implement provider-neutral durable email outbox and captured local mailbox; single-use hashed tokens, expiry, scanner-safe POST exchange and generic responses follow the specification.
+- Session rotation, idle/absolute expiry, logout, origin/CSRF checks, safe redirects and sensitive-log redaction are verified; production configuration fails closed.
+- Persist rate limits and test replay, concurrent consumption, enumeration, mail outage/resend and malicious return paths. Keep actual mail sending disabled in tests.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-097"></a>
+
+## NEM-097 — Enforce Admin capabilities and safe viewer responses
+
+- Repository: backend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-095](#nem-095), [NEM-096](#nem-096)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Enforce Admin capabilities and safe viewer responses. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Inventory every Admin route and define explicit owner/viewer/automation capabilities, including all list/detail/audit routes; unknown capabilities deny access.
+- Viewer schemas exclude personal information/secrets/raw diagnostics; direct writes and access-management reads return forbidden. Legacy bearer automation remains operational without authority to manage browser accounts.
+- HTTP matrix covers anonymous, applicant, expired/revoked viewer, active viewer, owner and bearer automation; grant revocation affects the next request and conflicting credentials are rejected.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-098"></a>
+
+## NEM-098 — Implement access requests approvals and grant lifecycle
+
+- Repository: backend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-096](#nem-096), [NEM-097](#nem-097)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Implement access requests approvals and grant lifecycle. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Verified-only approval queue and applicant-only request status implement duplicate/reapplication rules, limits and plain-text field validation.
+- Atomic approve/reject/extend/revoke operations create grants and email outbox records with audit; concurrent/stale decisions conflict safely and owner recent-auth is enforced.
+- Grant expiry, cleanup/retention, immediate session denial after revocation and email-failure recovery pass integration tests; no applicant data leaks through viewer endpoints.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-099"></a>
+
+## NEM-099 — Expose bounded console reads and publication provenance
+
+- Repository: backend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-097](#nem-097), [NEM-082](#nem-082)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Expose bounded console reads and publication provenance. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Provide bounded coverage/baseline readiness, job/history and publication projections needed by UI; reuse NEM-082 and existing endpoints before introducing new ones.
+- Stored versus published coverage, suite/version, counts, immutable evidence and highlight selection provenance are distinguished; insufficient baseline is not zero qualifying events.
+- Publication attempts/results record actor and correlation for lost-response reconciliation without auto-retry or changing intentional republish semantics. Contracts/captures and bounded-query measurements cover empty/partial and maximum windows.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-100"></a>
+
+## NEM-100 — Build Admin shell and guided read-only console
+
+- Repository: frontend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-097](#nem-097), [NEM-099](#nem-099)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Build Admin shell and guided read-only console. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Create separate apps/admin entry/build and generated clients with same-origin development proxy; public build excludes Admin code and secrets.
+- Coverage, Jobs, Publications and How it works render real safe API data, shared themes, workflow diagram/glossary, v2/baseline/Highlights explanations and immutable replay links.
+- Persistent read-only badge, permission-expiry cleanup, loading/empty/failure states and bounded polling pass keyboard and desktop/mobile browser checks. Early fixture design is allowed but task completes only on real integration.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-101"></a>
+
+## NEM-101 — Build request-access and sign-in experience
+
+- Repository: frontend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-096](#nem-096), [NEM-098](#nem-098), [NEM-100](#nem-100)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Build request-access and sign-in experience. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Public Admin welcome, request form, email verification, applicant status, sign-in and sign-out flow explain pending/approved/expired states without exposing account existence.
+- Token fragment is promptly removed; scanner-safe confirmation, safe return URLs, field errors and privacy/retention copy match the backend.
+- Mail-capture browser journeys cover expired/replayed links, mail failure and renewed access; auth pages use no third-party scripts and contain no token/localStorage shortcuts.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-102"></a>
+
+## NEM-102 — Track resumable bounded load operations
+
+- Repository: backend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-097](#nem-097), [NEM-099](#nem-099), [NEM-092](#nem-092)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Track resumable bounded load operations. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Persist scope/phase/child idempotency keys and job references; reuse existing grid and price queues, with <=31-day chunks and <=366-day UI operation cap.
+- Sequential/backpressured dispatch, reload reconciliation and explicit resume prevent orphan/duplicate requests; stop-dispatch differs from child cancellation. Do not automatically publish.
+- Integration tests cover partial submission, queue cap, crash between submission/link recording, duplicate resume, lease recovery, remaining-window resubmission and forbidden viewer actions.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-103"></a>
+
+## NEM-103 — Build guided owner import and publication workflow
+
+- Repository: frontend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-100](#nem-100), [NEM-102](#nem-102)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Build guided owner import and publication workflow. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Load data scope review, grid/price phases, per-day jobs, optional failures and authoritative coverage recheck match the actual runbook and persist across reload.
+- Explicit baseline import is separate; publication review limits scope to 31 days, defaults explicit v2 and explains latest-pointer replacement for long imports.
+- Owner-confirmed partial coverage, new-submission recovery, uncertain publish reconciliation and public replay result links work on real API; double-click/reload never silently republishes.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-104"></a>
+
+## NEM-104 — Build owner access management and audit screens
+
+- Repository: frontend
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-098](#nem-098), [NEM-100](#nem-100), [NEM-101](#nem-101)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Build owner access management and audit screens. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Owner-only pending/active/expired/revoked views show verified requests, optional messages and delivery states; approve 7/30/90 days, reject, extend and revoke.
+- Recent-auth prompts preserve safe intent without replaying stale decisions; access audit names actor/action/scope/result only for owner.
+- Concurrent decisions, request XSS strings, resend failure, empty lists and viewer direct navigation are tested; invalidation after revoke is demonstrated across sessions.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-105"></a>
+
+## NEM-105 — Publish Admin entry link and reconcile operator guidance
+
+- Repository: both
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-101](#nem-101), [NEM-103](#nem-103), [NEM-104](#nem-104)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Publish Admin entry link and reconcile operator guidance. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Add modest public Admin link only after working request/sign-in flow; link and browser navigation do not load private data or embed the operator bearer.
+- Update runbook for committed date-range refresh, v2/schema prerequisites, identity separation, load/publish semantics and safe recovery; UI help links agree with real endpoints.
+- Document owner bootstrap/recovery, email configuration/local mailbox, retention and deployment inputs. Keep historical decisions identifiable and avoid claiming production readiness.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-106"></a>
+
+## NEM-106 — Verify Admin access boundaries and resilience
+
+- Repository: both
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-103](#nem-103), [NEM-104](#nem-104), [NEM-105](#nem-105)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Verify Admin access boundaries and resilience. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Run complete route/capability and response-redaction matrix, CSRF/token replay/rate-limit tests, session revoke/expiry and concurrent approval tests.
+- Real API/worker/PostgreSQL/mail-capture journey covers request→approval→viewer access→denied write→revocation plus owner import→failure/recovery→v2 publication→saved replay.
+- Exercise queue-full, reload, mail outage, lost publication response and maximum bounded reads; record backend/contract/frontend checks with actual evidence and unresolved gaps.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-107"></a>
+
+## NEM-107 — Polish Admin UI and review M6 exit evidence
+
+- Repository: both
+- Milestone: M6 — Admin
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-106](#nem-106)
+- References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
+
+### Outcome
+
+Polish Admin UI and review M6 exit evidence. Deliver the corresponding accepted specification slice without changing existing public results.
+
+### Done when
+
+- Computer-use review at desktop/768/390/320px in Light/Dark/Auto; check keyboard/touch, focus/error announcements, reduced motion, overflow and owner/viewer states.
+- Owner and visitor can explain the pipeline and distinctions among data/detectors/publications/Highlights from the UI; validate honest coverage/baseline wording against live results.
+- Reconcile all M6 criteria and task evidence; close only if implementation and required local verification pass. Carry deployment/email-domain/hosted-CI checks explicitly to M7, without marking them verified.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
