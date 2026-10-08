@@ -3558,7 +3558,7 @@ inspector. Browser-verified on the real API: scope seeding, review, create,
 jobs-view jump, close/reopen draft restore, Escape + focus return; viewers
 still see zero owner affordances. `npm run check` green — both builds,
 contract, format, 126/126 public browser tests. Legacy `/load` and
-`/publications` pages remain mounted until NEM-114 retires them; queue-full
+`/publications` pages were retired by NEM-114 redirects; queue-full
 and session-expiry paths route through the same verified API layer.
 
 <a id="nem-113"></a>
@@ -3595,8 +3595,8 @@ subject/result, read-only inspector. Rail consolidates to Data Ops + owner-only
 Access (badge) + Public site; viewers get a single rail item and an owner-only
 fallback on the route. `components/HelpDrawer.tsx` moves workflow steps,
 glossary and detector explanation into a wide drawer opened from the appbar,
-prefaced with the caller's role and session expiry; `HowItWorksPage` renders
-the shared `HelpContent` until NEM-114 retires the route. Auth flows keep the
+prefaced with the caller's role and session expiry; NEM-114 redirects the old
+`/how-it-works` route into the drawer. Auth flows keep the
 secure token lifecycle untouched; the appbar now yields pickers under 720px —
 welcome/sign-in/request-access verified zero-overflow at 390px and 320px.
 `npm run check` green — both builds, contract, format, 126/126 public browser
@@ -3609,7 +3609,7 @@ tests.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-112](#nem-112), [NEM-113](#nem-113)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3625,7 +3625,24 @@ Migrate routes and verify Admin regressions, preserving delivered Admin capabili
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-09. `/admin/` is the only canonical workspace URL — view, region,
+`from`/`to` scope, `sel`, `type`, `tab` and `help` all restore from the query
+string. `LegacyRedirect` maps `/coverage`, `/load`, `/jobs`, `/publications`
+and `/how-it-works` into the workspace (`start`/`end` aliases translate to
+`from`/`to`); the legacy page components are deleted and the load draft helpers
+live in `LoadDrawer`, so job "Submit again" recovery opens the drawer in place
+instead of navigating. `HelpDrawer` opens via `help=1` from any route.
+
+New `tests-admin/` suite (`playwright.admin.config.ts`, `npm run test:admin`,
+wired into `npm run check`) — 19 API-mocked tests covering scope/selection URL
+restoration, draft-vs-applied scope, the 31-day bound rejection, tab/selection
+transitions, atomic activity-pane selection, Back/Forward, invalid-param
+recovery without mutations, every legacy redirect, load/publish drawer
+journeys (single dispatch, coverage gate + acknowledge, explicit v2), Access
+approve/extend/revoke/recent-auth/audit journeys, viewer read-only boundary,
+anonymous welcome, auth widths and expired-session return. The public suite
+(126 tests) still passes alongside it; `npm run check` green — contract, format,
+both builds, 126 public + 19 admin browser tests.
 
 <a id="nem-115"></a>
 
