@@ -25,6 +25,9 @@ class WorkerSettings(DatabaseSettings):
     grid_import_poll_ms: int = Field(default=5000, ge=1)
     simulation_enabled: bool = False
     simulation_poll_ms: int = Field(default=5000, ge=1)
+    mail_enabled: bool = False
+    mail_poll_ms: int = Field(default=5000, ge=1)
+    mail_dir: str = ""
     open_electricity_api_key: str | None = Field(
         default=None, validation_alias="OPEN_ELECTRICITY_API_KEY"
     )
@@ -43,6 +46,14 @@ class WorkerSettings(DatabaseSettings):
             raise ValueError(
                 "Grid import poll interval must be between 1000 and 60000 ms"
             )
+        if self.mail_enabled:
+            if not 1000 <= self.mail_poll_ms <= 60_000:
+                raise ValueError("Mail poll interval must be between 1000 and 60000 ms")
+            if not self.mail_dir.strip():
+                raise ValueError(
+                    "NEMLAB_MAIL_DIR is required when the mail outbox poller"
+                    " is enabled — there is no live-recipient transport"
+                )
         needs_key = self.worker_enabled or self.grid_import_enabled
         if not needs_key:
             return self

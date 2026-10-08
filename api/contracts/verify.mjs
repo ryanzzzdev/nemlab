@@ -11,6 +11,7 @@ addFormats(ajv);
 ajv.addFormat("int64", { type: "number", validate: Number.isInteger });
 const routes = Object.entries(api.paths).flatMap(([path, methods]) =>
   Object.entries(methods).map(([method, operation]) => ({
+    path,
     method,
     operation,
     pattern: new RegExp(`^${path.replace(/\{[^}]+\}/g, "[^/]+")}$`),
@@ -27,10 +28,15 @@ function validate(schema, value, label) {
   assert(check(value), `${label}: ${ajv.errorsText(check.errors)}`);
 }
 
+const SESSION_PATHS = new Set(["/api/auth/v1/session", "/api/auth/v1/logout"]);
 for (const route of routes) {
   const { operation } = route;
-  const admin = route.pattern.source.includes("admin");
-  assert.deepEqual(operation.security, admin ? [{ operatorBearer: [] }] : []);
+  const expected = route.path.startsWith("/api/admin/")
+    ? [{ operatorBearer: [] }]
+    : SESSION_PATHS.has(route.path)
+      ? [{ sessionCookie: [] }]
+      : [];
+  assert.deepEqual(operation.security, expected);
   for (const response of Object.values(operation.responses)) {
     const schema = response.content?.["application/json"]?.schema;
     if (schema) {

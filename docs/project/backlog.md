@@ -2947,7 +2947,7 @@ Verified: `uv run pytest infrastructure/tests/test_admin_identity.py infrastruct
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-095](#nem-095)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -2963,7 +2963,13 @@ Deliver email verification and browser sessions. Deliver the corresponding accep
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. `nemlab_infrastructure.admin` gains `auth.py` (`AdminAuth` — single-use 15-minute sign-in tokens hashed at rest, fragment-carried POST exchange, opaque 30-minute-idle/8-hour-absolute sessions with idle sliding, revocation on logout and on user-disable/grant-lapse at the next request, applicant-session support via `request_id`, `prune_expired` housekeeping and deterministic `sha256("csrf:"+raw)` CSRF derivation that needs no stored secret), `mail.py` (`MailTransport` protocol, `LocalMailbox` captured transport writing `.eml` files — the only transport this build ships, `OutboxMailer` draining `admin_email_outbox` inside `SKIP LOCKED` transactions with linear backoff and terminal `failed` after five attempts) and `rate_limit.py` (atomic fixed-window upserts into `admin_rate_limit`, shared across processes, with `prune`).
+
+API: `/api/auth/v1/sign-in-requests` (generic 202; IP 20/hr → 429, per-email 5/hr + 60 s resend cooldown + global daily budget silently skip the send — no enumeration signal), `/api/auth/v1/sessions` (exchange; every failure is `INVALID_TOKEN`, counted per-IP → `RATE_LIMITED` past 10/15 min), `GET /api/auth/v1/session`, `POST /api/auth/v1/logout` (CSRF header + same-origin Origin/Referer, revokes and clears the cookie). Cookie is `nemlab_session`, HttpOnly SameSite=Lax host-only, Secure unless `NEMLAB_ENVIRONMENT=development` + `NEMLAB_INSECURE_COOKIES=true` — that combination refuses to start in production posture. Cookie+bearer conflicts are rejected deterministically; `/api/auth/**` query strings are dropped from the request log. New settings: `NEMLAB_ADMIN_BASE_URL` (required when admin enabled), `NEMLAB_ENVIRONMENT`, `NEMLAB_INSECURE_COOKIES` and the five `NEMLAB_ADMIN_*` rate-limit knobs from the spec defaults. Worker: `NEMLAB_MAIL_ENABLED` + `NEMLAB_MAIL_DIR` + `NEMLAB_MAIL_POLL_MS` runs `MailWorker` on the existing poll loop. `python -m nemlab_infrastructure.admin seed-session --email E` prints a raw session/CSRF pair only under `NEMLAB_ENVIRONMENT=development`.
+
+Tests: 14 service tests (`test_admin_auth.py`) — queue/unknown/disabled silence, exchange+replay+logout, garbage/expired tokens, threaded double-exchange lands one session, idle/absolute expiry, viewer grant revocation denying the next resolve, prune, mailbox drain, retry→terminal failure, limiter windows/prune, dev-gated seed CLI. 10 HTTP tests (`test_auth_http.py`) — generic response parity, full cookie journey incl. CSRF/origin rejection, replay, exchange-limit 429, IP-limit 429, cookie+bearer conflict, forged cookie, validation, log redaction, production fails-closed and required base URL. 4 worker tests (`test_mail.py`) — settings gate, deliver/start/stop, idle without flags.
+
+Verified: targeted suites pass; `verify.mjs` — 149 responses, 28 operations (openapi 2.2.0 adds the four auth operations, `sessionCookie` scheme and a `SESSION_PATHS` rule in `verify.mjs`); ruff/mypy-strict/lint-imports clean; full suite 520 passed.
 
 <a id="nem-097"></a>
 

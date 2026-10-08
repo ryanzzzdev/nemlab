@@ -20,6 +20,7 @@ def test_flags_read_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(
         "NEMLAB_ADMIN_TOKEN", "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
     )
+    monkeypatch.setenv("NEMLAB_ADMIN_BASE_URL", "http://localhost:5173/admin")
     monkeypatch.setenv("NEMLAB_DB_PASSWORD", "test-password")
     settings = ApiSettings()
     assert settings.data_enabled

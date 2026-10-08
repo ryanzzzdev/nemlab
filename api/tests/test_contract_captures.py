@@ -472,6 +472,33 @@ def test_contract_captures(
                 sa.text("ALTER TABLE missing_price_current RENAME TO price_current")
             )
 
+    # -- browser auth (NEM-096) ------------------------------------------------
+
+    from nemlab_infrastructure.admin.identity import AdminIdentity
+
+    AdminIdentity(scratch_db).bootstrap_owner("Owner", "owner@example.test")
+    AUTH_BASE = "/api/auth/v1"
+    post(f"{AUTH_BASE}/sign-in-requests", {"email": "owner@example.test"})
+    post(f"{AUTH_BASE}/sign-in-requests", {"email": "not-an-email"})
+    post(f"{AUTH_BASE}/sessions", {"token": "bogus"})
+    with scratch_db.connect() as conn:
+        mail_body = conn.execute(
+            sa.text("SELECT body FROM admin_email_outbox LIMIT 1")
+        ).scalar_one()
+    raw = mail_body.split("#token=")[1].split("\n")[0]
+    exchanged = post(f"{AUTH_BASE}/sessions", {"token": raw})
+    assert exchanged.status_code == 200
+    csrf = exchanged.json()["csrfToken"]
+    get(f"{AUTH_BASE}/session")
+    origin = {"Origin": "http://testserver"}
+    post(f"{AUTH_BASE}/logout")  # 403 — no CSRF
+    post(f"{AUTH_BASE}/logout", headers={**origin, "x-csrf-token": "wrong"})
+    post(f"{AUTH_BASE}/logout", headers={**origin, "x-csrf-token": csrf})
+    get(f"{AUTH_BASE}/session")  # 401 — session revoked
+    for i in range(20):
+        post(f"{AUTH_BASE}/sign-in-requests", {"email": f"limit{i}@example.test"})
+    post(f"{AUTH_BASE}/sign-in-requests", {"email": "over@example.test"})
+
     # Refresh-queue saturation last: any earlier fill would starve the visitor
     # submissions above, and ``claim`` picks the oldest pending job.
     from nemlab_infrastructure.jobs import (
@@ -501,5 +528,19 @@ def test_contract_captures(
 
     written = list(CAPTURES.glob("*.json"))
     statuses = sorted({json.loads(f.read_text())["status"] for f in written})
-    assert statuses == [200, 201, 202, 400, 401, 404, 409, 413, 415, 429, 503]
+    assert statuses == [
+        200,
+        201,
+        202,
+        204,
+        400,
+        401,
+        403,
+        404,
+        409,
+        413,
+        415,
+        429,
+        503,
+    ]
     assert len(written) >= 45

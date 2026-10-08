@@ -22,7 +22,7 @@ INVALID_ADMIN_REQUEST = "Check the request fields, completed market day and iden
 STORAGE_PRICE = "Price storage is unavailable"
 STORAGE_ADMIN = "Refresh storage is temporarily unavailable"
 
-_ADMIN_PATH = re.compile(r"^/api/admin(?:/|$)")
+_ADMIN_PATH = re.compile(r"^/api/(?:admin|auth|access)(?:/|$)")
 
 
 class ApiError(Exception):

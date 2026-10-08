@@ -27,9 +27,28 @@ class ApiSettings(DatabaseSettings):
     admin_enabled: bool = False
     admin_operator: str = ""
     admin_token: str = ""
+    admin_base_url: str = ""
+    environment: str = "production"
+    insecure_cookies: bool = False
+    admin_mail_per_email_hour: int = 5
+    admin_mail_per_ip_hour: int = 20
+    admin_resend_cooldown_seconds: int = 60
+    admin_exchange_fail_per_ip: int = 10
+    admin_mail_budget_per_day: int = 200
+
+    @property
+    def secure_cookies(self) -> bool:
+        """Cookies are Secure unless explicit development relaxation is on."""
+        return not self.insecure_cookies
 
     @model_validator(mode="after")
     def _enabled_features_have_credentials(self) -> "ApiSettings":
+        if self.environment not in ("production", "development"):
+            raise ValueError("NEMLAB_ENVIRONMENT must be 'production' or 'development'")
+        if self.insecure_cookies and self.environment != "development":
+            raise ValueError(
+                "NEMLAB_INSECURE_COOKIES requires NEMLAB_ENVIRONMENT=development"
+            )
         if self.data_enabled or self.admin_enabled or self.simulation_api_enabled:
             for name in ("db_url", "db_user", "db_password"):
                 if not getattr(self, name).strip():
@@ -50,4 +69,12 @@ class ApiSettings(DatabaseSettings):
                 raise ValueError("Invalid operator identifier")
             if not TOKEN_PATTERN.fullmatch(self.admin_token):
                 raise ValueError("Admin token must be 43-128 base64url characters")
+            base = self.admin_base_url
+            if not (base.startswith("http://") or base.startswith("https://")) or any(
+                mark in base for mark in ("?", "#", " ")
+            ):
+                raise ValueError(
+                    "NEMLAB_ADMIN_BASE_URL is required when admin controls are"
+                    " enabled and must be a plain http(s) origin plus path"
+                )
         return self

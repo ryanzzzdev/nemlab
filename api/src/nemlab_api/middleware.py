@@ -58,7 +58,9 @@ class RequestLogging(BaseHTTPMiddleware):
             return response
         finally:
             target = request.url.path
-            if request.url.query:
+            # Authentication material must never reach the request log —
+            # auth-family query strings are dropped outright (NEM-096).
+            if request.url.query and not target.startswith("/api/auth/"):
                 target += "?" + request.url.query
             LOG.info(
                 "%s %s -> %s (%d ms)",

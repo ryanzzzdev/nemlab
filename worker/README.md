@@ -26,6 +26,16 @@ Requires `OPEN_ELECTRICITY_API_KEY`, `NEMLAB_DB_*` and a migrated schema.
 `python -m nemlab_worker --fetch-price REGION DAY OUT` — with a cleared
 environment carrying only the OE key, a 240 s watchdog and a 256 KB output cap.
 
+## Admin mail outbox (`NEMLAB_MAIL_ENABLED`)
+
+Drains `admin_email_outbox` on `NEMLAB_MAIL_POLL_MS` (1000–60000) — the
+spec's "existing worker poll cycle" for transactional Admin email
+(NEM-096). `NEMLAB_MAIL_DIR` is required and names the captured-mailbox
+directory: the only M6 transport writes one `.eml`-style file per message
+(`To:`/`Subject:`/body), so this build can never reach a live recipient.
+Deliveries retry with linear backoff and go terminally `failed` after
+five attempts with a classified diagnostic.
+
 ## Simulation execution (`NEMLAB_SIMULATION_ENABLED`)
 
 No OE credential needed. `NEMLAB_SIMULATION_POLL_MS` bounds the poll interval.

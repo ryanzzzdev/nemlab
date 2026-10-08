@@ -370,6 +370,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/v1/sign-in-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue a sign-in email when the address belongs to an enabled grant-active account; the 202 response is identical whether or not an account exists */
+        post: operations["requestSignIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/v1/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Consume a single-use sign-in token and open a session cookie; every failure is the same INVALID_TOKEN so unknown, expired and replayed links are indistinguishable */
+        post: operations["exchangeSignInToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/v1/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current session principal and CSRF token */
+        get: operations["getSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/v1/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke the session; requires X-CSRF-Token and same-origin Origin/Referer */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -923,6 +991,24 @@ export interface components {
         JobSet: {
             /** @description One job per market day in the submitted window, in day order. */
             jobs: components["schemas"]["Job"][];
+        };
+        SignInRequest: {
+            email: string;
+        };
+        SignInAccepted: {
+            /** @enum {string} */
+            status: "accepted";
+        };
+        TokenExchange: {
+            token: string;
+        };
+        SessionView: {
+            /** @enum {string} */
+            role: "owner" | "viewer" | "applicant";
+            name: string;
+            /** Format: date-time */
+            expiresAt: string;
+            csrfToken: string;
         };
     };
     responses: never;
@@ -2678,6 +2764,249 @@ export interface operations {
                     "application/json": {
                         /** @enum {string} */
                         code: "EVENT_NOT_FOUND" | "REPLAY_NOT_FOUND";
+                        message: string;
+                    };
+                };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    requestSignIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignInRequest"];
+            };
+        };
+        responses: {
+            /** @description Generic acceptance — no account-existence signal */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignInAccepted"];
+                };
+            };
+            /** @description INVALID_REQUEST */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "INVALID_REQUEST";
+                        message: string;
+                    };
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        message: string;
+                    };
+                };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    exchangeSignInToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenExchange"];
+            };
+        };
+        responses: {
+            /** @description Session established; the opaque token is set as an HttpOnly SameSite=Lax cookie */
+            200: {
+                headers: {
+                    "Set-Cookie": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description INVALID_REQUEST */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "INVALID_REQUEST";
+                        message: string;
+                    };
+                };
+            };
+            /** @description INVALID_TOKEN */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "INVALID_TOKEN";
+                        message: string;
+                    };
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "RATE_LIMITED";
+                        message: string;
+                    };
+                };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    getSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description UNAUTHORISED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                        message: string;
+                    };
+                };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session revoked; cookie cleared */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description UNAUTHORISED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                        message: string;
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
                         message: string;
                     };
                 };

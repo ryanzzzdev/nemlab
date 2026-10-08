@@ -312,9 +312,7 @@ def test_alembic_upgrade_and_downgrade(
     db_name = scratch_db.url.database
     assert db_name is not None
     base = DatabaseSettings()
-    monkeypatch.setenv(
-        "NEMLAB_DB_URL", base.db_url.rsplit("/", 1)[0] + "/" + db_name
-    )
+    monkeypatch.setenv("NEMLAB_DB_URL", base.db_url.rsplit("/", 1)[0] + "/" + db_name)
     monkeypatch.setenv("NEMLAB_DB_USER", base.db_user)
     monkeypatch.setenv("NEMLAB_DB_PASSWORD", base.db_password)
     cfg = Config()

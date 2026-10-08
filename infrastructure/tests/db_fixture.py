@@ -72,10 +72,15 @@ def apply_grid_schema(engine: sa.Engine) -> None:
         conn.exec_driver_sql(migration_text("V7__detector_v2.sql"))
 
 
-def apply_admin_schema(engine: sa.Engine) -> None:
-    """The grid schema plus the V8 admin-identity tables."""
+def apply_admin_tables(engine: sa.Engine) -> None:
+    """Only the V8 admin-identity tables — composable after any schema."""
     from nemlab_infrastructure.schema import migration_text
 
-    apply_grid_schema(engine)
     with engine.begin() as conn:
         conn.exec_driver_sql(migration_text("V8__admin_identity.sql"))
+
+
+def apply_admin_schema(engine: sa.Engine) -> None:
+    """The grid schema plus the V8 admin-identity tables."""
+    apply_grid_schema(engine)
+    apply_admin_tables(engine)

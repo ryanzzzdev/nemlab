@@ -14,6 +14,7 @@ import threading
 from pydantic import ValidationError
 
 from nemlab_core.prices import Region
+from nemlab_infrastructure.admin.mail import LocalMailbox, OutboxMailer
 from nemlab_infrastructure.database import create_bounded_engine
 from nemlab_infrastructure.grid.imports import GridImportJobs
 from nemlab_infrastructure.grid.store import GridStore
@@ -28,6 +29,7 @@ from nemlab_worker.grid import (
     GridImportWorker,
     run_grid_fetch_command,
 )
+from nemlab_worker.mail import MailWorker
 from nemlab_worker.refresh import (
     MODE,
     PriceFetchProcess,
@@ -55,12 +57,13 @@ def run(settings: WorkerSettings, stop: threading.Event) -> None:
         not settings.worker_enabled
         and not settings.simulation_enabled
         and not settings.grid_import_enabled
+        and not settings.mail_enabled
     ):
         logger.info("worker idle: all features disabled")
         stop.wait()
         return
     engine = create_bounded_engine(settings)
-    workers: list[RefreshWorker | SimulationWorker | GridImportWorker] = []
+    workers: list[RefreshWorker | SimulationWorker | GridImportWorker | MailWorker] = []
     try:
         api_key = settings.open_electricity_api_key
         if settings.worker_enabled:
@@ -97,6 +100,13 @@ def run(settings: WorkerSettings, stop: threading.Event) -> None:
                     SimulationJobs(engine),
                     SimulationProcess(),
                     settings.simulation_poll_ms / 1000,
+                )
+            )
+        if settings.mail_enabled:
+            workers.append(
+                MailWorker(
+                    OutboxMailer(engine, LocalMailbox(settings.mail_dir)),
+                    settings.mail_poll_ms / 1000,
                 )
             )
         for worker in workers:

@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from sqlalchemy.engine import Engine
 
 from nemlab_api.admin import admin_router
+from nemlab_api.auth import auth_router
 from nemlab_api.errors import register_error_handlers
 from nemlab_api.events import events_router
 from nemlab_api.grid_coverage import grid_coverage_router
@@ -28,6 +29,8 @@ from nemlab_api.middleware import (
 from nemlab_api.prices import prices_router
 from nemlab_api.settings import ApiSettings
 from nemlab_api.simulations import register_simulation_errors, simulations_router
+from nemlab_infrastructure.admin.auth import AdminAuth
+from nemlab_infrastructure.admin.rate_limit import RateLimiter
 from nemlab_infrastructure.database import create_bounded_engine
 from nemlab_infrastructure.grid.events import GridCatalogue
 from nemlab_infrastructure.grid.imports import GridImportJobs
@@ -103,6 +106,13 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
                 OperatorBearer,
                 operator=settings.admin_operator,
                 token=settings.admin_token,
+            )
+            app.include_router(
+                auth_router(
+                    AdminAuth(engine, base_url=settings.admin_base_url),
+                    RateLimiter(engine),
+                    settings,
+                )
             )
             app.include_router(admin_router(RefreshJobService(engine, prices)))
             register_grid_errors(app)

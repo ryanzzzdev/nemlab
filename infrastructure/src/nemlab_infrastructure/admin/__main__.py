@@ -8,14 +8,19 @@ Server-side only — there is no public bootstrap route by design (NEM-095).
   recovery path: disables the current owner, revokes its sessions and
   creates the replacement. Protecting the last owner is an application
   rule enforced on ordinary revoke paths, not on this command.
+- ``seed-session --email E`` prints a raw session/CSRF pair for local
+  development; it refuses unless ``NEMLAB_ENVIRONMENT=development`` and
+  never creates a backdoor — it is a plain session over the same checks.
 """
 
 import argparse
+import os
 import sys
 
 import sqlalchemy as sa
 from sqlalchemy import create_engine
 
+from nemlab_infrastructure.admin.auth import AdminAuth, csrf_for
 from nemlab_infrastructure.admin.identity import AdminIdentity, OwnerExists
 from nemlab_infrastructure.settings import DatabaseSettings
 
@@ -34,7 +39,44 @@ def main(argv: list[str] | None = None) -> int:
             action="store_true",
             help="confirm the supplied owner identity is intended",
         )
+    seed = commands.add_parser(
+        "seed-session",
+        help="print a raw session token for a local account;"
+        " requires NEMLAB_ENVIRONMENT=development",
+    )
+    seed.add_argument("--email", required=True)
     args = parser.parse_args(argv)
+
+    if args.command == "seed-session":
+        if os.environ.get("NEMLAB_ENVIRONMENT") != "development":
+            print(
+                "nemlab-admin: seed-session requires"
+                " NEMLAB_ENVIRONMENT=development — it cannot run against a"
+                " production deployment",
+                file=sys.stderr,
+            )
+            return 2
+        engine = create_engine(DatabaseSettings().sqlalchemy_url())
+        try:
+            raw, principal = AdminAuth(engine, base_url="").seed_session(args.email)
+            print(f"session for {principal.name} ({principal.role}):")
+            print(f"  token: {raw}")
+            print(f"  csrf: {csrf_for(raw)}")
+            print(f"  expires: {principal.expires_at.isoformat()}")
+            return 0
+        except ValueError as ex:
+            print(f"nemlab-admin: {ex}", file=sys.stderr)
+            return 2
+        except sa.exc.SQLAlchemyError:
+            print(
+                "nemlab-admin: database unavailable or V8 schema missing —"
+                " run `migrate` first",
+                file=sys.stderr,
+            )
+            return 1
+        finally:
+            engine.dispose()
+
     if not args.confirm:
         print(
             f"nemlab-admin: {args.command} refused without --confirm",

@@ -2,8 +2,8 @@
  "openapi": "3.0.3",
  "info": {
   "title": "NEMLab shared API",
-  "version": "2.1.0",
-  "description": "Independently enabled price reads, operator controls, bounded grid imports and simulation lifecycle. Disabled routes return 404. Market dates use fixed UTC+10. Simulation bodies are at most 16384 bytes and decimal inputs are strings. The public GridReplay catalogue and replay API are not yet implemented; grid imports are operator-only."
+  "version": "2.2.0",
+  "description": "Independently enabled price reads, operator controls, bounded grid imports, simulation lifecycle and browser-admin authentication. Disabled routes return 404. Market dates use fixed UTC+10. Simulation bodies are at most 16384 bytes and decimal inputs are strings. The public GridReplay catalogue and replay API are not yet implemented; grid imports are operator-only."
  },
  "paths": {
   "/api/v1/prices/{region}/coverage": {
@@ -3544,6 +3544,423 @@
      }
     }
    }
+  },
+  "/api/auth/v1/sign-in-requests": {
+   "post": {
+    "operationId": "requestSignIn",
+    "summary": "Queue a sign-in email when the address belongs to an enabled grant-active account; the 202 response is identical whether or not an account exists",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SignInRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "202": {
+      "description": "Generic acceptance \u2014 no account-existence signal",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SignInAccepted"
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "INVALID_REQUEST",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "INVALID_REQUEST"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "RATE_LIMITED",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "RATE_LIMITED"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "STORAGE_UNAVAILABLE",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "STORAGE_UNAVAILABLE"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "security": []
+   }
+  },
+  "/api/auth/v1/sessions": {
+   "post": {
+    "operationId": "exchangeSignInToken",
+    "summary": "Consume a single-use sign-in token and open a session cookie; every failure is the same INVALID_TOKEN so unknown, expired and replayed links are indistinguishable",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TokenExchange"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Session established; the opaque token is set as an HttpOnly SameSite=Lax cookie",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      },
+      "headers": {
+       "Set-Cookie": {
+        "required": true,
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "INVALID_REQUEST",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "INVALID_REQUEST"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "INVALID_TOKEN",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "INVALID_TOKEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "RATE_LIMITED",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "RATE_LIMITED"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "STORAGE_UNAVAILABLE",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "STORAGE_UNAVAILABLE"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "security": []
+   }
+  },
+  "/api/auth/v1/session": {
+   "get": {
+    "operationId": "getSession",
+    "summary": "Current session principal and CSRF token",
+    "security": [
+     {
+      "sessionCookie": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Active session",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionView"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "UNAUTHORISED",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "UNAUTHORISED"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "STORAGE_UNAVAILABLE",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "STORAGE_UNAVAILABLE"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/auth/v1/logout": {
+   "post": {
+    "operationId": "logout",
+    "summary": "Revoke the session; requires X-CSRF-Token and same-origin Origin/Referer",
+    "security": [
+     {
+      "sessionCookie": []
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Session revoked; cookie cleared"
+     },
+     "401": {
+      "description": "UNAUTHORISED",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "UNAUTHORISED"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "FORBIDDEN",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "STORAGE_UNAVAILABLE",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "STORAGE_UNAVAILABLE"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -3552,6 +3969,12 @@
     "type": "http",
     "scheme": "bearer",
     "description": "Locally configured opaque operator token; never embed in the public frontend."
+   },
+   "sessionCookie": {
+    "type": "apiKey",
+    "in": "cookie",
+    "name": "nemlab_session",
+    "description": "Opaque server-side session; HttpOnly SameSite=Lax. Cookie-authenticated mutations additionally require the X-CSRF-Token header and a same-origin Origin/Referer."
    }
   },
   "schemas": {
@@ -5528,6 +5951,78 @@
        "$ref": "#/components/schemas/Job"
       },
       "description": "One job per market day in the submitted window, in day order."
+     }
+    }
+   },
+   "SignInRequest": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "email"
+    ],
+    "properties": {
+     "email": {
+      "type": "string",
+      "maxLength": 254
+     }
+    }
+   },
+   "SignInAccepted": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "status"
+    ],
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "accepted"
+      ]
+     }
+    }
+   },
+   "TokenExchange": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "token"
+    ],
+    "properties": {
+     "token": {
+      "type": "string"
+     }
+    }
+   },
+   "SessionView": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "role",
+     "name",
+     "expiresAt",
+     "csrfToken"
+    ],
+    "properties": {
+     "role": {
+      "type": "string",
+      "enum": [
+       "owner",
+       "viewer",
+       "applicant"
+      ]
+     },
+     "name": {
+      "type": "string"
+     },
+     "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "csrfToken": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64
      }
     }
    }

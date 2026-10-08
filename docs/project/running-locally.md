@@ -45,18 +45,39 @@ uv run nemlab-worker       # no HTTP port; idles with all flags off
 ```
 
 The API honours `NEMLAB_DATA_ENABLED` (public price reads),
-`NEMLAB_ADMIN_ENABLED` (operator routes, requiring `NEMLAB_ADMIN_OPERATOR` and a
-43–128 character base64url `NEMLAB_ADMIN_TOKEN`) and
+`NEMLAB_ADMIN_ENABLED` (operator routes and browser auth, requiring
+`NEMLAB_ADMIN_OPERATOR`, a 43–128 character base64url `NEMLAB_ADMIN_TOKEN`
+and `NEMLAB_ADMIN_BASE_URL` — the Admin UI origin+path used in sign-in
+links, e.g. `http://localhost:5173/admin`) and
 `NEMLAB_SIMULATION_API_ENABLED` (public simulation lifecycle).
 `SERVER_ADDRESS` and `PORT` select the bind. With all flags off the API starts
 health-only; any enabled flag requires `NEMLAB_DB_*` and a migrated schema.
+Sessions use Secure cookies by default; `NEMLAB_ENVIRONMENT=development`
+plus `NEMLAB_INSECURE_COOKIES=true` relaxes that for local http — the
+combination refuses to start under `production`.
+
+Browser sign-in is email-link only: `POST /api/auth/v1/sign-in-requests`
+queues a durable outbox row, `POST /api/auth/v1/sessions` exchanges the
+fragment token for an HttpOnly cookie, and `POST /api/auth/v1/logout`
+revokes (CSRF + same-origin required). For local development, seed an
+owner then mint a session without mail:
+
+```sh
+uv run python -m nemlab_infrastructure.admin bootstrap-owner \
+    --name "Owner" --email "owner@example.test" --confirm
+NEMLAB_ENVIRONMENT=development \
+    uv run python -m nemlab_infrastructure.admin seed-session \
+    --email "owner@example.test"
+```
 
 The worker honours `NEMLAB_WORKER_ENABLED` (refresh polling — requires
 `OPEN_ELECTRICITY_API_KEY`), `NEMLAB_WORKER_SCHEDULE_ENABLED`,
 `NEMLAB_WORKER_REGIONS`, `NEMLAB_WORKER_POLL_MS`, `NEMLAB_GRID_IMPORT_ENABLED`
 (GridReplay imports — also requires `OPEN_ELECTRICITY_API_KEY`),
-`NEMLAB_GRID_IMPORT_POLL_MS`, `NEMLAB_SIMULATION_ENABLED` and
-`NEMLAB_SIMULATION_POLL_MS`. Fetch and simulation children run isolated
+`NEMLAB_GRID_IMPORT_POLL_MS`, `NEMLAB_SIMULATION_ENABLED`,
+`NEMLAB_SIMULATION_POLL_MS`, and `NEMLAB_MAIL_ENABLED` with `NEMLAB_MAIL_DIR`
+(Admin outbox drain — writes captured `.eml` files, never a live recipient)
+and `NEMLAB_MAIL_POLL_MS`. Fetch and simulation children run isolated
 with cleared environments and bounded deadlines; stopping the worker releases
 claims as `WORKER_STOPPED`.
 
