@@ -6,7 +6,7 @@ synchronous: the frozen detectors evaluate at most 31 stored market days, so
 no network access or worker round-trip is needed.
 """
 
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -27,6 +27,9 @@ class Submission(BaseModel):
     region: Region
     startDay: IsoDate
     endExclusive: IsoDate
+    # Publishing detector-v2 event types is an explicit operator choice;
+    # absent means the frozen v1 suite.
+    detectorSuite: Literal["v1", "v2"] = "v1"
 
 
 def _view(publication: Publication) -> dict[str, Any]:
@@ -48,7 +51,10 @@ def grid_publications_router(catalogue: GridCatalogue) -> APIRouter:
     @router.post(BASE)
     def publish(submission: Submission) -> Response:
         publication = catalogue.publish(
-            submission.region, submission.startDay, submission.endExclusive
+            submission.region,
+            submission.startDay,
+            submission.endExclusive,
+            suite=submission.detectorSuite,
         )
         return JSONResponse(
             _view(publication),

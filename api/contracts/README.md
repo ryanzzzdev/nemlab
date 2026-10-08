@@ -93,3 +93,15 @@ TypeScript consumer check document usage. Actual HTTP tests capture 200/202, val
 coverage, pending/failed results, queue capacity, body/media limits and storage failures.
 Regeneration must remain byte-for-byte reproducible. After committing this backend
 contract, sync the frontend snapshot with `npm run contract:sync` in the sibling repo.
+
+## Version 2.0.0 — GridReplay discovery
+
+Adds `gridEventHighlights` and `gridEventPreview` plus typed `sort`,
+`minDurationMinutes`, `valueGte`/`valueLte` and `publication` query parameters,
+and `matchingTotal`/`typeTotals` scope totals on `listGridEvents`.
+`GridEventType` is extended with the detector-v2 types — a closed-enum
+extension reviewed under the compatibility policy: wire readers must treat
+unknown event types as opaque strings rather than failing. `detail` on event
+summaries/details carries immutable per-event evidence (never detector config)
+and is `null` for the original v1 types. Cursors now bind the normalised
+query; a cursor reused under a different query is INVALID_REQUEST.

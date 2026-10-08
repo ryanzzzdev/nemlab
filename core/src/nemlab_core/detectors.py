@@ -15,18 +15,35 @@ not presented as a finished run.
 
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
+from nemlab_core.prices import NEM_OFFSET
+
 DETECTOR_VERSION = "v1"
+DETECTOR_VERSION_V2 = "v2"
 
 MIN_RUN_INTERVALS = 3
 SPIKE_THRESHOLD = Decimal("1000")
 RAMP_WINDOW_INTERVALS = 36
 RAMP_WINDOW_OBSERVATIONS = RAMP_WINDOW_INTERVALS + 1
 INTERVALS_PER_DAY = 288
+
+# Frozen detector-v2 parameters (decision 022, calibrated in NEM-087).
+REVERSAL_LOOKAHEAD_INTERVALS = 72  # 6 h of five-minute intervals
+REVERSAL_PEAK_MIN = Decimal("300")  # AUD/MWh
+REVERSAL_RISE_MIN = Decimal("300")  # AUD/MWh trough-to-peak
+EPISODE_MAX_GAP_INTERVALS = 3  # <= 15 minutes between members
+EPISODE_MAX_GAP_PRICE = Decimal("50")  # AUD/MWh, intervening observations
+EPISODE_MAX_TOTAL_GAP_INTERVALS = 6  # <= 30 minutes cumulative
+EPISODE_MIN_MEMBERS = 2
+RAMP_BASELINE_DAYS = 90
+RAMP_MIN_COMPLETE_DAYS = 60
+RAMP_MIN_CLASS_DAYS = 20
+RAMP_QUANTILE_PERCENT = 90
+RAMP_MIN_RISE_MW = Decimal("1000")
 
 # Canonical detector parameters — embedded verbatim in stored events.
 DETECTOR_PARAMS = {
@@ -45,6 +62,41 @@ DETECTOR_PARAMS = {
         "per_day": True,
         "tie": "earliest",
     },
+    "unusual_demand_ramp": {
+        "window_intervals": RAMP_WINDOW_INTERVALS,
+        "baseline_days": RAMP_BASELINE_DAYS,
+        "min_complete_days": RAMP_MIN_COMPLETE_DAYS,
+        "min_class_days": RAMP_MIN_CLASS_DAYS,
+        "quantile": "P90",
+        "quantile_method": "nearest_rank",
+        "comparison": "gt",
+        "min_rise_mw": str(RAMP_MIN_RISE_MW),
+        "class": "weekday_weekend",
+    },
+    "price_reversal": {
+        "min_run_intervals": MIN_RUN_INTERVALS,
+        "peak_at_least": str(REVERSAL_PEAK_MIN),
+        "rise_at_least": str(REVERSAL_RISE_MIN),
+        "lookahead_intervals": REVERSAL_LOOKAHEAD_INTERVALS,
+        "tie": "highest_then_earliest",
+    },
+    "negative_price_episode": {
+        "max_gap_intervals": EPISODE_MAX_GAP_INTERVALS,
+        "max_gap_price": str(EPISODE_MAX_GAP_PRICE),
+        "max_total_gap_intervals": EPISODE_MAX_TOTAL_GAP_INTERVALS,
+        "min_members": EPISODE_MIN_MEMBERS,
+    },
+}
+
+# Event rows carry the version of the rule that produced them; v1 rules are
+# unchanged under the v2 suite so their rows keep "v1".
+DETECTOR_VERSIONS = {
+    "negative_price_run": DETECTOR_VERSION,
+    "price_spike": DETECTOR_VERSION,
+    "demand_ramp": DETECTOR_VERSION,
+    "unusual_demand_ramp": DETECTOR_VERSION_V2,
+    "price_reversal": DETECTOR_VERSION_V2,
+    "negative_price_episode": DETECTOR_VERSION_V2,
 }
 
 
@@ -52,6 +104,9 @@ class EventType(StrEnum):
     NEGATIVE_PRICE_RUN = "negative_price_run"
     PRICE_SPIKE = "price_spike"
     DEMAND_RAMP = "demand_ramp"
+    UNUSUAL_DEMAND_RAMP = "unusual_demand_ramp"
+    PRICE_REVERSAL = "price_reversal"
+    NEGATIVE_PRICE_EPISODE = "negative_price_episode"
 
 
 @dataclass(frozen=True)
@@ -81,6 +136,21 @@ class RampEvaluation:
 
     event: Event | None
     reason: Literal["event", "none", "insufficient_coverage"]
+
+
+@dataclass(frozen=True)
+class Detected:
+    """A detector-v2 event plus its stored evidence payload.
+
+    ``linked`` lists the v1 events this event subsumes or groups — the
+    publication layer resolves them to stored event ids for ``detail`` and
+    for highlight suppression. ``detail`` becomes the immutable per-event
+    evidence JSON (baseline, members, trough/peak — never detector config).
+    """
+
+    event: Event
+    detail: dict[str, object]
+    linked: tuple[Event, ...] = ()
 
 
 def _next_position(day: date, position: int) -> tuple[date, int]:
@@ -221,3 +291,240 @@ def evaluate_demand_ramp(day: date, values: list[Decimal | None]) -> RampEvaluat
         ),
         "event",
     )
+
+
+# -- detector v2 ---------------------------------------------------------------
+#
+# Positions convert to a single absolute index
+# ``day.toordinal() * 288 + position`` so runs and look-ahead windows cross
+# market-day boundaries without special cases.
+
+
+def _absolute(day: date, position: int) -> int:
+    return day.toordinal() * INTERVALS_PER_DAY + position
+
+
+def _split(index: int) -> tuple[date, int]:
+    return date.fromordinal(index // INTERVALS_PER_DAY), index % INTERVALS_PER_DAY
+
+
+def nearest_rank(samples: list[Decimal], percent: int) -> Decimal:
+    """Nearest-rank quantile: the ``ceil(p/100 * n)``-th smallest sample."""
+    if not samples or not 0 < percent <= 100:
+        raise ValueError("quantile needs samples and a percent in (0, 100]")
+    ordered = sorted(samples)
+    rank = max(1, -(-percent * len(ordered) // 100))
+    return ordered[rank - 1]
+
+
+def classify_demand_ramp(
+    rise: Decimal,
+    class_samples: list[Decimal],
+    complete_days: int,
+) -> "RampClassification":
+    """Is ``rise`` unusual against the same-class daily-ramp distribution?
+
+    ``class_samples`` holds each complete same-class baseline day's largest
+    positive three-hour change (complete nonpositive days contribute 0);
+    ``complete_days`` counts every complete baseline day of either class.
+    Short history reports ``insufficient_baseline`` — never "normal".
+    """
+    if (
+        complete_days < RAMP_MIN_COMPLETE_DAYS
+        or len(class_samples) < RAMP_MIN_CLASS_DAYS
+    ):
+        return RampClassification("insufficient_baseline", None)
+    quantile = nearest_rank(class_samples, RAMP_QUANTILE_PERCENT)
+    unusual = rise > quantile and rise >= RAMP_MIN_RISE_MW
+    return RampClassification(
+        "unusual" if unusual else "ordinary",
+        quantile if unusual else None,
+    )
+
+
+@dataclass(frozen=True)
+class RampClassification:
+    reason: Literal["unusual", "ordinary", "insufficient_baseline"]
+    quantile: Decimal | None  # the P90 the rise cleared, when unusual
+
+
+def detect_price_reversals(
+    runs: list[Event],
+    value_at: Callable[[int], Decimal | None],
+) -> list[Detected]:
+    """Complete negative run, then >= ``REVERSAL_PEAK_MIN`` within 6 h.
+
+    ``value_at`` maps an absolute interval index to a stored price or None;
+    any missing observation inside the look-ahead window withholds the
+    reversal claim entirely — the "highest qualifying price" needs the whole
+    window. Runs sharing a peak keep the largest-rise candidate (earliest run
+    start on ties) and retain the other runs as linked evidence.
+    """
+    candidates: list[tuple[Event, int, Decimal, Decimal]] = []
+    for run in runs:
+        if run.edge_incomplete or run.interval_count < MIN_RUN_INTERVALS:
+            continue
+        start = _absolute(run.owner_day, run.start_position)
+        end = start + run.interval_count - 1
+        window = [
+            value_at(i) for i in range(end + 1, end + 1 + REVERSAL_LOOKAHEAD_INTERVALS)
+        ]
+        if any(v is None for v in window):
+            continue
+        qualifying = [
+            (end + 1 + offset, value)
+            for offset, value in enumerate(window)
+            if value is not None
+            and value >= REVERSAL_PEAK_MIN
+            and value - run.value >= REVERSAL_RISE_MIN
+        ]
+        if not qualifying:
+            continue
+        peak_index, peak = max(qualifying, key=lambda iv: (iv[1], -iv[0]))
+        candidates.append((run, peak_index, peak, peak - run.value))
+    by_peak: dict[int, list[tuple[Event, int, Decimal, Decimal]]] = {}
+    for candidate in candidates:
+        by_peak.setdefault(candidate[1], []).append(candidate)
+    detected: list[Detected] = []
+    for group in by_peak.values():
+        run, peak_index, peak, rise = max(
+            group,
+            key=lambda c: (
+                c[3],
+                -_absolute(c[0].owner_day, c[0].start_position),
+            ),
+        )
+        linked = tuple(c[0] for c in group if c[0] is not run)
+        start = _absolute(run.owner_day, run.start_position)
+        end = start + run.interval_count - 1
+        peak_day, _peak_position = _split(peak_index)
+
+        def _run_range(member: Event) -> dict[str, str]:
+            member_start = _absolute(member.owner_day, member.start_position)
+            return {
+                "startAt": _instant_label(member_start),
+                "endAt": _instant_label(member_start + member.interval_count - 1),
+            }
+
+        detail: dict[str, object] = {
+            "trough": str(run.value),
+            "peak": str(peak),
+            "rise": str(rise),
+            "riseMinutes": (peak_index - end) * 5,
+            "runStartAt": _instant_label(start),
+            "runEndAt": _instant_label(end),
+            "peakAt": _instant_label(peak_index),
+            "peakMarketDay": peak_day.isoformat(),
+            "peakPosition": _peak_position,
+            "memberRuns": [_run_range(m) for m in (run, *linked)],
+        }
+        detected.append(
+            Detected(
+                event=Event(
+                    type=EventType.PRICE_REVERSAL,
+                    owner_day=run.owner_day,
+                    start_position=run.start_position,
+                    interval_count=peak_index - start + 1,
+                    value=peak,
+                    edge_incomplete=False,
+                ),
+                detail=detail,
+                linked=(run, *linked),
+            )
+        )
+    return detected
+
+
+def _instant_label(index: int) -> str:
+    """Interval-end instant of absolute index, fixed NEM UTC+10."""
+    day, position = _split(index)
+    instant = datetime.combine(day, datetime.min.time(), tzinfo=NEM_OFFSET) + timedelta(
+        minutes=5 * (position + 1)
+    )
+    return instant.isoformat()
+
+
+def detect_negative_price_episodes(
+    runs: list[Event],
+    value_at: Callable[[int], Decimal | None],
+) -> list[Detected]:
+    """Join consecutive complete runs separated by short low-price gaps.
+
+    A join requires every intervening observation present, nonnegative and at
+    most ``EPISODE_MAX_GAP_PRICE``, at most ``EPISODE_MAX_GAP_INTERVALS``
+    intervals per gap and ``EPISODE_MAX_TOTAL_GAP_INTERVALS`` cumulative per
+    episode. Missing observations simply prevent joining — runs are never
+    merged across unknown data.
+    """
+    ordered = sorted(
+        (r for r in runs if not r.edge_incomplete),
+        key=lambda r: _absolute(r.owner_day, r.start_position),
+    )
+    groups: list[list[Event]] = []
+    current: list[Event] = []
+    gap_total = 0
+    for run in ordered:
+        start = _absolute(run.owner_day, run.start_position)
+        if current:
+            previous_end = (
+                _absolute(current[-1].owner_day, current[-1].start_position)
+                + current[-1].interval_count
+                - 1
+            )
+            gap = start - previous_end - 1
+            gap_values = [value_at(i) for i in range(previous_end + 1, start)]
+            joinable = (
+                0 < gap <= EPISODE_MAX_GAP_INTERVALS
+                and gap_total + gap <= EPISODE_MAX_TOTAL_GAP_INTERVALS
+                and all(
+                    v is not None and 0 <= v <= EPISODE_MAX_GAP_PRICE
+                    for v in gap_values
+                )
+            )
+            if joinable:
+                current.append(run)
+                gap_total += gap
+                continue
+        if len(current) >= EPISODE_MIN_MEMBERS:
+            groups.append(current)
+        current = [run]
+        gap_total = 0
+    if len(current) >= EPISODE_MIN_MEMBERS:
+        groups.append(current)
+
+    detected: list[Detected] = []
+    for members in groups:
+        first, last = members[0], members[-1]
+        start = _absolute(first.owner_day, first.start_position)
+        end = _absolute(last.owner_day, last.start_position) + last.interval_count - 1
+        negative = sum(m.interval_count for m in members)
+        detail = {
+            "memberCount": len(members),
+            "negativeMinutes": negative * 5,
+            "gapMinutes": (end - start + 1 - negative) * 5,
+            "spanMinutes": (end - start + 1) * 5,
+            "members": [
+                {
+                    "startAt": _instant_label(_absolute(m.owner_day, m.start_position)),
+                    "endAt": _instant_label(
+                        _absolute(m.owner_day, m.start_position) + m.interval_count - 1
+                    ),
+                }
+                for m in members
+            ],
+        }
+        detected.append(
+            Detected(
+                event=Event(
+                    type=EventType.NEGATIVE_PRICE_EPISODE,
+                    owner_day=first.owner_day,
+                    start_position=first.start_position,
+                    interval_count=end - start + 1,
+                    value=min(m.value for m in members),
+                    edge_incomplete=False,
+                ),
+                detail=detail,
+                linked=tuple(members),
+            )
+        )
+    return detected

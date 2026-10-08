@@ -184,6 +184,22 @@ def test_contract_captures(
     get(f"{PUBS}/{pub_id}", auth)
     get(f"{PUBS}/{uuid.uuid4()}", auth)  # 404 PUBLICATION_NOT_FOUND
     get(f"{PUBS}/not-a-uuid", auth)
+    v2 = post(
+        PUBS,
+        {
+            "region": "NSW1",
+            "startDay": "2023-10-02",
+            "endExclusive": "2023-10-03",
+            "detectorSuite": "v2",
+        },
+        auth,
+    )
+    assert v2.status_code == 201
+    post(
+        PUBS,
+        {**pub_window, "detectorSuite": "v9"},
+        auth,
+    )  # 400 INVALID_REQUEST
 
     # -- public GridReplay catalogue --------------------------------------------
 
@@ -265,9 +281,18 @@ def test_contract_captures(
     event_id = next(
         e["id"] for e in page.json()["events"] if e["type"] == "price_spike"
     )
+    get(f"{EV}?region=NSW1&type=price_spike&sort=highest")
+    get(f"{EV}?region=NSW1&sort=highest")  # 400 unsupported combination
+    get(f"{EV}?region=NSW1&type=negative_price_run&minDurationMinutes=10")
+    get(f"{EV}?region=NSW1&type=price_spike&valueGte=1000")
+    get(f"{EV}/highlights?region=NSW1")
+    get(f"{EV}/highlights?region=NSW1&type=negative_price_run")
+    get(f"{EV}/highlights?region=QLD1")  # 404 CATALOGUE_NOT_PUBLISHED
     get(f"{EV}/{event_id}")
     get(f"{EV}/{uuid.uuid4()}")  # 404 EVENT_NOT_FOUND
     get(f"{EV}/not-a-uuid")  # 400 INVALID_REQUEST
+    get(f"{EV}/{event_id}/preview")
+    get(f"{EV}/{uuid.uuid4()}/preview")  # 404 EVENT_NOT_FOUND
     get(f"{EV}/{event_id}/replay")
     get(f"{EV}/{event_id}/replay?startDay=2023-10-02&endExclusive=2023-10-03")
     get(

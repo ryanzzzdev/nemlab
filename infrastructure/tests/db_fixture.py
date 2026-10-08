@@ -69,3 +69,4 @@ def apply_grid_schema(engine: sa.Engine) -> None:
         conn.exec_driver_sql(migration_text("V4__grid_observations.sql"))
         conn.exec_driver_sql(migration_text("V5__grid_import_jobs.sql"))
         conn.exec_driver_sql(migration_text("V6__grid_events.sql"))
+        conn.exec_driver_sql(migration_text("V7__detector_v2.sql"))
