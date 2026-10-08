@@ -1966,7 +1966,7 @@ Gap identified in the NEM-063 rehearsal; not yet implemented.
 - Repository: backend
 - Milestone: Post-M5 operator tooling
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: None (existing refresh queue)
 - References: [runbook-grid-data.md](runbook-grid-data.md), [features/admin.md](features/admin.md)
 
@@ -2014,9 +2014,18 @@ submission, so backfilling e.g. Sept-2023 × 5 regions is 5 requests instead of
 
 ### Completion evidence
 
-Planned 2026-10-08 after the multi-region import surfaced the fan-out
-ergonomics problem; `MAX_PENDING_JOBS` raised 100 → 1000 separately as the
-cheap interim fix. Implementation not started.
+Implemented 2026-10-08 per the plan above. `RefreshJobService.submit_window`
+fans out one `refresh_job` per market day in a single queue-locked
+transaction with derived keys `{key}:{day}` plus a bare-key marker pinning
+the window; identical resubmission returns the same job set, a changed
+window/region under the same key raises `RequestKeyConflict`, and a cap
+overflow mid-window rolls back atomically. The API accepts
+`{region, day}` or `{region, startDay, endExclusive}` (OpenAPI `oneOf`);
+window responses are `202 {"jobs": [...]}` in day order. Bounds mirror grid
+imports (1–31 completed days, ≥ 2021-10-01). Verified: 5 new service tests +
+2 HTTP tests (dedup, conflicts, bounds, rollback, per-job cancel);
+contract `oneOf` + `JobSet` schema regenerated, 115 captures / 23 operations
+validated; full suite green; runbook Phase 2 updated.
 
 <a id="python-rebuild-tasks"></a>
 

@@ -87,26 +87,31 @@ Price detection (negative runs, spikes) and the replay's price series read from
 fetch prices.
 
 ```sh
-# one job per market day
-for d in $(seq 0 29); do
-  day=$(date -d "2023-09-01 +$d day" +%F)
-  curl -X POST http://localhost:8080/api/admin/v1/price-refreshes \
-    -H "Authorization: Bearer $NEMLAB_ADMIN_TOKEN" \
-    -H "Idempotency-Key: px-QLD1-$day" \
-    -H "Content-Type: application/json" \
-    -d "{\"region\":\"QLD1\",\"day\":\"$day\"}"
-done
+# one windowed submission fans out to a job per market day
+curl -X POST http://localhost:8080/api/admin/v1/price-refreshes \
+  -H "Authorization: Bearer $NEMLAB_ADMIN_TOKEN" \
+  -H "Idempotency-Key: px-QLD1-2023-09" \
+  -H "Content-Type: application/json" \
+  -d '{"region":"QLD1","startDay":"2023-09-01","endExclusive":"2023-10-01"}'
 ```
+
+A window submission returns `202` with `{"jobs": [...]}` — one job per market
+day, in day order. The single-day form `{"region":"…","day":"…"}` still works
+and returns the job with a `Location` header as before.
 
 Semantics:
 
-- One market day per job; the job view carries `status`, `attempts`,
-  `diagnostic`. List/status/events/cancel mirror the grid-import endpoints
-  under `/api/admin/v1/price-refreshes`.
-- Up to 1000 refresh jobs may be pending — a 30-day × 5-region sweep (150 jobs)
-  fits comfortably; beyond the cap the API returns `QUEUE_FULL` — retry after
-  the queue drains. (Windowed submission to collapse the fan-out is planned as
-  NEM-092.)
+- Window bounds: 1–31 completed market days (same rule as grid imports). A
+  failure mid-window rolls the whole submission back — never a partial set.
+- Each day is an independent `refresh_job` — it queues, retries, cancels and
+  audits exactly like a single-day submission.
+- Idempotency: the bare key pins the window — resubmitting the identical
+  window returns the same job set; the same key with a different window or
+  region returns `409 IDEMPOTENCY_CONFLICT`. Internally each day derives key
+  `{key}:{day}`, so window jobs also dedup onto a day already queued by a
+  single-day request.
+- Up to 1000 refresh jobs may be pending; beyond the cap the API returns
+  `QUEUE_FULL` — retry after the queue drains.
 - Same idempotency rules as grid imports.
 - Prices are also refreshed on the scheduled cadence for recent days; this
   path is for backfilling historical windows.
@@ -176,9 +181,9 @@ A future Admin app should orchestrate the same three phases — nothing here
 requires a new backend surface:
 
 - **Load-window flow**: region + date range → client-side chunking into ≤31-day
-  grid-import submissions; then one refresh job per market day (respect the
-  100-pending cap with a submit-on-drain loop); then a publish action once jobs
-  succeed.
+  grid-import submissions; then one windowed refresh submission per ≤31-day
+  chunk (it fans out to a job per market day server-side); then a publish
+  action once jobs succeed.
 - **Status views**: job list/detail with `nextDay` progress and `attempts`;
   the `events` endpoint is the audit view (submission → claims → day commits →
   terminal).

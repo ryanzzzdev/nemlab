@@ -302,6 +302,19 @@ def test_contract_captures(
 
     jobs = RefreshJobService(scratch_db, store)
 
+    # A windowed submission fans out to one job per day; cancel them at once —
+    # the visitor-exhaustion captures below claim the oldest queued job and
+    # expect that flow's own jobs to be first in line.
+    windowed = post(
+        BASE,
+        {"region": "NSW1", "startDay": "2023-09-01", "endExclusive": "2023-09-04"},
+        {**auth, "Idempotency-Key": "capture-window"},
+    )
+    assert windowed.status_code == 202
+    assert len(windowed.json()["jobs"]) == 3
+    for windowed_job in windowed.json()["jobs"]:
+        jobs.cancel(UUID(windowed_job["id"]), "test")
+
     with scratch_db.begin() as conn:
         conn.execute(sa.text("ALTER TABLE refresh_job RENAME TO missing_jobs"))
     try:
@@ -436,13 +449,20 @@ def test_contract_captures(
 
     # Refresh-queue saturation last: any earlier fill would starve the visitor
     # submissions above, and ``claim`` picks the oldest pending job.
-    from nemlab_infrastructure.jobs import QueueFull as RefreshQueueFull
+    from nemlab_infrastructure.jobs import (
+        MAX_PENDING_JOBS,
+    )
+    from nemlab_infrastructure.jobs import (
+        QueueFull as RefreshQueueFull,
+    )
 
-    for day in range(100):
+    # Fill on another region so the NSW1 probe day cannot dedup onto an
+    # active job instead of exercising the cap.
+    for day in range(MAX_PENDING_JOBS):
         try:
             jobs.submit(
                 f"fill-{day}",
-                Region.NSW1,
+                Region.QLD1,
                 date(2023, 1, 1) + timedelta(days=day),
                 "test",
             )

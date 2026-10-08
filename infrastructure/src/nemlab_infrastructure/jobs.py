@@ -11,7 +11,7 @@ to ``complete()``.
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from enum import Enum
 from typing import Any
 from uuid import UUID
@@ -19,9 +19,9 @@ from uuid import UUID
 import sqlalchemy as sa
 from sqlalchemy import text
 
-from nemlab_core.prices import Region
+from nemlab_core.prices import NEM_OFFSET, Region
 from nemlab_infrastructure.prices.source import Fetch
-from nemlab_infrastructure.prices.store import PriceStore
+from nemlab_infrastructure.prices.store import EARLIEST_DAY, PriceStore
 
 # One row per market day; multi-region historical backfills legitimately
 # reach the hundreds, so bound the queue generously rather than by burst rate.
@@ -139,6 +139,79 @@ class RefreshJobService:
         with self.engine.begin() as conn:
             self._lock_queue(conn)
             return self._submit_inside(conn, request_key, region, day, actor)
+
+    def submit_window(
+        self,
+        request_key: str,
+        region: Region,
+        start: date,
+        end: date,
+        actor: str,
+    ) -> list[UUID]:
+        """One job per market day in ``[start, end)``, all in one transaction.
+
+        Per-day request keys ``{request_key}:{day}`` compose with the existing
+        dedup: an identical resubmission returns the same job set, and a
+        marker request under the bare key pins the window so a resubmission
+        with a different window raises ``RequestKeyConflict``. A cap or
+        validation failure rolls the whole window back — never a partial set.
+        """
+        _validate_label(request_key, 120)
+        _validate_label(actor, 80)
+        today = _utc_now().astimezone(NEM_OFFSET).date()
+        days = [start + timedelta(days=i) for i in range((end - start).days)]
+        if (
+            region is None
+            or not days
+            or len(days) > 31
+            or start < EARLIEST_DAY
+            or end > today
+        ):
+            raise ValueError("require a 1..31 day window of completed market days")
+        prefix = f"{request_key}:"
+        keys = {f"{prefix}{day.isoformat()}": day for day in days}
+        with self.engine.begin() as conn:
+            self._lock_queue(conn)
+            marker = conn.execute(
+                text(
+                    "SELECT job.* FROM refresh_job job"
+                    " JOIN refresh_request request ON request.job_id = job.id"
+                    " WHERE request.request_key = :key"
+                ),
+                {"key": request_key},
+            ).first()
+            if marker is not None:
+                first = _job(marker)
+                stored = {
+                    row.request_key: row.job_id
+                    for row in conn.execute(
+                        text(
+                            "SELECT request_key, job_id FROM refresh_request"
+                            " WHERE substring(request_key from 1 for :len)"
+                            " = :prefix"
+                        ),
+                        {"len": len(prefix), "prefix": prefix},
+                    )
+                }
+                if (
+                    first.region is not region
+                    or first.day != start
+                    or set(stored) != set(keys)
+                ):
+                    raise RequestKeyConflict()
+                return [stored[key] for key in keys]
+            ids = [
+                self._submit_inside(conn, key, region, day, actor)
+                for key, day in keys.items()
+            ]
+            conn.execute(
+                text(
+                    "INSERT INTO refresh_request(request_key, job_id)"
+                    " VALUES (:key, :job)"
+                ),
+                {"key": request_key, "job": ids[0]},
+            )
+            return ids
 
     def submit_visitor(self, region: Region, day: date) -> UUID:
         """Enqueue a price fetch for an anonymous visitor submission. Keys are
@@ -517,3 +590,7 @@ class RefreshJobService:
 
 
 _ONE_DAY = timedelta(days=1)
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)

@@ -306,3 +306,62 @@ def test_security_headers_match_the_java_filter_chain(client: TestClient) -> Non
     ):
         assert denied.headers[name] == value
     assert "no-cache" in denied.headers["cache-control"]
+
+
+def test_window_submission_creates_and_replays_job_set(
+    client: TestClient, scratch_db: sa.Engine
+) -> None:
+    window = {"region": "NSW1", "startDay": "2023-09-01", "endExclusive": "2023-09-04"}
+    first = client.post(
+        BASE, json=window, headers={**HEADERS, "Idempotency-Key": "window-1"}
+    )
+    assert first.status_code == 202
+    assert "location" not in first.headers
+    ids = [job["id"] for job in first.json()["jobs"]]
+    assert len(ids) == 3
+    assert [job["day"] for job in first.json()["jobs"]] == [
+        "2023-09-01",
+        "2023-09-02",
+        "2023-09-03",
+    ]
+    repeat = client.post(
+        BASE, json=window, headers={**HEADERS, "Idempotency-Key": "window-1"}
+    )
+    assert [job["id"] for job in repeat.json()["jobs"]] == ids
+    assert _count(scratch_db, "SELECT count(*) FROM refresh_job") == 3
+    # Each job remains individually inspectable and cancellable.
+    status = client.get(f"{BASE}/{ids[1]}", headers=HEADERS)
+    assert status.status_code == 200
+    assert status.json()["day"] == "2023-09-02"
+    cancel = client.post(f"{BASE}/{ids[1]}/cancel", headers=HEADERS, content="")
+    assert cancel.status_code == 200
+
+
+def test_window_submission_conflicts_on_changed_window_and_rejects_bad_bounds(
+    client: TestClient, scratch_db: sa.Engine
+) -> None:
+    window = {"region": "NSW1", "startDay": "2023-09-01", "endExclusive": "2023-09-04"}
+    client.post(BASE, json=window, headers={**HEADERS, "Idempotency-Key": "window-1"})
+    wider = {**window, "endExclusive": "2023-09-05"}
+    conflict = client.post(
+        BASE, json=wider, headers={**HEADERS, "Idempotency-Key": "window-1"}
+    )
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "IDEMPOTENCY_CONFLICT"
+    for bad in (
+        {"region": "NSW1", "startDay": "2023-09-04", "endExclusive": "2023-09-01"},
+        {"region": "NSW1", "startDay": "2023-09-01", "endExclusive": "2023-10-03"},
+        {"region": "NSW1", "startDay": "2023-09-01"},
+        {
+            "region": "NSW1",
+            "day": "2023-09-01",
+            "startDay": "2023-09-01",
+            "endExclusive": "2023-09-04",
+        },
+    ):
+        response = client.post(
+            BASE, json=bad, headers={**HEADERS, "Idempotency-Key": f"bad-{bad}"}
+        )
+        assert response.status_code in (400, 422), response.text
+    # The window that conflicted and the invalid bodies created nothing.
+    assert _count(scratch_db, "SELECT count(*) FROM refresh_job") == 3

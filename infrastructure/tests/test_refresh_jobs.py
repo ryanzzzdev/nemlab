@@ -445,3 +445,90 @@ def test_preexisting_job_and_audit_rows_remain_readable(
     ]
     recent = jobs.recent(10)
     assert [j.id for j in recent] == [job_id]
+
+
+def test_submit_window_creates_one_job_per_day_and_replays(
+    jobs: RefreshJobService, scratch_db: sa.Engine
+) -> None:
+    end = DAY + timedelta(days=5)
+    ids = jobs.submit_window("month-nsw1", REGION, DAY, end, "operator")
+    assert len(ids) == 5
+    assert len(set(ids)) == 5
+    assert jobs.find(ids[0]).day == DAY  # type: ignore[union-attr]
+    assert jobs.find(ids[4]).day == end - timedelta(days=1)  # type: ignore[union-attr]
+    assert count(scratch_db, "refresh_job") == 5
+    # 5 derived keys + 1 window marker
+    assert count(scratch_db, "refresh_request") == 6
+    # Identical resubmission returns the same jobs — nothing new.
+    assert jobs.submit_window("month-nsw1", REGION, DAY, end, "operator") == ids
+    assert count(scratch_db, "refresh_job") == 5
+
+
+def test_submit_window_rejects_different_window_under_same_key(
+    jobs: RefreshJobService, scratch_db: sa.Engine
+) -> None:
+    jobs.submit_window("month-nsw1", REGION, DAY, DAY + timedelta(days=5), "op")
+    # Same start, wider window.
+    with pytest.raises(jobs_module.RequestKeyConflict):
+        jobs.submit_window("month-nsw1", REGION, DAY, DAY + timedelta(days=7), "op")
+    # Same window, different region.
+    with pytest.raises(jobs_module.RequestKeyConflict):
+        jobs.submit_window(
+            "month-nsw1", Region.QLD1, DAY, DAY + timedelta(days=5), "op"
+        )
+    # Shifted window.
+    with pytest.raises(jobs_module.RequestKeyConflict):
+        jobs.submit_window(
+            "month-nsw1", REGION, DAY + timedelta(days=1), DAY + timedelta(days=6), "op"
+        )
+    assert count(scratch_db, "refresh_job") == 5
+
+
+def test_submit_window_deduplicates_onto_active_day_jobs(
+    jobs: RefreshJobService, scratch_db: sa.Engine
+) -> None:
+    existing = jobs.submit("single", REGION, DAY + timedelta(days=2), "operator")
+    ids = jobs.submit_window("month", REGION, DAY, DAY + timedelta(days=4), "op")
+    assert ids[2] == existing
+    assert count(scratch_db, "refresh_job") == 4
+
+
+def test_submit_window_validates_bounds(
+    jobs: RefreshJobService, scratch_db: sa.Engine
+) -> None:
+    with pytest.raises(ValueError):
+        jobs.submit_window("empty", REGION, DAY, DAY, "op")
+    with pytest.raises(ValueError):
+        jobs.submit_window("reversed", REGION, DAY, DAY - timedelta(days=1), "op")
+    with pytest.raises(ValueError):
+        jobs.submit_window("long", REGION, DAY, DAY + timedelta(days=32), "op")
+    with pytest.raises(ValueError):
+        jobs.submit_window("early", REGION, date(2021, 9, 28), date(2021, 10, 3), "op")
+    today = datetime.now(UTC).astimezone().date()
+    with pytest.raises(ValueError):
+        jobs.submit_window("future", REGION, today, today + timedelta(days=2), "op")
+    assert count(scratch_db, "refresh_job") == 0
+    assert count(scratch_db, "refresh_request") == 0
+
+
+def test_submit_window_rolls_back_when_the_queue_fills_mid_window(
+    jobs: RefreshJobService, scratch_db: sa.Engine
+) -> None:
+    for index in range(jobs_module.MAX_PENDING_JOBS - 5):
+        jobs.submit(
+            f"fill-{index}",
+            Region.QLD1,
+            date(2023, 1, 1) + timedelta(days=index),
+            "scheduler",
+        )
+    with pytest.raises(jobs_module.QueueFull):
+        jobs.submit_window("month", REGION, DAY, DAY + timedelta(days=10), "op")
+    assert count(scratch_db, "refresh_job") == jobs_module.MAX_PENDING_JOBS - 5
+    with scratch_db.connect() as conn:
+        stray: int = conn.execute(
+            sa.text(
+                "SELECT count(*) FROM refresh_request"
+                " WHERE substring(request_key from 1 for 6) = 'month:'"
+            )
+        ).scalar_one()
+    assert stray == 0

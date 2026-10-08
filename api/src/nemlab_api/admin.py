@@ -21,11 +21,22 @@ from nemlab_infrastructure.jobs import JobEvent, RefreshJob, RefreshJobService
 BASE = "/api/admin/v1/price-refreshes"
 
 
-class Submission(BaseModel):
+class DaySubmission(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     region: Region
     day: IsoDate
+
+
+class WindowSubmission(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    region: Region
+    startDay: IsoDate
+    endExclusive: IsoDate
+
+
+Submission = DaySubmission | WindowSubmission
 
 
 def _view(job: RefreshJob) -> dict[str, Any]:
@@ -66,6 +77,18 @@ def admin_router(jobs: RefreshJobService) -> APIRouter:
         submission: Submission,
         idempotency_key: Annotated[str, Header()],
     ) -> Response:
+        if isinstance(submission, WindowSubmission):
+            ids = jobs.submit_window(
+                idempotency_key,
+                submission.region,
+                submission.startDay,
+                submission.endExclusive,
+                request.state.actor,
+            )
+            return JSONResponse(
+                {"jobs": [_view(_required(jobs, id)) for id in ids]},
+                status_code=202,
+            )
         id = jobs.submit(
             idempotency_key, submission.region, submission.day, request.state.actor
         )
