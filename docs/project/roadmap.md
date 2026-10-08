@@ -14,7 +14,7 @@ M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.m
 | M4 — BatteryLab | Complete simulation experience | Complete | M3 local foundation; hosted CI remains a separate open gate |
 | Python backend rebuild | Verified Python parity with retained Java reference | Complete | Delivered Java baseline; before M5 |
 | M5 — GridReplay | Working catalogue, replay, sharing and discovery | Complete (local feature milestone) | M4 and validated grid inputs |
-| M6 — Admin | Agreed operator experience and supporting controls | Planned — scope agreed | M5 and existing operator APIs |
+| M6 — Admin | Agreed operator experience and supporting controls | Complete (local feature milestone) | M5 and existing operator APIs |
 | M7 — Launch | Verified, operable public release | Planned | M6 outcome and launch gates |
 
 ## Python backend rebuild — complete
@@ -80,7 +80,7 @@ NEM-018, NEM-059 and NEM-064 records are reconciled with delivered evidence. NEM
 
 ## M6 — Admin
 
-Status: Planned; NEM-093 scope planning is complete. Deliver the [Admin specification](features/admin.md) through NEM-095–107 and NEM-082. NEM-092 bounded price windows are already delivered.
+Status: Complete locally (2026-10-08). The [Admin specification](features/admin.md) is delivered through NEM-095–107 and NEM-082; NEM-092 bounded price windows were already delivered. All M6 tasks are Done with recorded evidence — boundary/resilience verification in [NEM-106](backlog.md#nem-106), UI/exit review in [NEM-107](backlog.md#nem-107). Production deployment, hosted CI, real email delivery and launch gates carry to M7 explicitly unverified.
 
 Scope: coverage-led separate Admin UI, embedded workflow guide, securely bootstrapped owner, verified/approved expiring read-only visitors, public Admin entry, safe operational reads, bounded imports/recovery and explicit v2 publication. Existing API/worker/jobs remain the execution path. Decision 024 supersedes the earlier UI deferral; two human roles and email-link sign-in are selected defaults. NEM-082 (grid coverage read) is delivered; NEM-095 identity storage is in progress.
 

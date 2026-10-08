@@ -3353,7 +3353,7 @@ Unresolved gaps (honest record): live queue saturation was not exercised — `ba
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-106](#nem-106)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3369,4 +3369,16 @@ Polish Admin UI and review M6 exit evidence. Deliver the corresponding accepted 
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08 in a real Chromium session against the live stack.
+
+Responsive sweep: `/admin` (Coverage index), `/admin/load`, `/admin/jobs`, `/admin/publications`, `/admin/access`, `/admin/how-it-works` at 1280/768/390/320px — **zero horizontal overflow** on every page; `/admin/welcome`, `/admin/request-access`, `/admin/sign-in` clean at 1280 and 320. Header/nav/main/footer landmarks render on console pages (signed-out pages intentionally omit the nav). Tables sit in `.table-scroll` containers; the viewer layout holds at 390px with the Read-only badge visible.
+
+Themes: the shared `ThemePicker` select cycles Light (`#fff`/`#17202a`) / Dark (`#151b23`/`#d7dee7`) / Auto (follows `prefers-color-scheme`) — measured real computed colours on rendered panels.
+
+Keyboard/touch: skip link is the first Tab stop and lands focus in content; focus-visible renders a 3px outline through the nav and controls; every button/link/input/select resolves an accessible name (form inputs use associated labels). Reduced motion is satisfied by construction — the stylesheets contain no animations or transitions, so nothing moves to reduce. Error/empty states announce via `role="alert"`/`role="status"` (verified on the reconcile, failure and conflict paths in NEM-103/104 runs).
+
+Owner/viewer states: owner sees the full guided workflow and access management; viewers get the badge, read-only explains, hidden owner controls and 403 on direct writes; anonymous traffic lands on Welcome/Request access/Sign in with an honest unavailable-state explainer.
+
+Pipeline explanation: How-it-works covers the four steps (inspect coverage → bounded load → review → explicit publication), the data/detectors/publications/Highlights distinctions and the v2 unusual-ramp baseline requirement; Welcome explains the console to visitors. Coverage/baseline wording validated against live results (honest "baseline ready" counts, incomplete-day naming before publish).
+
+M6 reconciliation: every M6 task carries Done status with evidence — NEM-082, NEM-095–099, NEM-100–106 (this file). Exit criteria met locally: owner bootstrap + full journey, visitor lifecycle, capability/redaction matrix, bounded load/recovery with preserved replay links, accurate guide, responsive/accessibility checks with recorded evidence. Carried to M7 unverified: production deployment and same-origin hosting/TLS, real SMTP provider + email domain, hosted CI, backup/retention rehearsal, deployed smoke.
