@@ -233,6 +233,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v1/grid-coverage/{region}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stored grid-observation coverage for 1-31 completed NEM days */
+        get: operations["getGridCoverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v1/grid-publications": {
         parameters: {
             query?: never;
@@ -682,6 +699,42 @@ export interface components {
             coverage: Record<string, never>;
             /** Format: date-time */
             createdAt: string;
+        };
+        /** @description NOT_IMPORTED has null revision, retrievedAt and counts and is used only for the three required market series; a stored series reports its current revision, and COMPLETE means valid = 288. */
+        GridSeriesCoverage: {
+            /** @enum {string} */
+            metric: "demand" | "flow_imports" | "flow_exports" | "power";
+            /** @description Empty string for single-series metrics; the provider fueltech label for power */
+            series: string;
+            /** @enum {string} */
+            availability: "NOT_IMPORTED" | "COMPLETE" | "INCOMPLETE";
+            /** Format: uuid */
+            revision: string | null;
+            /** Format: date-time */
+            retrievedAt: string | null;
+            valid: number | null;
+            missing: number | null;
+            sourceNull: number | null;
+        };
+        GridCoverageDay: {
+            /** Format: date */
+            day: string;
+            /**
+             * @description Summary over the required market series only: COMPLETE when all three are stored complete, NOT_IMPORTED when none are stored, otherwise PARTIAL. Optional power series never affect it.
+             * @enum {string}
+             */
+            availability: "NOT_IMPORTED" | "PARTIAL" | "COMPLETE";
+            series: components["schemas"]["GridSeriesCoverage"][];
+        };
+        GridCoverage: {
+            region: components["schemas"]["Region"];
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            endExclusive: string;
+            /** @enum {string} */
+            marketOffset: "+10:00";
+            days: components["schemas"]["GridCoverageDay"][];
         };
         /**
          * @description Detector event types. The v2 suite adds unusual_demand_ramp, price_reversal and negative_price_episode; consumers must tolerate unknown type strings for forward compatibility.
@@ -2026,6 +2079,80 @@ export interface operations {
                         message: string;
                     };
                 };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    getGridCoverage: {
+        parameters: {
+            query: {
+                /** @description ISO date in fixed UTC+10. Start must be since 2021-10-01 and before today; endExclusive must be after start and no later than today. Coverage spans at most 31 days. */
+                start: string;
+                /** @description ISO date in fixed UTC+10. Start must be since 2021-10-01 and before today; endExclusive must be after start and no later than today. Coverage spans at most 31 days. */
+                endExclusive: string;
+            };
+            header?: never;
+            path: {
+                region: components["schemas"]["Region"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Per-day stored coverage: the three required market series are always present (NOT_IMPORTED when absent); optional power fueltech series appear only when stored */
+            200: {
+                headers: {
+                    "Cache-Control": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GridCoverage"];
+                };
+            };
+            /** @description INVALID_REQUEST */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "INVALID_REQUEST";
+                        message: string;
+                    };
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate": "Bearer";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description Authenticated operator lacks permission; empty body */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description STORAGE_UNAVAILABLE */
             503: {

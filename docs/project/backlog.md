@@ -1954,7 +1954,7 @@ Reconciled 2026-10-08 from the 2026-10-02 journal exit review (393 backend tests
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-055](#nem-055)
 - References: [Rehearsal gap](evidence/m5-ops-rehearsal.md)
 
@@ -1973,7 +1973,20 @@ publication.
 
 ### Completion evidence
 
-Gap identified in the NEM-063 rehearsal; not yet implemented.
+Delivered 2026-10-08: `GET /api/admin/v1/grid-coverage/{region}?start&endExclusive`
+returns per-day coverage over a bounded 1–31 completed-market-day window
+(since 2021-10-01, matching `check_day`/`_validate_range` floors). Each day
+reports required-metric availability (`NOT_IMPORTED`/`PARTIAL`/`COMPLETE`)
+plus a `series` list — the three market metrics always present, stored
+power fueltech series included — with revision, retrieval time and
+valid/missing/source-null counts mirroring the price-coverage shape.
+`GridStore.coverage_days` groups `grid_current`/`grid_revision` rows by day;
+no new tables. Contract bumped to 2.1.0 (`getGridCoverage` +
+`GridCoverage`/`GridCoverageDay`/`GridSeriesCoverage` schemas);
+`schema.d.ts` regenerated and captures extended. Runbook Phase 1 documents
+pre-import inspection. Verification: 6 new HTTP tests plus captures; full
+suite 475 passed; `npm run check` — 119 responses/24 operations;
+ruff/format/mypy-strict clean.
 
 <a id="nem-092"></a>
 
@@ -2903,7 +2916,7 @@ Pending. These limits were recorded in the 2026-10-02 journal and retained at th
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Ready
+- Status: In progress
 - Depends on: [NEM-093](#nem-093)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 

@@ -94,6 +94,13 @@ coverage, pending/failed results, queue capacity, body/media limits and storage 
 Regeneration must remain byte-for-byte reproducible. After committing this backend
 contract, sync the frontend snapshot with `npm run contract:sync` in the sibling repo.
 
+## Version 2.1.0 — operator grid-coverage read
+
+Adds `getGridCoverage` (`GET /api/admin/v1/grid-coverage/{region}`), the
+operator-only pre-import inspection read closed as NEM-082: per-day required
+market series plus any stored power fueltech series, NOT_IMPORTED/PARTIAL/
+COMPLETE semantics. Read-only; no existing operation changed.
+
 ## Version 2.0.0 — GridReplay discovery
 
 Adds `gridEventHighlights` and `gridEventPreview` plus typed `sort`,

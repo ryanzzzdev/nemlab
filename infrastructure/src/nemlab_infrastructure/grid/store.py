@@ -248,6 +248,39 @@ class GridStore:
             for row in rows
         }
 
+    def coverage_days(
+        self, region: Region, start: date, end: date
+    ) -> dict[date, dict[SeriesKey, Coverage]]:
+        """Current-revision coverage for every stored series, grouped by
+        market day — the operator pre-import inspection view."""
+        if not start < end or start + timedelta(days=31) < end:
+            raise ValueError("Coverage range must contain 1-31 days")
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT c.market_day, c.metric, c.series, r.id,"
+                    " r.valid_count, r.missing_count, r.null_count,"
+                    " c.retrieved_at FROM grid_current c"
+                    " JOIN grid_revision r ON r.id = c.revision_id"
+                    " WHERE c.region = :region AND c.market_day >= :start"
+                    " AND c.market_day < :end"
+                    " ORDER BY c.market_day, c.metric, c.series"
+                ),
+                {"region": region.name, "start": start, "end": end},
+            ).all()
+        days: dict[date, dict[SeriesKey, Coverage]] = {}
+        for row in rows:
+            days.setdefault(row.market_day, {})[(Metric(row.metric), row.series)] = (
+                Coverage(
+                    row.id,
+                    row.valid_count,
+                    row.missing_count,
+                    row.null_count,
+                    _instant(row.retrieved_at),
+                )
+            )
+        return days
+
     def coverage_range(
         self,
         region: Region,

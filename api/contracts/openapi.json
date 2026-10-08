@@ -2,7 +2,7 @@
  "openapi": "3.0.3",
  "info": {
   "title": "NEMLab shared API",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Independently enabled price reads, operator controls, bounded grid imports and simulation lifecycle. Disabled routes return 404. Market dates use fixed UTC+10. Simulation bodies are at most 16384 bytes and decimal inputs are strings. The public GridReplay catalogue and replay API are not yet implemented; grid imports are operator-only."
  },
  "paths": {
@@ -2251,6 +2251,156 @@
      },
      "403": {
       "description": "Authenticated operator lacks permission; empty body"
+     }
+    }
+   }
+  },
+  "/api/admin/v1/grid-coverage/{region}": {
+   "get": {
+    "operationId": "getGridCoverage",
+    "summary": "Stored grid-observation coverage for 1-31 completed NEM days",
+    "security": [
+     {
+      "operatorBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "region",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "$ref": "#/components/schemas/Region"
+      }
+     },
+     {
+      "name": "start",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "date"
+      },
+      "description": "ISO date in fixed UTC+10. Start must be since 2021-10-01 and before today; endExclusive must be after start and no later than today. Coverage spans at most 31 days."
+     },
+     {
+      "name": "endExclusive",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "date"
+      },
+      "description": "ISO date in fixed UTC+10. Start must be since 2021-10-01 and before today; endExclusive must be after start and no later than today. Coverage spans at most 31 days."
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Per-day stored coverage: the three required market series are always present (NOT_IMPORTED when absent); optional power fueltech series appear only when stored",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GridCoverage"
+        }
+       }
+      },
+      "headers": {
+       "Cache-Control": {
+        "required": true,
+        "schema": {
+         "type": "string",
+         "pattern": "no-store"
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "INVALID_REQUEST",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "INVALID_REQUEST"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Missing or invalid operator bearer token",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "UNAUTHORISED"
+           ]
+          }
+         }
+        }
+       }
+      },
+      "headers": {
+       "WWW-Authenticate": {
+        "required": true,
+        "schema": {
+         "type": "string",
+         "enum": [
+          "Bearer"
+         ]
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Authenticated operator lacks permission; empty body"
+     },
+     "503": {
+      "description": "STORAGE_UNAVAILABLE",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "STORAGE_UNAVAILABLE"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -4625,6 +4775,142 @@
      "createdAt": {
       "type": "string",
       "format": "date-time"
+     }
+    }
+   },
+   "GridSeriesCoverage": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "metric",
+     "series",
+     "availability",
+     "revision",
+     "retrievedAt",
+     "valid",
+     "missing",
+     "sourceNull"
+    ],
+    "properties": {
+     "metric": {
+      "type": "string",
+      "enum": [
+       "demand",
+       "flow_imports",
+       "flow_exports",
+       "power"
+      ]
+     },
+     "series": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Empty string for single-series metrics; the provider fueltech label for power"
+     },
+     "availability": {
+      "type": "string",
+      "enum": [
+       "NOT_IMPORTED",
+       "COMPLETE",
+       "INCOMPLETE"
+      ]
+     },
+     "revision": {
+      "type": "string",
+      "format": "uuid",
+      "nullable": true
+     },
+     "retrievedAt": {
+      "type": "string",
+      "format": "date-time",
+      "nullable": true
+     },
+     "valid": {
+      "type": "integer",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 288
+     },
+     "missing": {
+      "type": "integer",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 288
+     },
+     "sourceNull": {
+      "type": "integer",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 288
+     }
+    },
+    "description": "NOT_IMPORTED has null revision, retrievedAt and counts and is used only for the three required market series; a stored series reports its current revision, and COMPLETE means valid = 288."
+   },
+   "GridCoverageDay": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "day",
+     "availability",
+     "series"
+    ],
+    "properties": {
+     "day": {
+      "type": "string",
+      "format": "date"
+     },
+     "availability": {
+      "type": "string",
+      "enum": [
+       "NOT_IMPORTED",
+       "PARTIAL",
+       "COMPLETE"
+      ],
+      "description": "Summary over the required market series only: COMPLETE when all three are stored complete, NOT_IMPORTED when none are stored, otherwise PARTIAL. Optional power series never affect it."
+     },
+     "series": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/GridSeriesCoverage"
+      },
+      "minItems": 3
+     }
+    }
+   },
+   "GridCoverage": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "region",
+     "start",
+     "endExclusive",
+     "marketOffset",
+     "days"
+    ],
+    "properties": {
+     "region": {
+      "$ref": "#/components/schemas/Region"
+     },
+     "start": {
+      "type": "string",
+      "format": "date"
+     },
+     "endExclusive": {
+      "type": "string",
+      "format": "date"
+     },
+     "marketOffset": {
+      "type": "string",
+      "enum": [
+       "+10:00"
+      ]
+     },
+     "days": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/GridCoverageDay"
+      },
+      "minItems": 1,
+      "maxItems": 31
      }
     }
    },

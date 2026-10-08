@@ -82,7 +82,7 @@ NEM-018, NEM-059 and NEM-064 records are reconciled with delivered evidence. NEM
 
 Status: Planned; NEM-093 scope planning is complete. Deliver the [Admin specification](features/admin.md) through NEM-095–107 and NEM-082. NEM-092 bounded price windows are already delivered.
 
-Scope: coverage-led separate Admin UI, embedded workflow guide, securely bootstrapped owner, verified/approved expiring read-only visitors, public Admin entry, safe operational reads, bounded imports/recovery and explicit v2 publication. Existing API/worker/jobs remain the execution path. Decision 024 supersedes the earlier UI deferral; two human roles and email-link sign-in are selected defaults.
+Scope: coverage-led separate Admin UI, embedded workflow guide, securely bootstrapped owner, verified/approved expiring read-only visitors, public Admin entry, safe operational reads, bounded imports/recovery and explicit v2 publication. Existing API/worker/jobs remain the execution path. Decision 024 supersedes the earlier UI deferral; two human roles and email-link sign-in are selected defaults. NEM-082 (grid coverage read) is delivered; NEM-095 identity storage is in progress.
 
 Sequence: NEM-095 identity → NEM-096 sessions/mail → NEM-097 permissions → NEM-098 requests/grants and NEM-099 reads (with NEM-082) → NEM-100 console → NEM-101 entry/auth, NEM-102–103 load workflow and NEM-104 access UI → NEM-105 public entry/runbook → NEM-106 verification → NEM-107 visual/exit review. Independent API slices may proceed concurrently once their dependencies are satisfied.
 

@@ -257,6 +257,31 @@ def test_contract_captures(
             "test-1",
         )
     )
+    GridStore(scratch_db).save(
+        GridFetch(
+            (
+                GridBatch(
+                    Region.NSW1,
+                    Metric.POWER,
+                    "wind",
+                    DAY + timedelta(days=1),
+                    flat,
+                ),
+            ),
+            RETRIEVED,
+            response_hash("capture-grid-power"),
+            "test-1",
+        )
+    )
+
+    # -- operator grid coverage (NEM-082) -------------------------------------
+
+    COV = "/api/admin/v1/grid-coverage"
+    get(f"{COV}/NSW1?start=2023-10-01&endExclusive=2023-10-03")  # 401
+    get(f"{COV}/NSW1?start=2023-10-01&endExclusive=2023-10-03", auth)
+    get(f"{COV}/NSW1?start=2023-10-01&endExclusive=2023-10-01", auth)  # 400
+    get(f"{COV}/NSW1?start=2023-10-01", auth)  # 400
+
     catalogue = GridCatalogue(scratch_db)
     catalogue.publish(Region.NSW1, DAY + timedelta(days=1), DAY + timedelta(days=2))
 

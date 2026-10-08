@@ -17,6 +17,7 @@ from sqlalchemy.engine import Engine
 from nemlab_api.admin import admin_router
 from nemlab_api.errors import register_error_handlers
 from nemlab_api.events import events_router
+from nemlab_api.grid_coverage import grid_coverage_router
 from nemlab_api.grid_imports import grid_imports_router, register_grid_errors
 from nemlab_api.grid_publications import grid_publications_router
 from nemlab_api.middleware import (
@@ -105,9 +106,9 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             )
             app.include_router(admin_router(RefreshJobService(engine, prices)))
             register_grid_errors(app)
-            app.include_router(
-                grid_imports_router(GridImportJobs(engine, GridStore(engine)))
-            )
+            grid = GridStore(engine)
+            app.include_router(grid_imports_router(GridImportJobs(engine, grid)))
+            app.include_router(grid_coverage_router(grid))
             app.include_router(grid_publications_router(GridCatalogue(engine)))
 
     app.add_middleware(RequestLogging)

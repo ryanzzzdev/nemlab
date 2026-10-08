@@ -37,6 +37,20 @@ The [accepted Admin plan](features/admin.md) supersedes the UI deferral referenc
 
 ## Phase 1 — import grid observations
 
+Inspect what is already stored before submitting — the coverage read answers
+per day and per series without creating a publication:
+
+```sh
+curl "http://localhost:8080/api/admin/v1/grid-coverage/QLD1?start=2023-09-01&endExclusive=2023-10-01" \
+  -H "Authorization: Bearer $NEMLAB_ADMIN_TOKEN"
+```
+
+Each day reports `availability` over the required market series
+(`NOT_IMPORTED`/`PARTIAL`/`COMPLETE`), a `series` list with the three market
+metrics always present plus any stored power fueltech series, and per-series
+revision/observation counts. Bounds match the other operator reads: 1–31
+completed market days since 2021-10-01.
+
 One job imports a bounded window of **1–31 completed market days** for one
 region, day by day, with a durable checkpoint (`nextDay`). Market data (demand,
 interconnector flows) is required; power-by-fueltech fetch failures are
