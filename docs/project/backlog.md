@@ -3453,7 +3453,7 @@ Completed 2026-10-08 — static prototype at `nemlab-ui/apps/admin/prototype/ind
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-109](#nem-109)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3469,7 +3469,7 @@ Build independent Admin shell and table primitives, preserving delivered Admin c
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08. `apps/admin` is style-independent: `main.tsx` no longer imports `public/src/styles.css` or the public `ThemeProvider`; `admin.css` is a self-contained port of the accepted prototype tokens plus a compat layer for un-migrated pages. New `prefs.tsx` (`LayoutPrefsProvider`/`useThemePreference`) owns theme (shared `nemlab-theme` key), density and pane sizes under one `nemlab-admin-layout` key — presentation data only. Shell is the prototype frame: 48px app bar (dev-env badge, Help, Density, Theme, account+expiry, Sign out), 176px rail collapsing to icon width ≤1360px, owner-only Access item with live pending-count badge. New primitives: `Table.tsx` (role=grid keyboard contract, column-visibility menu persisted per table), `Panes.tsx` (pointer + keyboard `role="separator"` resizing for inspector/activity, persisted, Home resets), `Drawer.tsx` (Escape/focus-managed portal), `Toolbar.tsx` (toolbar/stat-strip/tabs). Verified at 1440×900 light/dark, 1280×720 collapsed rail, 720px (~200% zoom) with zero horizontal overflow; welcome renders anonymous-clean; 126/126 public browser tests pass; both builds and contract check green.
 
 <a id="nem-111"></a>
 
