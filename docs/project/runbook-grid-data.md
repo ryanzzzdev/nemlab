@@ -1,10 +1,12 @@
 # GridReplay data loading runbook
 
 Created: 2026-10-08
+Updated: 2026-10-08 — reconciled for the delivered Admin UI (NEM-105): browser
+load/publish workflow, browser-vs-automation identity, explicit v2 publication.
 Scope: how an operator populates GridReplay — which endpoints load observations,
-in what order, and how to monitor and recover. This is the tested manual path
-(decision 021 defers the Admin UI); it is also the contract a future Admin UI
-would orchestrate.
+in what order, and how to monitor and recover. The owner does this in the
+browser Admin console; the curl path below remains the tested automation path
+and the contract the UI orchestrates.
 
 Pipeline: **grid import → price refresh → publish catalogue**. Phases are
 separate because the stores are separate: grid observations land in
@@ -18,21 +20,55 @@ succeeds — run/spike detectors have nothing to detect and ramp snapshots pin
 identity), so the safe recovery is always *import the missing data, then
 republish* — never database edits.
 
-## M6 planning note — 2026-10-08
+## Browser path — the Admin console
 
-The [accepted Admin plan](features/admin.md) supersedes the UI deferral referenced below. This manual runbook remains the existing operational path. The publication example below defaults to v1; v2 is already supported by explicitly adding `"detectorSuite":"v2"` and requires the detector-v2 migration (V7 or current migration head). Highlights are a separate selection policy over published events. NEM-105 will reconcile all examples and add browser-account instructions when implemented; those accounts do not exist yet.
+The delivered way to run this pipeline is the Admin UI at `/admin`, a separate
+bundle on the same origin. Sign-in is an emailed single-use link — request one
+at `/admin/sign-in` for an account the owner has approved (or the bootstrap
+owner). The console mirrors this runbook:
+
+- **Coverage** answers what is stored before loading (same read as the curl
+  example below).
+- **Load data** reviews a ≤366-day scope, then creates a resumable load
+  operation that dispatches ≤31-day chunks — grid phase first, then prices —
+  with explicit per-chunk dispatch, pause and resume. It never publishes.
+- **Jobs** shows every bounded submission, checkpoints, attempts and audit
+  events; owner can cancel active imports and "Submit again" for the remaining
+  window after failure.
+- **Publications** previews coverage for a ≤31-day scope, requires an owner
+  acknowledgement for incomplete days, then publishes explicitly — **v2 is the
+  default suite** (v1 is an advanced option). Each publish carries a caller
+  attempt key so a lost response reconciles against the recorded run instead
+  of silently republishing.
+- **Access** is where the owner approves verified requests, extends or revokes
+  viewer grants. Baseline demand history for ramp detection is an explicit
+  separate import, never silently fetched.
+
+Humans use the browser session; automation uses the bearer token below. The
+two are separate credentials — a browser request that also presents a bearer
+is rejected, and the UI never stores a credential.
 
 ## Prerequisites
 
-- API running with `NEMLAB_ADMIN_ENABLED=true`, `NEMLAB_ADMIN_OPERATOR` and a
-  `NEMLAB_ADMIN_TOKEN` (43–128 char base64url). Admin routes are not mounted
-  without them.
+- API running with `NEMLAB_ADMIN_ENABLED=true`, `NEMLAB_ADMIN_OPERATOR`,
+  `NEMLAB_ADMIN_TOKEN` (43–128 char base64url) and `NEMLAB_ADMIN_BASE_URL`
+  (the Admin UI origin+path used in sign-in links). Admin routes are not
+  mounted without them.
+- Browser path additionally needs a bootstrapped owner
+  (`python -m nemlab_infrastructure.admin bootstrap-owner`, see
+  [infrastructure README](../../infrastructure/README.md#admin-identity)) and
+  the worker mail drain so sign-in links actually send
+  (`NEMLAB_MAIL_ENABLED`, `NEMLAB_MAIL_DIR`).
 - Worker running with `NEMLAB_GRID_IMPORT_ENABLED=true` and
   `OPEN_ELECTRICITY_API_KEY` set, plus `NEMLAB_WORKER_ENABLED=true` for price
   refreshes.
-- Schema migrated to head (V4–V6 grid tables).
-- Every mutating request needs `Authorization: Bearer $NEMLAB_ADMIN_TOKEN` and a
-  unique `Idempotency-Key` header (publication is the exception — see below).
+- Schema migrated to head. Detector v2 publication additionally requires the
+  detector-v2 migration (V7 or current head); the identity/load-operation
+  tables need V8–V10 (all included in `migrate`).
+- Every mutating automation request needs
+  `Authorization: Bearer $NEMLAB_ADMIN_TOKEN` and a unique `Idempotency-Key`
+  header (publication is the exception — see below). Browser sessions supply
+  their own cookie + CSRF instead.
 - Regions: NSW1, QLD1, SA1, TAS1, VIC1 — all supported end to end.
 
 ## Phase 1 — import grid observations
@@ -136,26 +172,36 @@ Semantics:
 
 ## Phase 3 — publish the catalogue
 
-One atomic publication per region+window runs the frozen v1 detectors over all
-stored observations, mints immutable event versions with materialised replay
-snapshots, and swaps the region's catalogue pointer — in a single
-REPEATABLE READ transaction.
+One atomic publication per region+window runs the chosen detector suite over
+all stored observations, mints immutable event versions with materialised
+replay snapshots, and swaps the region's catalogue pointer — in a single
+REPEATABLE READ transaction. The Admin UI submits `"detectorSuite":"v2"`
+explicitly (v1 remains for compatibility); a bare API call defaults to v1.
 
 ```sh
 curl -X POST http://localhost:8080/api/admin/v1/grid-publications \
   -H "Authorization: Bearer $NEMLAB_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"region":"QLD1","startDay":"2023-09-01","endExclusive":"2023-10-01"}'
+  -d '{"region":"QLD1","startDay":"2023-09-01","endExclusive":"2023-10-01","detectorSuite":"v2","attemptKey":"run-2023-09-a"}'
 ```
 
 (No `Idempotency-Key` — every successful call creates a new publication row;
-a republish is an explicit, meaningful operation.)
+a republish is an explicit, meaningful operation. `attemptKey` is optional
+caller correlation recorded on the detection run: it reconciles a lost
+response via `GET /api/admin/v1/grid-publications/attempts`, it never
+deduplicates.)
 
 Response carries `id`, `region`, `startDay`, `endExclusive`,
 `detectorVersion`, `eventCount`, `coverage`, `createdAt`. Inspection:
 
 - `GET /api/admin/v1/grid-publications?limit=50` — publication history
 - `GET /api/admin/v1/grid-publications/{id}` — detail including coverage
+- `GET /api/admin/v1/grid-publications/attempts` — detection-run history with
+  actor and `attemptKey`, for reconciling a lost publish response
+
+A span longer than 31 days is deliberately *not* auto-published: publish each
+≤31-day window explicitly — the most recent publication wins the region's
+latest pointer; it does not append monthly catalogues.
 
 Semantics:
 
@@ -184,7 +230,9 @@ independent (publishing QLD1 never touches NSW1's catalogue or saved links).
 
 | Symptom | Meaning | Action |
 | --- | --- | --- |
-| 401 on any admin call | missing/wrong token | check `NEMLAB_ADMIN_*` env |
+| 401 on any admin call | missing/wrong token, or an expired/consumed session | automation: check `NEMLAB_ADMIN_*` env; browser: request a fresh sign-in link |
+| 403 on a browser decision | capability or recent-auth failure | viewers are read-only; owner decisions need a sign-in from the last 15 minutes |
+| 409 `ACCESS_CONFLICT` on a decision | request/grant already decided or stale version | refresh the view — the other decision already committed |
 | 404 on `/api/admin/…` | admin routes not mounted | `NEMLAB_ADMIN_ENABLED=true`, restart API |
 | 400 naming a field/header | request validation | fix request; message names the missing part |
 | 409 `IDEMPOTENCY_CONFLICT` | key reused with different payload | use a new key |
@@ -193,27 +241,29 @@ independent (publishing QLD1 never touches NSW1's catalogue or saved links).
 | job stuck RUNNING after worker restart | lease expiry will requeue (~5 min) | none — resumes from `nextDay` |
 | catalogue published but price chart empty | prices imported after publication | republish the window (fixed since the context-pin dedupe change) |
 
-## Admin UI contract (when built)
+## Admin UI (delivered)
 
-A future Admin app should orchestrate the same three phases — nothing here
-requires a new backend surface:
+The Admin app orchestrates the same three phases — no new backend surface was
+needed beyond the bounded console reads and load-operation metadata:
 
-- **Load-window flow**: region + date range → client-side chunking into ≤31-day
-  grid-import submissions; then one windowed refresh submission per ≤31-day
-  chunk (it fans out to a job per market day server-side); then a publish
-  action once jobs succeed.
+- **Load-window flow**: region + ≤366-day range → one resumable load
+  operation; explicit dispatch submits ≤31-day grid chunks then ≤31-day price
+  windows with queue backpressure. Pause stops new submissions without
+  cancelling queued children; resume reconciles via deterministic child keys.
 - **Status views**: job list/detail with `nextDay` progress and `attempts`;
   the `events` endpoint is the audit view (submission → claims → day commits →
   terminal).
-- **Actions**: cancel a running import; resubmit remaining window after
-  failure; publish/republish a window.
-- **Feedback**: surface `optionalFailures`, `diagnostic`, and queue-full as
-  states, not silent retries.
-- **Constraints from decision 021**: the app is a *separate* bundle
-  (`apps/admin`), never part of the public build; no operator token in the
-  public app or a Vite env; authentication/session/CSRF requirements must be
-  designed before browser implementation.
+- **Actions**: cancel a running import; submit the remaining window as a new
+  bounded submission after failure; publish/republish a ≤31-day window.
+- **Feedback**: `optionalFailures`, `diagnostic` and queue-full
+  (`backpressured`) are states, not silent retries; publish attempts carry a
+  caller correlation key for lost-response reconciliation.
+- **Constraints (decision 021, kept)**: the app is a *separate* bundle
+  (`apps/admin` served at `/admin`), never part of the public build; no
+  operator token or secret in either bundle or a Vite env. Browser
+  authentication is email-link sessions with CSRF + same-origin checks; the
+  bearer token below is automation-only.
 
-See also: [decision 021 — Admin UI deferred](decisions/021-admin-ui-deferred.md),
+See also: [decision 021 — Admin UI deferred](decisions/021-admin-ui-deferred.md) (superseded by M6 delivery),
 [NEM-063 rehearsal evidence](evidence/m5-ops-rehearsal.md),
 [gridreplay feature spec](features/gridreplay.md).

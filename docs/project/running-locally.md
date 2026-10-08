@@ -48,13 +48,17 @@ The API honours `NEMLAB_DATA_ENABLED` (public price reads),
 `NEMLAB_ADMIN_ENABLED` (operator routes and browser auth, requiring
 `NEMLAB_ADMIN_OPERATOR`, a 43–128 character base64url `NEMLAB_ADMIN_TOKEN`
 and `NEMLAB_ADMIN_BASE_URL` — the Admin UI origin+path used in sign-in
-links, e.g. `http://localhost:5173/admin`) and
+links, e.g. `http://127.0.0.1:5274/admin` for the local dev server) and
 `NEMLAB_SIMULATION_API_ENABLED` (public simulation lifecycle).
 `SERVER_ADDRESS` and `PORT` select the bind. With all flags off the API starts
 health-only; any enabled flag requires `NEMLAB_DB_*` and a migrated schema.
 Sessions use Secure cookies by default; `NEMLAB_ENVIRONMENT=development`
 plus `NEMLAB_INSECURE_COOKIES=true` relaxes that for local http — the
-combination refuses to start under `production`.
+combination refuses to start under `production`. Auth rate limits tune via
+`NEMLAB_ADMIN_MAIL_PER_EMAIL_HOUR` (5), `NEMLAB_ADMIN_MAIL_PER_IP_HOUR`
+(20), `NEMLAB_ADMIN_RESEND_COOLDOWN_SECONDS` (60),
+`NEMLAB_ADMIN_EXCHANGE_FAIL_PER_IP` (10/15 min) and
+`NEMLAB_ADMIN_MAIL_BUDGET_PER_DAY` (200).
 
 Browser sign-in is email-link only: `POST /api/auth/v1/sign-in-requests`
 queues a durable outbox row, `POST /api/auth/v1/sessions` exchanges the
@@ -80,6 +84,15 @@ The worker honours `NEMLAB_WORKER_ENABLED` (refresh polling — requires
 and `NEMLAB_MAIL_POLL_MS`. Fetch and simulation children run isolated
 with cleared environments and bounded deadlines; stopping the worker releases
 claims as `WORKER_STOPPED`.
+
+The mail drain also runs access retention hourly: unverified requests are
+deleted after 7 days, rejected requests after 30, approved-request messages
+are scrubbed 30 days post-decision, lapsed visitor contact data is
+pseudonymised 90 days after their last grant ends, and access-audit rows are
+deleted after 180 days — the product defaults, not a compliance
+certification. A real mail provider, sender domain and credentials are
+deployment inputs (M7); the only transport in this build is the captured
+`.eml` mailbox.
 
 Operator grid imports are submitted on the admin surface:
 
@@ -152,7 +165,8 @@ From `nemlab-ui/`:
 
 ```sh
 npm ci --ignore-scripts
-npm run dev   # http://127.0.0.1:5173
+npm run dev         # http://127.0.0.1:5173 — public app
+npm run dev:admin   # http://127.0.0.1:5274/admin — Admin console
 ```
 
 The shell works without the backend. It proxies `/api/v1/prices` to

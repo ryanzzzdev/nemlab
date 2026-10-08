@@ -3266,7 +3266,7 @@ empty lists and direct viewer navigation covered.
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-101](#nem-101), [NEM-103](#nem-103), [NEM-104](#nem-104)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3282,7 +3282,24 @@ Publish Admin entry link and reconcile operator guidance. Deliver the correspond
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. The public app footer carries a modest plain
+`<a href="/admin">Admin</a>` — a separate-bundle navigation that loads
+no private data and embeds no credential (verified in-browser).
+`runbook-grid-data.md` is reconciled to the delivered UI: a "Browser
+path" section mirrors the pipeline (Coverage → Load data → Jobs →
+Publications → Access), prerequisites now distinguish browser sessions
+from the automation bearer, schema prerequisites call out V7+ for v2 and
+V8–V10 identity/load tables, the publication example defaults explicit
+v2 with an `attemptKey`, the attempts read is documented for
+lost-response reconciliation, the >31-day pointer rule is explicit, and
+the failure table covers session expiry, capability/recent-auth 403s and
+`ACCESS_CONFLICT`. The "Admin UI contract (when built)" section now
+describes the delivered app. `running-locally.md` fixes the
+`NEMLAB_ADMIN_BASE_URL` example to the real dev port, documents the
+auth rate-limit tunables, the `dev:admin` command and the actual
+hourly retention policy (7d unverified / 30d rejected / 30d decided
+messages / 90d lapsed contacts / 180d audit), noting provider transport
+remains a deployment input for M7 — no production readiness claimed.
 
 <a id="nem-106"></a>
 
