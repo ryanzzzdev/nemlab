@@ -14,6 +14,7 @@ import threading
 from pydantic import ValidationError
 
 from nemlab_core.prices import Region
+from nemlab_infrastructure.admin.access import AccessRequests
 from nemlab_infrastructure.admin.mail import LocalMailbox, OutboxMailer
 from nemlab_infrastructure.database import create_bounded_engine
 from nemlab_infrastructure.grid.imports import GridImportJobs
@@ -103,10 +104,12 @@ def run(settings: WorkerSettings, stop: threading.Event) -> None:
                 )
             )
         if settings.mail_enabled:
+            retention = AccessRequests(engine).prune
             workers.append(
                 MailWorker(
                     OutboxMailer(engine, LocalMailbox(settings.mail_dir)),
                     settings.mail_poll_ms / 1000,
+                    retention=retention,
                 )
             )
         for worker in workers:

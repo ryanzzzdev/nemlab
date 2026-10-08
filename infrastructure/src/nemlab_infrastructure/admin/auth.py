@@ -59,6 +59,81 @@ class Principal:
     role: str  # owner | viewer | applicant
     name: str
     expires_at: datetime
+    authenticated_at: datetime
+
+
+def create_session(
+    conn: sa.Connection,
+    *,
+    user_id: UUID | None = None,
+    request_id: UUID | None = None,
+    now: datetime,
+) -> str:
+    raw = mint()
+    conn.execute(
+        sa.text(
+            "INSERT INTO admin_session"
+            " (id, user_id, request_id, token_hash, expires_at)"
+            " VALUES (:id, :user, :request, :hash, :expires)"
+        ),
+        {
+            "id": uuid.uuid4(),
+            "user": user_id,
+            "request": request_id,
+            "hash": _hash(raw),
+            "expires": now + SESSION_LIFE,
+        },
+    )
+    return raw
+
+
+def queue_mail(
+    conn: sa.Connection,
+    *,
+    recipient: str,
+    kind: str,
+    subject: str,
+    body: str,
+    dedupe_key: str,
+) -> None:
+    conn.execute(
+        sa.text(
+            "INSERT INTO admin_email_outbox"
+            " (id, recipient, kind, subject, body, dedupe_key)"
+            " VALUES (:id, :recipient, :kind, :subject, :body, :dedupe)"
+        ),
+        {
+            "id": uuid.uuid4(),
+            "recipient": recipient,
+            "kind": kind,
+            "subject": subject,
+            "body": body,
+            "dedupe": dedupe_key,
+        },
+    )
+
+
+def audit_event(
+    conn: sa.Connection,
+    *,
+    actor_user_id: UUID | None,
+    actor_label: str,
+    action: str,
+    subject: str | None,
+) -> None:
+    conn.execute(
+        sa.text(
+            "INSERT INTO admin_access_audit"
+            " (actor_user_id, actor_label, action, subject, result)"
+            " VALUES (:actor, :label, :action, :subject, 'applied')"
+        ),
+        {
+            "actor": actor_user_id,
+            "label": actor_label,
+            "action": action,
+            "subject": subject,
+        },
+    )
 
 
 class AdminAuth:
@@ -91,35 +166,49 @@ class AdminAuth:
             ).first()
             if row is None or not self._grant_active(conn, row.id, row.role, now):
                 return False
-            token_id = uuid.uuid4()
-            raw = mint()
-            conn.execute(
-                sa.text(
-                    "INSERT INTO admin_token"
-                    " (id, purpose, user_id, token_hash, expires_at)"
-                    " VALUES (:id, 'sign_in', :user, :hash, :expires)"
-                ),
-                {
-                    "id": token_id,
-                    "user": row.id,
-                    "hash": _hash(raw),
-                    "expires": now + TOKEN_TTL,
-                },
-            )
-            link = f"{self.base_url}/sign-in#token={raw}"
-            self._queue_mail(
-                conn,
-                recipient=row.email,
-                kind="sign_in",
-                subject="NEMLab Admin sign-in",
-                body=(
-                    f"Sign in to NEMLab Admin:\n\n{link}\n\n"
-                    "This link expires in 15 minutes and can be used once."
-                    " If you did not request it, ignore this message.\n"
-                ),
-                dedupe_key=f"sign_in:{token_id}",
-            )
+            self.queue_sign_in(conn, user_id=row.id, email=row.email, now=now)
             return True
+
+    def queue_sign_in(
+        self,
+        conn: sa.Connection,
+        *,
+        user_id: UUID,
+        email: str,
+        now: datetime,
+        dedupe_key: str | None = None,
+    ) -> None:
+        """Mint a 15-minute sign-in token and queue its email inside the
+        caller's transaction — used by both sign-in requests and viewer
+        approval so grant/token/outbox land atomically (NEM-098)."""
+        token_id = uuid.uuid4()
+        raw = mint()
+        conn.execute(
+            sa.text(
+                "INSERT INTO admin_token"
+                " (id, purpose, user_id, token_hash, expires_at)"
+                " VALUES (:id, 'sign_in', :user, :hash, :expires)"
+            ),
+            {
+                "id": token_id,
+                "user": user_id,
+                "hash": _hash(raw),
+                "expires": now + TOKEN_TTL,
+            },
+        )
+        link = f"{self.base_url}/sign-in#token={raw}"
+        queue_mail(
+            conn,
+            recipient=email,
+            kind="sign_in",
+            subject="NEMLab Admin sign-in",
+            body=(
+                f"Sign in to NEMLab Admin:\n\n{link}\n\n"
+                "This link expires in 15 minutes and can be used once."
+                " If you did not request it, ignore this message.\n"
+            ),
+            dedupe_key=dedupe_key or f"sign_in:{token_id}",
+        )
 
     def exchange(self, raw_token: str) -> tuple[str, Principal]:
         """Consume a sign-in token and open a session; returns the raw
@@ -150,7 +239,7 @@ class AdminAuth:
                 sa.text("UPDATE admin_token SET consumed_at = :now WHERE id = :id"),
                 {"now": now, "id": row.id},
             )
-            raw_session = self._create_session(conn, user_id=row.user_id, now=now)
+            raw_session = create_session(conn, user_id=row.user_id, now=now)
             principal = Principal(
                 session_id=self._session_id(conn, raw_session),
                 user_id=row.user_id,
@@ -158,8 +247,9 @@ class AdminAuth:
                 role=row.role,
                 name=row.display_name,
                 expires_at=now + SESSION_LIFE,
+                authenticated_at=now,
             )
-            self._audit(
+            audit_event(
                 conn,
                 actor_user_id=row.user_id,
                 actor_label=row.role,
@@ -181,7 +271,7 @@ class AdminAuth:
             row = conn.execute(
                 sa.text(
                     "SELECT s.id, s.user_id, s.request_id, s.last_seen_at,"
-                    " s.expires_at, s.revoked_at,"
+                    " s.created_at, s.expires_at, s.revoked_at,"
                     " u.role, u.display_name, u.disabled_at"
                     " FROM admin_session s"
                     " LEFT JOIN admin_user u ON u.id = s.user_id"
@@ -212,7 +302,13 @@ class AdminAuth:
                 {"now": now, "id": row.id},
             )
             return Principal(
-                row.id, row.user_id, row.request_id, role, name, row.expires_at
+                row.id,
+                row.user_id,
+                row.request_id,
+                role,
+                name,
+                row.expires_at,
+                row.created_at,
             )
 
     def logout(self, raw_session: str) -> None:
@@ -241,7 +337,7 @@ class AdminAuth:
             ).first()
             if row is None or not self._grant_active(conn, row.id, row.role, now):
                 raise ValueError("no enabled account for that email")
-            raw = self._create_session(conn, user_id=row.id, now=now)
+            raw = create_session(conn, user_id=row.id, now=now)
             return raw, Principal(
                 self._session_id(conn, raw),
                 row.id,
@@ -249,6 +345,7 @@ class AdminAuth:
                 row.role,
                 row.display_name,
                 now + SESSION_LIFE,
+                now,
             )
 
     def prune_expired(self, before: timedelta = timedelta(days=1)) -> int:
@@ -269,31 +366,6 @@ class AdminAuth:
         return removed
 
     # -- internals ----------------------------------------------------------
-
-    def _create_session(
-        self,
-        conn: sa.Connection,
-        *,
-        user_id: UUID | None = None,
-        request_id: UUID | None = None,
-        now: datetime,
-    ) -> str:
-        raw = mint()
-        conn.execute(
-            sa.text(
-                "INSERT INTO admin_session"
-                " (id, user_id, request_id, token_hash, expires_at)"
-                " VALUES (:id, :user, :request, :hash, :expires)"
-            ),
-            {
-                "id": uuid.uuid4(),
-                "user": user_id,
-                "request": request_id,
-                "hash": _hash(raw),
-                "expires": now + SESSION_LIFE,
-            },
-        )
-        return raw
 
     @staticmethod
     def _session_id(conn: sa.Connection, raw: str) -> UUID:
@@ -338,53 +410,4 @@ class AdminAuth:
                 sa.text("SELECT count(*) FROM admin_access_request WHERE id = :id"),
                 {"id": request_id},
             ).scalar_one()
-        )
-
-    @staticmethod
-    def _queue_mail(
-        conn: sa.Connection,
-        *,
-        recipient: str,
-        kind: str,
-        subject: str,
-        body: str,
-        dedupe_key: str,
-    ) -> None:
-        conn.execute(
-            sa.text(
-                "INSERT INTO admin_email_outbox"
-                " (id, recipient, kind, subject, body, dedupe_key)"
-                " VALUES (:id, :recipient, :kind, :subject, :body, :dedupe)"
-            ),
-            {
-                "id": uuid.uuid4(),
-                "recipient": recipient,
-                "kind": kind,
-                "subject": subject,
-                "body": body,
-                "dedupe": dedupe_key,
-            },
-        )
-
-    @staticmethod
-    def _audit(
-        conn: sa.Connection,
-        *,
-        actor_user_id: UUID | None,
-        actor_label: str,
-        action: str,
-        subject: str | None,
-    ) -> None:
-        conn.execute(
-            sa.text(
-                "INSERT INTO admin_access_audit"
-                " (actor_user_id, actor_label, action, subject, result)"
-                " VALUES (:actor, :label, :action, :subject, 'applied')"
-            ),
-            {
-                "actor": actor_user_id,
-                "label": actor_label,
-                "action": action,
-                "subject": subject,
-            },
         )

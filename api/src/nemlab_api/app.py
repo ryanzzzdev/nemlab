@@ -14,6 +14,7 @@ import sqlalchemy as sa
 from fastapi import FastAPI
 from sqlalchemy.engine import Engine
 
+from nemlab_api.access import access_admin_router, access_router
 from nemlab_api.admin import admin_router
 from nemlab_api.auth import auth_router
 from nemlab_api.errors import register_error_handlers
@@ -29,6 +30,7 @@ from nemlab_api.middleware import (
 from nemlab_api.prices import prices_router
 from nemlab_api.settings import ApiSettings
 from nemlab_api.simulations import register_simulation_errors, simulations_router
+from nemlab_infrastructure.admin.access import AccessRequests
 from nemlab_infrastructure.admin.auth import AdminAuth
 from nemlab_infrastructure.admin.rate_limit import RateLimiter
 from nemlab_infrastructure.database import create_bounded_engine
@@ -103,6 +105,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             )
         if settings.admin_enabled:
             admin_auth = AdminAuth(engine, base_url=settings.admin_base_url)
+            rate_limits = RateLimiter(engine)
             app.add_middleware(
                 AdminAccess,
                 operator=settings.admin_operator,
@@ -110,12 +113,13 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
                 auth=admin_auth,
             )
             app.include_router(
-                auth_router(
-                    admin_auth,
-                    RateLimiter(engine),
-                    settings,
-                )
+                auth_router(admin_auth, rate_limits, settings)
             )
+            access = AccessRequests(engine, admin_auth)
+            app.include_router(
+                access_router(access, admin_auth, rate_limits, settings)
+            )
+            app.include_router(access_admin_router(access))
             app.include_router(admin_router(RefreshJobService(engine, prices)))
             register_grid_errors(app)
             grid = GridStore(engine)

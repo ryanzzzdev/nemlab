@@ -116,6 +116,7 @@ class AdminAccess(BaseHTTPMiddleware):
         if cookie is not None and bearer is not None:
             return unauthorised_response()
 
+        principal = None
         if cookie is not None:
             principal = self._auth.resolve(cookie)
             if principal is None:
@@ -143,6 +144,10 @@ class AdminAccess(BaseHTTPMiddleware):
 
         request.state.actor = actor
         request.state.viewer = role == "viewer"
+        request.state.user_id = principal.user_id if principal else None
+        request.state.authenticated_at = (
+            principal.authenticated_at if principal else None
+        )
         return await call_next(request)
 
 

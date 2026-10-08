@@ -502,6 +502,98 @@ def test_contract_captures(
         post(f"{AUTH_BASE}/sign-in-requests", {"email": f"limit{i}@example.test"})
     post(f"{AUTH_BASE}/sign-in-requests", {"email": "over@example.test"})
 
+    # -- access requests (NEM-098) --------------------------------------------
+    # Applicant journey: anonymous submission, token verification, own status.
+    from nemlab_infrastructure.admin.auth import AdminAuth, csrf_for
+
+    ACCESS = "/api/access/v1"
+    REQS = "/api/admin/v1/access-requests"
+    GRANTS = "/api/admin/v1/viewer-grants"
+    applicant = "capture@example.test"
+    post(
+        f"{ACCESS}/requests",
+        {"displayName": "Applicant", "email": applicant, "message": "please"},
+    )
+    post(f"{ACCESS}/requests", {"displayName": "", "email": "bad", "message": "x"})
+    post(f"{ACCESS}/verifications", {"token": "bogus"})  # 401 INVALID_TOKEN
+    get(f"{ACCESS}/requests/status")  # 401 — no session
+    with scratch_db.connect() as conn:
+        verify_body = conn.execute(
+            sa.text(
+                "SELECT body FROM admin_email_outbox"
+                " WHERE kind = 'request_verification' AND recipient = :email"
+                " ORDER BY created_at DESC LIMIT 1"
+            ),
+            {"email": applicant},
+        ).scalar_one()
+    verify_raw = verify_body.split("#token=")[1].split("\n")[0]
+    verified = post(f"{ACCESS}/verifications", {"token": verify_raw})
+    assert verified.status_code == 200
+    applicant_csrf = verified.json()["csrfToken"]
+    get(f"{ACCESS}/requests/status")
+    # Applicant resend while already pending conflicts; CSRF applies too.
+    post(f"{ACCESS}/requests/resend", headers=origin)  # 403 — no CSRF
+    post(
+        f"{ACCESS}/requests/resend",
+        headers={**origin, "x-csrf-token": applicant_csrf},
+    )  # 409 — already pending
+
+    # Owner journey: queue, detail with deliveries, approve, invite resend,
+    # grant extend/revoke. The seeded session keeps recent-auth fresh.
+    raw_owner, _principal = AdminAuth(
+        scratch_db, base_url="http://testserver/admin"
+    ).seed_session("owner@example.test")
+    client.cookies.set("nemlab_session", raw_owner)
+    owner_headers = {**origin, "x-csrf-token": csrf_for(raw_owner)}
+    queue = get(REQS)
+    request_id = next(r["id"] for r in queue.json() if r["email"] == applicant)
+    get(REQS + "?state=bogus")  # 400 INVALID_REQUEST
+    detail = get(f"{REQS}/{request_id}")
+    get(f"{REQS}/{uuid.uuid4()}")  # 404 REQUEST_NOT_FOUND
+    decided = post(
+        f"{REQS}/{request_id}/decisions",
+        {"decision": "approve", "days": 30, "version": detail.json()["version"]},
+        owner_headers,
+    )
+    assert decided.status_code == 200
+    post(
+        f"{REQS}/{request_id}/decisions",
+        {"decision": "reject", "version": detail.json()["version"]},
+        owner_headers,
+    )  # 409 ACCESS_CONFLICT — stale replay
+    post(f"{REQS}/{request_id}/resend", "", owner_headers)  # 202 invite resend
+    post(f"{REQS}/{uuid.uuid4()}/resend", "", owner_headers)  # 404
+    grants_list = get(GRANTS)
+    get(f"{GRANTS}?state=active")
+    grant_id = next(g["id"] for g in grants_list.json() if g["requestId"] == request_id)
+    post(f"{GRANTS}/{grant_id}/extend", {"days": 90}, owner_headers)
+    post(f"{GRANTS}/{grant_id}/extend", {"days": 14}, owner_headers)  # 400
+    post(f"{GRANTS}/{uuid.uuid4()}/extend", {"days": 30}, owner_headers)  # 404
+
+    # The approved applicant's sign-in invite opens a viewer session; access
+    # management stays owner-only, and revocation denies the next request.
+    with scratch_db.connect() as conn:
+        invite_body = conn.execute(
+            sa.text(
+                "SELECT body FROM admin_email_outbox"
+                " WHERE kind = 'sign_in' AND recipient = :email"
+                " ORDER BY created_at DESC LIMIT 1"
+            ),
+            {"email": applicant},
+        ).scalar_one()
+    invite_raw = invite_body.split("#token=")[1].split("\n")[0]
+    client.cookies.clear()
+    signed_in = post(f"{AUTH_BASE}/sessions", {"token": invite_raw})
+    assert signed_in.status_code == 200
+    get(REQS)  # 403 — viewers cannot read access management
+    viewer_raw = client.cookies.get("nemlab_session")
+    client.cookies.set("nemlab_session", raw_owner)
+    post(f"{GRANTS}/{grant_id}/revoke", {"reason": "capture"}, owner_headers)
+    post(f"{GRANTS}/{grant_id}/extend", {"days": 30}, owner_headers)  # 409
+    client.cookies.set("nemlab_session", viewer_raw)
+    get(GRID)  # 403 — grant revoked; next request denied
+    client.cookies.clear()
+
     # Refresh-queue saturation last: any earlier fill would starve the visitor
     # submissions above, and ``claim`` picks the oldest pending job.
     from nemlab_infrastructure.jobs import (

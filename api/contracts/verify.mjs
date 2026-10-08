@@ -29,13 +29,25 @@ function validate(schema, value, label) {
 }
 
 const SESSION_PATHS = new Set(["/api/auth/v1/session", "/api/auth/v1/logout"]);
+// Browser-session-only routes: owner access management plus the applicant
+// status/resend surface. Bearer automation carries no authority on these.
+const COOKIE_PREFIXES = [
+  "/api/admin/v1/access-requests",
+  "/api/admin/v1/viewer-grants",
+  "/api/access/v1/requests/status",
+  "/api/access/v1/requests/resend",
+];
 for (const route of routes) {
   const { operation } = route;
-  const expected = route.path.startsWith("/api/admin/")
-    ? [{ operatorBearer: [] }]
-    : SESSION_PATHS.has(route.path)
-      ? [{ sessionCookie: [] }]
-      : [];
+  const expected = COOKIE_PREFIXES.some((prefix) =>
+    route.path.startsWith(prefix),
+  )
+    ? [{ sessionCookie: [] }]
+    : route.path.startsWith("/api/admin/")
+      ? [{ operatorBearer: [] }]
+      : SESSION_PATHS.has(route.path)
+        ? [{ sessionCookie: [] }]
+        : [];
   assert.deepEqual(operation.security, expected);
   for (const response of Object.values(operation.responses)) {
     const schema = response.content?.["application/json"]?.schema;

@@ -3003,7 +3003,7 @@ Completed 2026-10-08. `api/src/nemlab_api/capabilities.py` registers every `/api
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-096](#nem-096), [NEM-097](#nem-097)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3019,7 +3019,7 @@ Implement access requests approvals and grant lifecycle. Deliver the correspondi
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08. `infrastructure/src/nemlab_infrastructure/admin/access.py` implements the request lifecycle (unverified → pending → approved|rejected): single active request per normalised email enforced by `FOR UPDATE` re-checks, 24 h single-use verification tokens, applicant sessions bound to `request_id`, plain-text field validation, resend cooldowns and mail budgets via `RateLimiter`. `decide`/`extend`/`revoke` are single transactions covering status bumps, viewer-user upsert, grant write, sign-in/verification outbox records and audit events; the optimistic `version` check conflicts stale or replayed decisions. `prune` (run from the worker's mail loop) deletes unverified requests at 7 days, rejected requests and their mail at 30 days, scrubs lapsed-viewer contact data at 90 days while keeping grant row references, and expires audit at 180 days; revocation is checked on every session resolution so the viewer's next request denies. `api/src/nemlab_api/access.py` exposes the anonymous submit/verify surface plus the applicant status/resend routes (generic responses; no existence signal) and owner-only `/api/admin/v1/access-requests|viewer-grants` routes behind the `access.manage` capability with a 15-minute recent-auth check on decisions and grant mutations. `test_admin_access.py` covers duplicates, verification, stale decisions, lifecycle and retention; `test_access_http.py` covers the full request→verify→approve→viewer-sign-in→revoke journey including bearer/cookie conflicts. Contract captures added for all 11 operations; `verify.mjs` passes 176 responses/39 operations; ruff/mypy-strict/lint-imports clean.
 
 <a id="nem-099"></a>
 

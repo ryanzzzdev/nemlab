@@ -9,16 +9,29 @@ recipient from this build).
 
 import logging
 import threading
+import time
+from collections.abc import Callable
 
 from nemlab_infrastructure.admin.mail import OutboxMailer
 
 LOG = logging.getLogger(__name__)
 
+RETENTION_SECONDS = 3600
+
 
 class MailWorker:
-    def __init__(self, mailer: OutboxMailer, poll_interval: float) -> None:
+    def __init__(
+        self,
+        mailer: OutboxMailer,
+        poll_interval: float,
+        *,
+        retention: Callable[[], object] | None = None,
+    ) -> None:
         self._mailer = mailer
         self._poll = poll_interval
+        self._retention = retention
+        # Negative offset so the first tick always runs retention once.
+        self._retention_at = float(-RETENTION_SECONDS)
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._running = False
@@ -49,6 +62,16 @@ class MailWorker:
             self._mailer.send_pending()
         except Exception:
             LOG.warning("mail outbox drain failed; retrying on next poll")
+        if (
+            self._retention is not None
+            and time.monotonic() - self._retention_at >= RETENTION_SECONDS
+        ):
+            try:
+                self._retention()
+            except Exception:
+                LOG.warning("access retention cleanup failed; retrying later")
+            else:
+                self._retention_at = time.monotonic()
 
     def stop(self) -> None:
         self._running = False
