@@ -157,7 +157,7 @@ def auth_router(
         response.set_cookie(
             COOKIE,
             raw,
-            max_age=8 * 3600,
+            max_age=72 * 3600,
             httponly=True,
             samesite="lax",
             secure=settings.secure_cookies,

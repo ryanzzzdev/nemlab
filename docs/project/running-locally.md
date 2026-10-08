@@ -63,16 +63,48 @@ combination refuses to start under `production`. Auth rate limits tune via
 Browser sign-in is email-link only: `POST /api/auth/v1/sign-in-requests`
 queues a durable outbox row, `POST /api/auth/v1/sessions` exchanges the
 fragment token for an HttpOnly cookie, and `POST /api/auth/v1/logout`
-revokes (CSRF + same-origin required). For local development, seed an
-owner then mint a session without mail:
+revokes (CSRF + same-origin required). Sessions last 72 hours absolute with
+a 24-hour idle window that slides on each request.
+
+Two ways to get an owner session locally. First bootstrap the owner once:
 
 ```sh
 uv run python -m nemlab_infrastructure.admin bootstrap-owner \
     --name "Owner" --email "owner@example.test" --confirm
+```
+
+**1. Seed a session cookie directly** (no mail needed — dev only):
+
+```sh
 NEMLAB_ENVIRONMENT=development \
     uv run python -m nemlab_infrastructure.admin seed-session \
     --email "owner@example.test"
 ```
+
+The command prints a `token:` — store it as the `nemlab_session` cookie on
+`127.0.0.1` (DevTools → Application → Cookies → `http://127.0.0.1:5274`,
+new cookie named `nemlab_session`, value = the token), then reload
+`http://127.0.0.1:5274/admin/`.
+
+**2. Real sign-in flow** — exercises the actual auth path:
+
+1. Open `http://127.0.0.1:5274/admin/sign-in`, enter `owner@example.test`,
+   submit. The response is a generic `202` either way.
+2. With mail delivery off, read the link from the outbox:
+
+   ```sh
+   docker exec nemlab-postgres-1 psql -U nemlab -d nemlab -tA -c \
+     "SELECT substring(body from 'https?://[^[:space:]]*sign-in#token=[A-Za-z0-9_-]+') \
+      FROM admin_email_outbox \
+      WHERE kind='sign_in' AND recipient='owner@example.test' \
+      ORDER BY created_at DESC LIMIT 1"
+   ```
+
+   (Or enable `NEMLAB_MAIL_ENABLED=true` + `NEMLAB_MAIL_DIR=/tmp/nemlab-mail`
+   on the worker and `cat` the newest `.eml`.)
+3. Open the link — it's a single-use 15-minute token. Note the resend
+   cooldown: rapid resubmits return generic `202` without minting a fresh
+   token, so reuse the newest outbox link instead of resubmitting.
 
 The worker honours `NEMLAB_WORKER_ENABLED` (refresh polling — requires
 `OPEN_ELECTRICITY_API_KEY`), `NEMLAB_WORKER_SCHEDULE_ENABLED`,

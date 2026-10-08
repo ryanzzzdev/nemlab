@@ -145,13 +145,13 @@ def test_session_idle_and_absolute_expiry(scratch_db: sa.Engine) -> None:
     raw = _raw_sign_in_token(auth)
     session, _ = auth.exchange(raw)
     assert auth.resolve(session) is not None
-    clock += timedelta(minutes=31)  # past 30-minute idle window
+    clock += timedelta(hours=24, seconds=1)  # past 24-hour idle window
     assert auth.resolve(session) is None
-    # Fresh session also dies at the 8-hour absolute boundary.
+    # Fresh session also dies at the 72-hour absolute boundary.
     clock = datetime.now(UTC)
     raw2 = _raw_sign_in_token(auth)
     session2, _ = auth.exchange(raw2)
-    clock += timedelta(hours=8, seconds=1)
+    clock += timedelta(hours=72, seconds=1)
     assert auth.resolve(session2) is None
 
 

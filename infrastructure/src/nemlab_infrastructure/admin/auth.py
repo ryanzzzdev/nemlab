@@ -21,8 +21,8 @@ import sqlalchemy as sa
 
 TOKEN_TTL = timedelta(minutes=15)
 REQUEST_TOKEN_TTL = timedelta(hours=24)
-SESSION_IDLE = timedelta(minutes=30)
-SESSION_LIFE = timedelta(hours=8)
+SESSION_IDLE = timedelta(hours=24)
+SESSION_LIFE = timedelta(hours=72)
 MAX_TOKEN_LENGTH = 128
 
 
