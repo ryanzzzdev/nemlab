@@ -570,7 +570,7 @@ Delivered as NEM-042–NEM-046. NEM-042 established product layouts and shared a
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-006](#nem-006), [NEM-017](#nem-017)
 - References: [Specification / decision](features/gridreplay.md)
 
@@ -586,7 +586,7 @@ Deliver the demo-faithful real-data journey through NEM-054–NEM-062 and the NE
 
 ### Completion evidence
 
-Delivery tasks and acceptance criteria planned on 2026-09-25; implementation and verification remain pending.
+Reconciled 2026-10-08: delivered through NEM-054–NEM-064; discovery NEM-083–NEM-091 also delivered. The original live journey and test evidence were already recorded in the October journal; stale parent status did not reflect delivery. Fresh read-only browser review confirms highlights, replay/cursor and BatteryLab date prefill. See [M5 state review](evidence/m5-state-review-2026-10-08.md). Admin is now M6; launch hardening remains NEM-094/M7.
 
 ### Notes
 
@@ -622,10 +622,10 @@ Assessment completed by the NEM-063 live rehearsal on 2026-10-02. Decision: Admi
 ## NEM-020 — Prepare and verify the initial public release
 
 - Repository: both
-- Milestone: M6
+- Milestone: M7
 - Priority: High
 - Status: Backlog
-- Depends on: [NEM-018](#nem-018), [NEM-019](#nem-019)
+- Depends on: [NEM-018](#nem-018), M6 Admin outcome (scope starts at [NEM-093](#nem-093)), [NEM-094](#nem-094), [NEM-038](#nem-038)
 - References: [Specification / decision](roadmap.md)
 
 ### Outcome
@@ -1710,7 +1710,7 @@ Committed as `81bde29`.
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: In progress — backend contract done; frontend type sync and browser checks remain
+- Status: Done
 - Depends on: [NEM-058](#nem-058)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1726,7 +1726,7 @@ Offer read-only typed public endpoints for catalogue filters, event details and 
 
 ### Completion evidence
 
-In progress. `api/src/nemlab_api/events.py` adds read-only
+Delivered (status reconciled 2026-10-08). `api/src/nemlab_api/events.py` adds read-only
 `GET /api/v1/events` (region/type/inclusive-day overlap filters, page 24/100,
 base64 cursor pinning the publication so a republish cannot shift pages),
 `GET /api/v1/events/{id}` (immutable detail; superseded ids stay readable)
@@ -1740,6 +1740,8 @@ gains 3 operations (21 total); verifier passes 103 captures.
 republication, replay bounds and error states. Contract 1.4.0 verified;
 frontend types regenerated (`7e38c3a` in nemlab-ui) and consumed by the
 GridReplay client built under NEM-060 with full browser coverage.
+
+The original type-sync/browser dependency was satisfied by NEM-060–062 and subsequently verified again with contract 2.0.0 in NEM-091. No fresh full-suite run is claimed by this documentation reconciliation.
 
 <a id="nem-060"></a>
 
@@ -1911,24 +1913,24 @@ runbook is the deliverable.
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-061](#nem-061), [NEM-062](#nem-062), [NEM-063](#nem-063)
 - References: [Delivery specification](features/gridreplay.md)
 
 ### Outcome
 
-Close M5 only when the real-data journey, demo fidelity and Admin decision are evidenced.
+Close the local GridReplay feature milestone; retain the original M5 Admin assessment as historical evidence and track subsequent Admin work in M6.
 
 ### Done when
 
 - Rehearse a bounded real NSW1 import→detection→publication→catalogue→replay→BatteryLab flow and record the actual supported period. Retain reproducible fixture versions of key failure/boundary cases.
 - Run relevant backend, migration, contract, frontend and live checks; measure maximum-window payload/render/playback behavior and fix observed bottlenecks.
 - Review demo-matched desktop/mobile screenshots in light/dark/auto, keyboard/touch interaction, unavailable metrics and factual event copy. Record limitations and intentional differences.
-- Review NEM-018/NEM-019 acceptance. If an Admin UI is included, its added tasks are additional dependencies before closure. Update M5 status only when all required evidence passes; preserve hosted CI and public launch/retention/security gates under M6 and NEM-038.
+- Review NEM-018 and the local feature evidence. Under decision 023, Admin implementation is M6 and launch is M7; carry the explicitly unverified motion/failure/max-window checks to NEM-094 without claiming they passed. NEM-038 remains the hosted CI gate.
 
 ### Completion evidence
 
-Planned only; no implementation or verification evidence yet.
+Reconciled 2026-10-08 from the 2026-10-02 journal exit review (393 backend tests, 103 contract captures/21 operations, 124 browser tests, 6 live tests and real NSW1 journey) and later NEM-091 evidence (462 backend tests, 126 browser tests, 114 contract captures/23 operations). Fresh browser review confirms the delivered discovery/replay/BatteryLab path. The recorded reduced-motion, chart-render-failure and maximum seven-day real-payload gaps remain NEM-094; this closes local feature scope, not public launch readiness. See [review and carried limits](evidence/m5-state-review-2026-10-08.md).
 
 
 <a id="nem-082"></a>
@@ -1936,7 +1938,7 @@ Planned only; no implementation or verification evidence yet.
 ## NEM-082 — Expose grid-observation coverage inspection
 
 - Repository: backend
-- Milestone: M5
+- Milestone: M6 — Admin
 - Priority: Normal
 - Status: Ready
 - Depends on: [NEM-055](#nem-055)
@@ -1964,7 +1966,7 @@ Gap identified in the NEM-063 rehearsal; not yet implemented.
 ## NEM-092 — Accept bounded date-range price refreshes
 
 - Repository: backend
-- Milestone: Post-M5 operator tooling
+- Milestone: M6 — Admin
 - Priority: Normal
 - Status: Done
 - Depends on: None (existing refresh queue)
@@ -2827,3 +2829,55 @@ Done 2026-10-08. Both checkpoints recorded in `journal/2026-10.md` ("GridReplay 
 - Frontend: `npm run check` — contract verified, prettier/tsc clean, vite build, 126 browser tests pass (desktop + mobile).
 - Live: alembic `nemlab_v7_detector_v2` applied; NSW1 republished via admin API with `detectorSuite=v2` → publication `232be228`, 114 events (68 runs, 30 ramps, 1 spike, 5 reversals, 10 episodes, 0 unusual ramps — every day `insufficient_baseline`, honest since no Jun–Aug history is imported). UI live check on the built bundle: Highlights default shows the Sept-4 $16,599.89 spike first with `#1 highest price of 1`, previews render per card, replay opens and charts render; All events + `sort=longest` surfaces the 9h5m run top. Old event ids and replays (incl. superseded versions) still return 200; `?event=` links unchanged.
 - Follow-ups recorded: (a) unusual ramps need ~90 days of prior demand history imported per region before any can qualify; (b) run the v2 publication for QLD1/SA1/TAS1/VIC1 if cross-region v2 catalogues are wanted; (c) revisit the 300 AUD/MWh reversal floor if other regions/months show high counts.
+
+
+<a id="nem-093"></a>
+
+## NEM-093 — Agree the M6 Admin experience and delivery tasks
+
+- Repository: both
+- Milestone: M6 — Admin
+- Priority: High
+- Status: Ready
+- Depends on: [NEM-018](#nem-018), [NEM-063](#nem-063)
+- References: [Admin specification](features/admin.md), [milestone separation](decisions/023-milestone-separation.md)
+
+### Outcome
+
+Discuss Admin independently of delivered GridReplay, then record an agreed scope and focused implementation tasks.
+
+### Done when
+
+- Review coverage, bounded imports, progress/recovery, publication and audit needs against existing APIs/runbooks and NEM-082/NEM-092.
+- Agree whether to build an Admin UI, its smallest useful workflow and authentication/session boundary; preserve server-side authorization and public-bundle isolation.
+- Create dependent implementation/verification tasks and explicit M6 exit criteria. A plan is not Admin delivery; any renewed UI deferral is recorded explicitly.
+
+### Completion evidence
+
+Not started. Milestone created at the user's request on 2026-10-08; Admin discussion is next.
+
+<a id="nem-094"></a>
+
+## NEM-094 — Close carried GridReplay launch-hardening evidence gaps
+
+- Repository: both
+- Milestone: M7 — Launch
+- Priority: Normal
+- Status: Ready
+- Depends on: [NEM-064](#nem-064), [NEM-091](#nem-091)
+- References: [M5 state review](evidence/m5-state-review-2026-10-08.md)
+
+### Outcome
+
+Complete the known accessibility, failure-state and maximum-window checks carried explicitly from local GridReplay acceptance.
+
+### Done when
+
+- Verify reduced-motion playback behavior and implement any required treatment; test keyboard/touch and hidden-tab behavior without asserting existing unrun checks passed.
+- Exercise chart-render/load failures and useful recovery with retained textual evidence.
+- Measure maximum supported seven-day replay/preview payload and rendering/playback using suitable bounded fixtures; distinguish measured fixture evidence from available real one-day events.
+- Re-run relevant integrated backend/contract/browser/live checks at the release candidate, including shared links and BatteryLab handoff, and document residual coverage limits.
+
+### Completion evidence
+
+Pending. These limits were recorded in the 2026-10-02 journal and retained at the 2026-10-08 milestone review; no claim of completed hardening is made.

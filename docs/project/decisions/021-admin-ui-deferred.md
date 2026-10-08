@@ -1,7 +1,6 @@
 # 021 — Admin UI deferred for M5
 
-Date: 2026-10-02. Status: Accepted (NEM-063 decision gate exercised;
-user may amend). Task: [NEM-063](../backlog.md#nem-063). Evidence:
+Date: 2026-10-02. Status: Partially superseded by [decision 023](023-milestone-separation.md) on 2026-10-08: the M5 deferral/rehearsal remains historical evidence; release-wide UI deferral is reopened for M6 scope discussion. Task: [NEM-063](../backlog.md#nem-063). Evidence:
 [operator rehearsal](../evidence/m5-ops-rehearsal.md).
 
 ## Decision

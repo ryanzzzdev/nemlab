@@ -1,8 +1,8 @@
 # NEMLab roadmap
 
-Updated: 2026-10-01
+Updated: 2026-10-08
 
-The accepted product sequence is BatteryLab, then GridReplay, then public launch. Admin is assessed before launch. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
+The accepted product sequence is BatteryLab (M4), GridReplay (M5), Admin (M6), then launch (M7). The user separated Admin from GridReplay on 2026-10-08; detailed Admin scope is the next discussion. See [launch scope decision](decisions/001-product-and-launch-scope.md). Detailed behaviour and technical choices remain proposed where explicitly labelled.
 
 M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.md) and [grid](evidence/oe-validation/grid-gate.md) gates. Individual task status belongs in the backlog. M2 now passes for the ordered-window comparison; see [engine evidence](evidence/engine/findings.md). The API/worker foundation now passes [NEM-011](backlog.md#nem-011); [NEM-012](backlog.md#nem-012) now implements the price-storage/backfill slice. [NEM-013](backlog.md#nem-013) is split into focused tasks: the durable queue is verified in NEM-028; NEM-029 adds verified worker scheduling/execution; NEM-030 verifies protected operator controls and completes this price-refresh package. NEM-031 implements public stored-price reads; NEM-032 verifies formal contracts and generated client inputs, completing NEM-014. NEM-015 is split into NEM-033–NEM-036: the separate frontend repository/tooling is verified in NEM-033; NEM-034 verifies public navigation and shell; NEM-035 verifies typed public price integration; NEM-036 verifies synchronised charts and completes NEM-015. NEM-037 has reviewed the aggregate M3 exit evidence: local foundation checks pass, while NEM-038 must verify hosted CI before M3 closes. See the [exit review](evidence/foundation/m3-exit-review.md). Optional unrestricted hindsight remains deferred. No delivery dates are committed; estimate after the data and engine exercises reveal the work involved.
 
@@ -13,8 +13,9 @@ M1 sampling is complete with bounded [price](evidence/oe-validation/price-gate.m
 | M3 — Shared foundation | Ingestion, jobs, persistence, API and frontend shells | In progress | M1 and M2 |
 | M4 — BatteryLab | Complete simulation experience | Complete | M3 local foundation; hosted CI remains a separate open gate |
 | Python backend rebuild | Verified Python parity with retained Java reference | Complete | Delivered Java baseline; before M5 |
-| M5 — GridReplay and Admin assessment | Replay experience and an explicit Admin scope decision | Planned | M4 and validated grid inputs |
-| M6 — Launch | Verified, operable release of both products | Planned | M5 |
+| M5 — GridReplay | Working catalogue, replay, sharing and discovery | Complete (local feature milestone) | M4 and validated grid inputs |
+| M6 — Admin | Agreed operator experience and supporting controls | Planned — scope discussion next | M5 and existing operator APIs |
+| M7 — Launch | Verified, operable public release | Planned | M6 outcome and launch gates |
 
 ## Python backend rebuild — complete
 
@@ -67,24 +68,31 @@ Exit criteria: a visitor can configure a valid scenario, follow job progress, in
 
 Planning work packages: [NEM-016](backlog.md#nem-016), [NEM-017](backlog.md#nem-017). NEM-039–NEM-041 completed the simulation backend package NEM-016; NEM-042–NEM-045 delivered the NEM-017 visitor experience. The original exit criteria passed locally, verified by mocked browser suites and a live API/worker/PostgreSQL journey ending in an immutable result reopen. On 2026-09-24 the user added [NEM-046](backlog.md#nem-046) — visitor-triggered price refresh for missing days — as required BatteryLab scope; it landed on 2026-09-25 with bounded deduplicated visitor fetches, explicit pending/failed/limited states and a live real-stack verification of the terminal failure path, restoring the milestone to complete. Completion remains an internal milestone, not the public launch: hosted CI stays open under NEM-038 and launch gates under NEM-020.
 
-## M5 — GridReplay and Admin assessment
+## M5 — GridReplay
 
-Status: Complete (2026-10-02). NSW1 September 2023 catalogue published with 99 real events; replay, sharing and BatteryLab handoff verified live ([NEM-054–NEM-064](backlog.md#m5-delivery-tasks)); Admin UI deferred with a tested operator API alternative ([decision 021](decisions/021-admin-ui-deferred.md)). Renewable peaks stay deferred pending methodology (BLK-005).
+Status: **Complete as a local feature milestone**, reconciled 2026-10-08. The original real-data journey was recorded as delivered on 2026-10-02; discovery releases A+B followed on 2026-10-08. See the [state review](evidence/m5-state-review-2026-10-08.md) for evidence and the limits of this conclusion.
 
+Delivered: versioned observations and events, a real catalogue/replay, filters and saved links, synchronized charts, BatteryLab handoff, Highlights/All events, scoped reasons/sorts, preview sparklines, price reversals and grouped negative episodes. The unusual-ramp detector is implemented but correctly reports insufficient baseline for the current September dataset.
 
-Scope: a bounded NSW1 catalogue, three evidence-backed event types, a replay closely matching the selected demo, and navigation into BatteryLab. The recommended first detectors are negative-price runs, price spikes and scheduled-demand ramps; NEM-054 freezes definitions/coverage before implementation. Renewable peaks remain deferred pending methodology. Assess Admin through actual operational workflows; a separate UI is not yet committed.
+Exit criteria for this local feature scope: repeatable coverage-aware events, reproducible replay data, a functioning catalogue→replay→BatteryLab journey, and verified discovery behavior. The initial Admin assessment was completed historically under NEM-019/NEM-063; Admin product work is now M6 and does not keep M5 open. Scope/sequence acceptance: [decision 023](decisions/023-milestone-separation.md).
 
-Exit criteria: event results are repeatable and coverage-aware; linked charts align; observations do not imply unsupported causal claims; a replay can open the corresponding BatteryLab day. Record whether Admin UI is included or deferred, with an operational alternative if deferred.
+NEM-018, NEM-059 and NEM-064 records are reconciled with delivered evidence. NEM-083–NEM-091 record discovery delivery. Known reduced-motion, chart-failure and maximum-window verification follow-ups are explicitly tracked in NEM-094 for M7; local feature completion is not a statement that all earlier aspirational acceptance wording or launch hardening has been verified. Additional prior demand history and cross-region v2 publication are data-operations follow-ups, not missing detector implementation. Renewable peaks remain outside this scope.
 
-Delivery plan (2026-09-25): [NEM-054–NEM-064](backlog.md#m5-delivery-tasks) refine parent packages [NEM-018](backlog.md#nem-018) and [NEM-019](backlog.md#nem-019). Start NEM-054, then build storage/ingestion/detectors and the demo-faithful UI in independent tracks; connect publication/API/replay, finish sharing/BatteryLab handoff, rehearse Admin operations and review exit evidence. UI design starts at NEM-060 after the scope/fixture contract, rather than waiting for all backend implementation. The tasks delivered M5 on 2026-10-02; exit review evidence is under [NEM-064](backlog.md#nem-064). See the [feature plan](features/gridreplay.md#m5-delivery-plan--2026-09-25).
+## M6 — Admin
 
-## M6 — Launch readiness and release
+Status: Planned; discuss and settle the Admin experience next under [NEM-093](backlog.md#nem-093). This milestone is distinct from completed GridReplay and from deployment readiness. Creating the milestone does not preselect a particular UI, authentication mechanism or hosting architecture.
+
+Starting point: existing authenticated operator APIs and [data-loading runbook](runbook-grid-data.md), with the M5-era deferral retained as history in decision 021. Likely scope to discuss: coverage inspection, bounded grid/price imports, job progress/failure recovery, detection/publication and audit visibility. Existing operator follow-ups NEM-082 (coverage inspection) and NEM-092 (bounded price-date ranges) belong here. Preserve any ongoing work on those tasks.
+
+Exit criteria: agree the Admin scope; split it into focused implementation tasks; deliver and verify the agreed operator journey, server-side authorization and audit/recovery behavior. If discussion concludes no UI is needed, record that explicitly with a verified operational alternative. The NEM-093 planning task alone does not complete M6 when implementation is agreed.
+
+## M7 — Launch readiness and release
 
 Scope: hosting decision, public request/resource limits, administrator authentication, observability, backups and restore rehearsal, deployment/rollback instructions, methodology and attribution, coverage validation, and accessible browser journeys across both products.
 
 Exit criteria: launch coverage claims match verified data; end-to-end smoke checks pass in the deployment environment; refresh/retry and recovery procedures work; resource budgets and failure alerts are documented; the agreed release is ready for deployment under the user's publication authorisation.
 
-Planning work package: [NEM-020](backlog.md#nem-020). Hosting provider, budget and release date are open, not assumed.
+Planning work package: [NEM-020](backlog.md#nem-020), including [NEM-094](backlog.md#nem-094) for carried GridReplay hardening evidence. M3 hosted CI remains an explicit NEM-038 gate before public launch. Hosting provider, budget and release date are open, not assumed.
 
 ## Deferred scope
 

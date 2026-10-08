@@ -80,7 +80,7 @@ These records distinguish future decision gates from work that is blocked now. N
 
 - Identified: 2026-09-13
 - Status: Open
-- Impact: M5 assessment and M6 release.
+- Impact: M6 Admin scope and M7 release.
 - Affected tasks: [NEM-019](backlog.md#nem-019), [NEM-020](backlog.md#nem-020).
 - Evidence / attempts: No hosting provider/budget, identity mechanism, public compute quotas, retention policy or decision to ship Admin UI is recorded.
 - Blocking scope: Not an immediate blocker. Blocks final launch readiness if unresolved.

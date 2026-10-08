@@ -60,8 +60,9 @@ Use these agreed implementation milestones as the starting sequence:
 2. Prove the battery engine.
 3. Build the shared backend and frontend foundation.
 4. Deliver BatteryLab end to end.
-5. Deliver GridReplay and assess whether to include Admin before launch.
-6. Complete launch readiness and release.
+5. Deliver GridReplay.
+6. Agree and deliver the Admin operator experience.
+7. Complete launch readiness and release.
 
 BatteryLab and GridReplay are intended for the initial public launch. Admin's UI is optional before launch; the operational controls required to run the system are still part of launch readiness.
 

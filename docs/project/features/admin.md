@@ -1,8 +1,10 @@
 # Admin
 
-Updated: 2026-09-25
+Updated: 2026-10-08
 
-Status: Conditional feature; the UI is not committed to initial launch.
+Status: M6 planned; scope discussion is next under [NEM-093](../backlog.md#nem-093). A specific Admin UI is not yet agreed.
+
+Current sequencing follows [decision 023](../decisions/023-milestone-separation.md): GridReplay is M5, Admin M6, launch M7. Dated M5 assessment sections below retain their historical context. The existing operator API/runbook is the starting point, not evidence that the new Admin milestone is complete.
 
 ## Purpose and boundary
 
@@ -26,9 +28,9 @@ Use the same durable job mechanism for schedules, commands and UI requests. Back
 
 ## Decision gate and acceptance
 
-At M5, exercise the operator workflow through the available endpoints/commands. Include the UI if it materially improves coverage inspection and recovery within the release scope; otherwise document the tested alternative and defer the app.
+At M6, agree the operator experience using the completed M5 rehearsal as evidence. Decide whether a UI materially improves coverage inspection and recovery, then split the agreed scope into implementation and verification tasks.
 
-If included, unauthorised requests fail server-side, refresh/retry produces one logical operation, progress and errors are inspectable, and actor/scope/result can be traced. If deferred, equivalent critical operations pass a documented operator rehearsal before M6 completes.
+If included, unauthorised requests fail server-side, refresh/retry produces one logical operation, progress and errors are inspectable, and actor/scope/result can be traced. If deferred, equivalent critical operations pass a documented operator rehearsal before M7 completes.
 
 See [NEM-019](../backlog.md#nem-019), [BLK-006](../blockers.md#blk-006), and [architecture](../architecture.md).
 
