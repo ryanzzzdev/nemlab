@@ -3224,7 +3224,7 @@ before declaring a consumed link dead).
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-098](#nem-098), [NEM-100](#nem-100), [NEM-101](#nem-101)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3240,7 +3240,24 @@ Build owner access management and audit screens. Deliver the corresponding accep
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. A new `/admin/access` page serves the owner: a
+pending-request queue (verified applicants only — the API lists just
+`pending`) with expandable detail showing the applicant message,
+verify/decide timestamps and the delivery audit (kind/status/attempts/
+sent/diagnostic). Decisions offer 7/30/90-day approval or reject with
+optimistic `version` — `ACCESS_CONFLICT` refreshes the list with an
+"already decided" note instead of erroring. Resend re-queues the
+request's mail. The grants panel filters active/expired/revoked with
+extend (7/30/90 — also reactivates expired grants) and a two-step revoke
+with optional recorded reason. `RECENT_AUTH_REQUIRED` renders a banner
+that preserves the form and links to a fresh sign-in — nothing replays
+automatically. Viewers get an explainer panel and zero owner API calls.
+Browser-verified: XSS name/message render literally (no dialog);
+approve 30d -> grant + invite; extend; revoke -> the seeded viewer
+session went 200 -> 401 on its next resolve (cross-session
+invalidation); stale-version Approve -> conflict note + refresh;
+backdated session -> recent-auth prompt with the request still pending;
+empty lists and direct viewer navigation covered.
 
 <a id="nem-105"></a>
 
