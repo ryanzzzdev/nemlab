@@ -80,7 +80,7 @@ NEM-018, NEM-059 and NEM-064 records are reconciled with delivered evidence. NEM
 
 ## M6 — Admin
 
-Status: Reopened for the accepted desktop UI redesign (2026-10-08), [NEM-108–115](backlog.md#nem-108). Original functional delivery was complete locally; its evidence remains intact. The [Admin specification](features/admin.md) is delivered through NEM-095–107 and NEM-082; NEM-092 bounded price windows were already delivered. All M6 tasks are Done with recorded evidence — boundary/resilience verification in [NEM-106](backlog.md#nem-106), UI/exit review in [NEM-107](backlog.md#nem-107). Production deployment, hosted CI, real email delivery and launch gates carry to M7 explicitly unverified.
+Status: **Complete as a local feature milestone**, reconciled 2026-10-09 after the accepted desktop UI redesign [NEM-108–115](backlog.md#nem-108). The redesign passed its final review — evidence in [m6-review](evidence/admin-redesign/m6-review.md): 31 coverage rows at 1440×900, all viewport/theme/density/keyboard/zoom checks green, real approve/revoke and drawer journeys, preserved workflows and security boundaries, plus a 19-test dedicated Admin browser suite alongside the 126-test public suite. Original functional delivery evidence remains intact. The [Admin specification](features/admin.md) is delivered through NEM-095–107 and NEM-082; NEM-092 bounded price windows were already delivered. All M6 tasks are Done with recorded evidence — boundary/resilience verification in [NEM-106](backlog.md#nem-106), UI/exit review in [NEM-107](backlog.md#nem-107). Production deployment, hosted CI, real email delivery and launch gates carry to M7 explicitly unverified.
 
 Scope: coverage-led separate Admin UI, embedded workflow guide, securely bootstrapped owner, verified/approved expiring read-only visitors, public Admin entry, safe operational reads, bounded imports/recovery and explicit v2 publication. Existing API/worker/jobs remain the execution path. Decision 024 supersedes the earlier UI deferral; two human roles and email-link sign-in are selected defaults. NEM-082 (grid coverage read) is delivered; NEM-095 identity storage is delivered.
 
@@ -88,7 +88,7 @@ Sequence: NEM-095 identity → NEM-096 sessions/mail → NEM-097 permissions →
 
 Exit criteria: owner bootstrap and full operator journey verified; visitor request/verification/approval/sign-in/revocation works; all backend capabilities and viewer redaction tested; bounded load/recovery and explicit publication preserve links; guide explains v2 and Highlights accurately; local integrated and responsive/accessibility checks pass with recorded evidence. Scope planning alone does not complete M6. Provider credentials/owner identity are setup inputs, not default secrets; production deployment and hosted verification remain M7.
 
-Current UI exit: [desktop redesign](features/admin-desktop-redesign.md) accepted under decision 025; independent full-viewport shell, consolidated workspaces, preserved workflows/security, dedicated Admin browser regression and desktop visual acceptance must pass before M6 closes again.
+Current UI exit: [desktop redesign](features/admin-desktop-redesign.md) accepted under decision 025 — delivered and verified through [NEM-108–115](backlog.md#nem-108): independent full-viewport shell, consolidated DataOps/Access workspaces, preserved workflows/security, dedicated Admin browser regression suite and recorded desktop visual acceptance.
 
 ## M7 — Launch readiness and release
 

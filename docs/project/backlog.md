@@ -3651,7 +3651,7 @@ both builds, 126 public + 19 admin browser tests.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-114](#nem-114)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3667,7 +3667,21 @@ Review desktop redesign and close M6 UI acceptance, preserving delivered Admin c
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-09. Full review record with 19 annotated screenshots in
+[evidence/admin-redesign/m6-review.md](evidence/admin-redesign/m6-review.md),
+run on the real API/PostgreSQL stack with seeded owner and viewer sessions:
+31 coverage rows at 1440×900 standard density (target ≥10), 28/40px
+compact/comfortable rows, dark theme, rail 48px at 1280×720 and 176px at
+1920×1080, zero overflow at ~200% zoom, keyboard grid selection and Escape
+dismissal, in-place operation inspection, load-review and publish-coverage
+drawers, a real approve → grant → revoke round-trip, and the viewer
+read-only boundary (badge, zero owner affordances, owner-only /access
+fallback). No console errors. Preservation matrix reconciled — bounded
+scopes, attempt-key reconciliation, single dispatcher, honest loaded-results
+labelling, no-PII URL state, viewer redaction, recent-auth/conflict/delivery
+surfaces, draft persistence all intact. All redesign acceptance criteria
+pass; M6 closes with deployment, hosted CI, real SMTP and TLS carried to M7
+explicitly unverified.
 
 <a id="nem-116"></a>
 
