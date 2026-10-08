@@ -110,7 +110,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-099 — Expose bounded console reads and publication provenance](#nem-099)
 - [NEM-100 — Build Admin shell and guided read-only console](#nem-100)
 - [NEM-101 — Build request-access and sign-in experience](#nem-101)
-- [NEM-102 — Track resumable bounded load operations](#nem-102) — Done 2026-10-08
+- [NEM-102 — Track resumable bounded load operations](#nem-102)
 - [NEM-103 — Build guided owner import and publication workflow](#nem-103)
 - [NEM-104 — Build owner access management and audit screens](#nem-104)
 - [NEM-105 — Publish Admin entry link and reconcile operator guidance](#nem-105)
@@ -3053,7 +3053,7 @@ Completed 2026-10-08. V9 adds `actor`/`request_key` to `grid_detection_run` so e
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-097](#nem-097), [NEM-099](#nem-099)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3069,7 +3069,25 @@ Build Admin shell and guided read-only console. Deliver the corresponding accept
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. `nemlab-ui/apps/admin` is a separate Vite app
+(`@nemlab/admin`, base `/admin/`, ports 5274/4274) sharing the public
+theme and stylesheet but excluded from the public build — the public
+bundle grep confirms zero Admin code. Same-origin dev proxy forwards
+`/api/admin|auth|access`; the typed client binds the synced generated
+schema. Coverage (per-day stored coverage, series detail, baseline
+readiness), Jobs (load operations + grid imports + price refreshes with
+audit events and 20 s bounded polling), Publications (provenance, event
+counts, highlights selection, attempts, replay links) and How it works
+(stepper + glossary + v2 education) all render real API data behind a
+session-gated shell: owner/viewer account menu with sign-out, persistent
+read-only badge for viewers, sign-in-required state for anonymous,
+loading/empty/failure/permission-expired states throughout. Verified on
+real integration — migrated dev DB to V10, bootstrapped owner, seeded a
+session, exercised all pages through a real browser (all h1s, owner
+account, operation/job tables, coverage + baseline render, anonymous
+redirect state, zero JS errors); `tsc`/`vite build` clean; contract
+files byte-identical to backend 1898cfc; public browser suite 126
+passed.
 
 <a id="nem-101"></a>
 
@@ -3103,7 +3121,7 @@ Planned 2026-10-08; not implemented or verified.
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-097](#nem-097), [NEM-099](#nem-099), [NEM-092](#nem-092)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
