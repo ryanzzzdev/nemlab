@@ -3568,7 +3568,7 @@ and session-expiry paths route through the same verified API layer.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-110](#nem-110), [NEM-111](#nem-111)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3584,7 +3584,23 @@ Redesign Access authentication and contextual help, preserving delivered Admin c
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-09. `workspace/AccessPage.tsx` delivers the Access workspace at
+`/admin/access?tab=requests|visitors|audit&sel=<id>` — IDs only in the URL,
+never names/emails/messages. Requests inspector carries the same
+approve/reject + bounded-duration, resend, delivery-audit, RECENT_AUTH_REQUIRED
+prompt and ACCESS_CONFLICT refresh behaviour, one decision at a time (no bulk
+surface). Visitors inspector keeps duration-bounded extend and the two-step
+reasoned revoke. New Audit tab consumes the NEM-116 endpoint — actor/action/
+subject/result, read-only inspector. Rail consolidates to Data Ops + owner-only
+Access (badge) + Public site; viewers get a single rail item and an owner-only
+fallback on the route. `components/HelpDrawer.tsx` moves workflow steps,
+glossary and detector explanation into a wide drawer opened from the appbar,
+prefaced with the caller's role and session expiry; `HowItWorksPage` renders
+the shared `HelpContent` until NEM-114 retires the route. Auth flows keep the
+secure token lifecycle untouched; the appbar now yields pickers under 720px —
+welcome/sign-in/request-access verified zero-overflow at 390px and 320px.
+`npm run check` green — both builds, contract, format, 126/126 public browser
+tests.
 
 <a id="nem-114"></a>
 
