@@ -178,6 +178,16 @@ Other commands: `npm run build` then `npm run preview` (port 4173);
 `npm run check` for contract/format/type/build/Playwright verification;
 `npm run test:live` exercises the real API and PostgreSQL.
 
+If a dev port is already in use, stop the process holding it:
+
+```sh
+fuser -k 5274/tcp                     # admin dev server (5173 public, 8080 API)
+lsof -ti tcp:5274 | xargs -r kill     # same, without fuser
+ss -tlnp | grep 5274                  # only inspect who owns the port
+pkill -f nemlab-worker                # worker has no port — kill by name
+pkill -f nemlab-api                   # API alternative to the 8080 port kill
+```
+
 ## Detailed references
 
 - Backend overview and build: [README.md](../../README.md)
