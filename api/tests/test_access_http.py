@@ -312,3 +312,38 @@ def test_owner_resend_and_missing_requests(
 def _scalar(engine: sa.Engine, sql: str, **params: object) -> object:
     with engine.connect() as conn:
         return conn.execute(sa.text(sql), params).scalar_one()
+
+
+def test_owner_audit_read(client: TestClient, scratch_db: sa.Engine) -> None:
+    """NEM-116 — owner-only bounded audit trail for the Access workspace."""
+    assert client.get("/api/admin/v1/access-audit").status_code == 401
+
+    _submit(client)
+    _verify(client, scratch_db)
+    owner = _seed(client, scratch_db, OWNER_EMAIL)
+    headers = _headers(owner)
+    request = client.get(ADMIN_REQUESTS).json()[0]
+    decided = client.post(
+        f"{ADMIN_REQUESTS}/{request['id']}/decisions",
+        json={"decision": "approve", "days": 7, "version": request["version"]},
+        headers=headers,
+    )
+    assert decided.status_code == 200
+
+    rows = client.get("/api/admin/v1/access-audit", headers=headers).json()
+    actions = {r["action"] for r in rows}
+    assert "DECISION_APPLIED" in actions or any("APPROV" in a for a in actions)
+    assert all(
+        set(r) == {"occurredAt", "actor", "action", "subject", "result"} for r in rows
+    )
+    assert {r["actor"] for r in rows} <= {"owner", "applicant"}
+    assert "owner" in {r["actor"] for r in rows}
+
+    # Automation bearer cannot manage access either.
+    client.cookies.clear()
+    audit = client.get("/api/admin/v1/access-audit", headers=BEARER)
+    assert audit.status_code == 403
+
+    # Viewers are denied by the capability table.
+    _seed(client, scratch_db, APPLICANT)
+    assert client.get("/api/admin/v1/access-audit").status_code == 403

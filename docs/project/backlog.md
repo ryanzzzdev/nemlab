@@ -3603,7 +3603,7 @@ Planned 2026-10-08; not implemented or verified.
 - Repository: backend
 - Milestone: M6 — Admin desktop redesign
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-108](#nem-108)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [inventory](evidence/admin-redesign/inventory.md)
 
@@ -3618,4 +3618,4 @@ Expose the persisted `admin_access_audit` trail to the owner so the Access works
 
 ### Completion evidence
 
-Identified 2026-10-08 by the NEM-108 inventory — the data exists server-side with no route.
+Completed 2026-10-08. `AccessRequests.audit` reads the newest rows from `admin_access_audit` (bounded `limit`, clamped to the 100-row page like `queue`/`grants`) and projects a safe shape — `occurredAt`, `actor` (role label, never identity), `action`, `subject`, `result`; the free-form `detail` JSON is deliberately not exposed. `GET /api/admin/v1/access-audit` sits behind `access.manage`: anonymous 401, automation bearer and viewer sessions 403. Contract: `listAccessAudit` + `AccessAuditView` added to `api/contracts/openapi.json` and `verify.mjs` `COOKIE_PREFIXES`; captures cover owner 200, bounded `?limit=5` and viewer 403 — `node verify.mjs` validates 196 responses / 48 operations. HTTP test covers anon 401, owner rows/field projection, bearer 403, viewer 403. 563 backend tests pass.

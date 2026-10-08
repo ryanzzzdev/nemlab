@@ -523,6 +523,29 @@ class AccessRequests:
                 for row in rows
             ]
 
+    def audit(self, limit: int = _PAGE) -> list[dict[str, Any]]:
+        """Recent access-audit rows for the owner's audit view — newest
+        first, bounded. Retention deletes beyond the kept window."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT occurred_at, actor_label, action, subject, result"
+                    " FROM admin_access_audit"
+                    " ORDER BY occurred_at DESC, id LIMIT :limit"
+                ),
+                {"limit": min(limit, _PAGE)},
+            ).all()
+            return [
+                {
+                    "occurredAt": row.occurred_at,
+                    "actor": row.actor_label,
+                    "action": row.action,
+                    "subject": row.subject,
+                    "result": row.result,
+                }
+                for row in rows
+            ]
+
     def extend(self, grant_id: UUID, days: int, owner_id: UUID) -> ViewerGrant:
         if days not in DURATION_DAYS:
             raise ValueError("Extension must be 7, 30 or 90 days")

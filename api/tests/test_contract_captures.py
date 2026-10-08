@@ -584,6 +584,10 @@ def test_contract_captures(
     post(f"{GRANTS}/{grant_id}/extend", {"days": 14}, owner_headers)  # 400
     post(f"{GRANTS}/{uuid.uuid4()}/extend", {"days": 30}, owner_headers)  # 404
 
+    # Access audit (NEM-116): owner reads the bounded trail just written.
+    get("/api/admin/v1/access-audit")
+    get("/api/admin/v1/access-audit?limit=5")
+
     # The approved applicant's sign-in invite opens a viewer session; access
     # management stays owner-only, and revocation denies the next request.
     with scratch_db.connect() as conn:
@@ -600,6 +604,7 @@ def test_contract_captures(
     signed_in = post(f"{AUTH_BASE}/sessions", {"token": invite_raw})
     assert signed_in.status_code == 200
     get(REQS)  # 403 — viewers cannot read access management
+    get("/api/admin/v1/access-audit")  # 403 — audit stays owner-only
     viewer_raw = client.cookies.get("nemlab_session")
     client.cookies.set("nemlab_session", raw_owner)
     post(f"{GRANTS}/{grant_id}/revoke", {"reason": "capture"}, owner_headers)

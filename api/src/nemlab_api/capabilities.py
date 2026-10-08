@@ -49,6 +49,7 @@ ROUTES: dict[tuple[str, str], str] = {
     ("GET", "/api/admin/v1/access-requests/{id}"): ACCESS_MANAGE,
     ("POST", "/api/admin/v1/access-requests/{id}/decisions"): ACCESS_MANAGE,
     ("POST", "/api/admin/v1/access-requests/{id}/resend"): ACCESS_MANAGE,
+    ("GET", "/api/admin/v1/access-audit"): ACCESS_MANAGE,
     ("GET", "/api/admin/v1/viewer-grants"): ACCESS_MANAGE,
     ("POST", "/api/admin/v1/viewer-grants/{id}/extend"): ACCESS_MANAGE,
     ("POST", "/api/admin/v1/viewer-grants/{id}/revoke"): ACCESS_MANAGE,

@@ -314,6 +314,13 @@ def access_admin_router(access: AccessRequests) -> APIRouter:
             ) from None
         return _grant_view(grant)
 
+    @router.get(f"{ADMIN}/access-audit")
+    def audit(limit: int = 100) -> list[dict[str, Any]]:
+        return [
+            {**row, "occurredAt": instant(row["occurredAt"])}
+            for row in access.audit(limit)
+        ]
+
     @router.post(grants_base + "/{id}/revoke")
     def revoke(request: Request, id: UUID, body: Revocation) -> dict[str, Any]:
         _recent(request)

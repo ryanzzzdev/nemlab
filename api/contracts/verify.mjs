@@ -33,6 +33,7 @@ const SESSION_PATHS = new Set(["/api/auth/v1/session", "/api/auth/v1/logout"]);
 // status/resend surface. Bearer automation carries no authority on these.
 const COOKIE_PREFIXES = [
   "/api/admin/v1/access-requests",
+  "/api/admin/v1/access-audit",
   "/api/admin/v1/viewer-grants",
   "/api/access/v1/requests/status",
   "/api/access/v1/requests/resend",
