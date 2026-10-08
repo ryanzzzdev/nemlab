@@ -20,6 +20,7 @@ LIST = "/api/admin/v1/grid-imports"
 SUBMIT = "/api/admin/v1/price-refreshes"
 COVERAGE = "/api/admin/v1/grid-coverage/NSW1?start=2023-09-01&endExclusive=2023-09-02"
 PUBLICATIONS = "/api/admin/v1/grid-publications"
+LOADS = "/api/admin/v1/load-operations"
 BODY = {"region": "NSW1", "day": "2023-09-11"}
 TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
 BEARER = {"Authorization": f"Bearer {TOKEN}"}
@@ -163,10 +164,10 @@ def _applicant_session(client: TestClient, engine: sa.Engine) -> None:
 def test_anonymous_and_applicant_are_denied(
     client: TestClient, scratch_db: sa.Engine
 ) -> None:
-    for path in (LIST, COVERAGE, PUBLICATIONS):
+    for path in (LIST, COVERAGE, PUBLICATIONS, LOADS):
         assert client.get(path).status_code == 401
     _applicant_session(client, scratch_db)
-    for path in (LIST, COVERAGE, PUBLICATIONS):
+    for path in (LIST, COVERAGE, PUBLICATIONS, LOADS):
         response = client.get(path)
         assert response.status_code == 403, path
         assert response.json()["code"] == "FORBIDDEN"
@@ -192,6 +193,7 @@ def test_viewer_reads_safely_but_cannot_write(
     assert client.get(SUBMIT).status_code == 200
     assert client.get(COVERAGE).status_code == 200
     assert client.get(PUBLICATIONS).status_code == 200
+    assert client.get(LOADS).status_code == 200
     assert client.get(f"{SUBMIT}/{job_id}").status_code == 200
 
     events = client.get(f"{SUBMIT}/{job_id}/events")
@@ -205,6 +207,7 @@ def test_viewer_reads_safely_but_cannot_write(
         ("post", f"{SUBMIT}/{job_id}/cancel"),
         ("post", LIST),
         ("post", PUBLICATIONS),
+        ("post", LOADS),
     ):
         response = getattr(client, method)(
             path, json=BODY, headers={"Idempotency-Key": "viewer-attempt"}

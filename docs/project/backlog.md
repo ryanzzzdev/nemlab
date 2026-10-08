@@ -110,7 +110,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-099 — Expose bounded console reads and publication provenance](#nem-099)
 - [NEM-100 — Build Admin shell and guided read-only console](#nem-100)
 - [NEM-101 — Build request-access and sign-in experience](#nem-101)
-- [NEM-102 — Track resumable bounded load operations](#nem-102)
+- [NEM-102 — Track resumable bounded load operations](#nem-102) — Done 2026-10-08
 - [NEM-103 — Build guided owner import and publication workflow](#nem-103)
 - [NEM-104 — Build owner access management and audit screens](#nem-104)
 - [NEM-105 — Publish Admin entry link and reconcile operator guidance](#nem-105)
@@ -3119,7 +3119,19 @@ Track resumable bounded load operations. Deliver the corresponding accepted spec
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. `LoadOperations` service plus the V10
+`load_operation`/`load_operation_child` tables persist scope, phase,
+deterministic child request keys (`load:{operation}:{phase}:{start}`) and
+the queue job ids each <=31-day chunk created. Dispatch is explicit per
+call — one POST submits at most one chunk; queue caps answer
+`backpressured` without moving the cursor, pause stops dispatch only
+(queued children keep running), resume is an explicit state flip, and a
+submission lost between enqueue and link recording rebinds through the
+queues' own request-key idempotency — never duplicates. Nothing
+publishes automatically. Owner/bearer mutations; viewers get labelled
+read projections. Contract: six operations under
+`/api/admin/v1/load-operations` (193 responses verified). 562 tests
+pass; ruff/mypy clean.
 
 <a id="nem-103"></a>
 

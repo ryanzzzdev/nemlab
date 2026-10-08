@@ -81,15 +81,11 @@ def apply_admin_tables(engine: sa.Engine) -> None:
         conn.exec_driver_sql(migration_text("V8__admin_identity.sql"))
 
 
-def apply_provenance(engine: sa.Engine) -> None:
-    """Only the V9 publication-provenance columns — after the grid schema."""
+def apply_admin_schema(engine: sa.Engine) -> None:
+    """The grid schema plus the V8 admin-identity tables and V10 load ops."""
     from nemlab_infrastructure.schema import migration_text
 
-    with engine.begin() as conn:
-        conn.exec_driver_sql(migration_text("V9__publication_provenance.sql"))
-
-
-def apply_admin_schema(engine: sa.Engine) -> None:
-    """The grid schema plus the V8 admin-identity tables."""
     apply_grid_schema(engine)
     apply_admin_tables(engine)
+    with engine.begin() as conn:
+        conn.exec_driver_sql(migration_text("V10__load_operations.sql"))

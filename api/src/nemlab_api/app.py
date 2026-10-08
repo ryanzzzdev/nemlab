@@ -22,6 +22,7 @@ from nemlab_api.events import events_router
 from nemlab_api.grid_coverage import grid_coverage_router
 from nemlab_api.grid_imports import grid_imports_router, register_grid_errors
 from nemlab_api.grid_publications import grid_publications_router
+from nemlab_api.load_operations import load_operations_router
 from nemlab_api.middleware import (
     AdminAccess,
     RequestLogging,
@@ -38,6 +39,7 @@ from nemlab_infrastructure.grid.events import GridCatalogue
 from nemlab_infrastructure.grid.imports import GridImportJobs
 from nemlab_infrastructure.grid.store import GridStore
 from nemlab_infrastructure.jobs import RefreshJobService
+from nemlab_infrastructure.load_operations import LoadOperations
 from nemlab_infrastructure.prices.store import PriceStore
 from nemlab_infrastructure.simulations import SimulationJobs
 
@@ -127,6 +129,15 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             catalogue = GridCatalogue(engine)
             app.include_router(grid_coverage_router(grid, catalogue))
             app.include_router(grid_publications_router(catalogue))
+            app.include_router(
+                load_operations_router(
+                    LoadOperations(
+                        engine,
+                        GridImportJobs(engine, grid),
+                        RefreshJobService(engine, prices),
+                    )
+                )
+            )
 
     app.add_middleware(RequestLogging)
     app.add_middleware(SecurityHeaders)

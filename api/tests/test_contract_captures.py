@@ -608,6 +608,33 @@ def test_contract_captures(
     get(GRID)  # 403 — grant revoked; next request denied
     client.cookies.clear()
 
+    # -- load operations (NEM-102) ------------------------------------------
+    LOADS = "/api/admin/v1/load-operations"
+    get(LOADS)  # 401 — anonymous
+    client.cookies.set("nemlab_session", raw_owner)
+    created = post(
+        LOADS,
+        {"region": "NSW1", "startDay": "2023-09-04", "endExclusive": "2023-09-14"},
+        owner_headers,
+    )
+    assert created.status_code == 201
+    op_id = created.json()["id"]
+    post(
+        LOADS,
+        {"region": "NSW1", "startDay": "2023-09-04", "endExclusive": "2025-09-05"},
+        owner_headers,
+    )  # 400 — over the 366-day cap
+    get(LOADS)
+    dispatched = post(f"{LOADS}/{op_id}/dispatch", "", owner_headers)
+    assert dispatched.status_code == 200
+    get(f"{LOADS}/{op_id}")
+    get(f"{LOADS}/{uuid.uuid4()}")  # 404
+    post(f"{LOADS}/{op_id}/pause", "", owner_headers)
+    post(f"{LOADS}/{op_id}/dispatch", "", owner_headers)  # 409 — paused
+    post(f"{LOADS}/{op_id}/resume", "", owner_headers)
+    post(f"{LOADS}/{uuid.uuid4()}/resume", "", owner_headers)  # 404
+    client.cookies.clear()
+
     # Refresh-queue saturation last: any earlier fill would starve the visitor
     # submissions above, and ``claim`` picks the oldest pending job.
     from nemlab_infrastructure.jobs import (

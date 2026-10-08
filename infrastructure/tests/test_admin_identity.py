@@ -338,11 +338,23 @@ def test_alembic_upgrade_and_downgrade(
             ).scalar_one()
 
     command.upgrade(cfg, "head")
-    assert revision() == "nemlab_v9_publication_provenance"
+    assert revision() == "nemlab_v10_load_operations"
     assert "admin_user" in admin_tables()
     command.downgrade(cfg, "nemlab_v7_detector_v2")
     assert revision() == "nemlab_v7_detector_v2"
     assert admin_tables() == set()
+    with scratch_db.connect() as conn:
+        remaining = {
+            row[0]
+            for row in conn.execute(
+                sa.text(
+                    "SELECT table_name FROM information_schema.tables"
+                    " WHERE table_schema = 'public' AND table_name"
+                    " LIKE 'load_operation%'"
+                )
+            )
+        }
+    assert remaining == set()
     with scratch_db.connect() as conn:
         columns = {
             row[0]

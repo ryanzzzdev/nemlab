@@ -659,6 +659,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v1/load-operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent load operations, newest first */
+        get: operations["listLoadOperations"];
+        put?: never;
+        /** Declare a bounded owner load operation (scope recorded, nothing dispatched yet) */
+        post: operations["beginLoadOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v1/load-operations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operation detail with child chunk submissions and live queue job state */
+        get: operations["loadOperationDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v1/load-operations/{id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit the next <=31-day chunk of the current phase; backpressured leaves the cursor unmoved */
+        post: operations["dispatchLoadOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v1/load-operations/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop dispatching new chunks — queued children keep running */
+        post: operations["pauseLoadOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/v1/load-operations/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicitly resume dispatch after pause or interruption */
+        post: operations["resumeLoadOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1426,6 +1512,81 @@ export interface components {
             /** @description Role label only (Owner/Operator/Worker) — never an identity; null for runs predating provenance. */
             actor: string | null;
             attemptKey: string | null;
+        };
+        BeginLoadOperation: {
+            /** @enum {string} */
+            region: "NSW1" | "QLD1" | "SA1" | "TAS1" | "VIC1";
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+        };
+        LoadOperation: {
+            /** Format: uuid */
+            id: string;
+            region: string;
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+            /** Format: date */
+            nextDay: string;
+            /** @enum {string} */
+            status: "dispatching" | "paused" | "dispatched";
+            /** @enum {string} */
+            phase: "grid" | "price";
+            actor: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        LoadOperationJob: {
+            /** Format: uuid */
+            id: string;
+            status: string;
+            attempts?: number;
+            diagnostic?: string;
+            /** Format: date */
+            nextDay?: string;
+        };
+        LoadOperationChild: {
+            /** @enum {string} */
+            phase: "grid" | "price";
+            requestKey: string;
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+            /** Format: date-time */
+            submittedAt: string;
+            jobs: components["schemas"]["LoadOperationJob"][];
+        };
+        LoadOperationDetail: {
+            /** Format: uuid */
+            id: string;
+            region: string;
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+            /** Format: date */
+            nextDay: string;
+            /** @enum {string} */
+            status: "dispatching" | "paused" | "dispatched";
+            /** @enum {string} */
+            phase: "grid" | "price";
+            actor: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            children: components["schemas"]["LoadOperationChild"][];
+        };
+        LoadDispatchOutcome: {
+            /** @enum {string} */
+            outcome: "submitted" | "backpressured" | "dispatched";
+            child?: components["schemas"]["LoadOperationChild"];
         };
     };
     responses: never;
@@ -4574,6 +4735,401 @@ export interface operations {
                     "application/json": {
                         /** @enum {string} */
                         code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    listLoadOperations: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadOperation"][];
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    beginLoadOperation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeginLoadOperation"];
+            };
+        };
+        responses: {
+            /** @description Operation created */
+            201: {
+                headers: {
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadOperation"];
+                };
+            };
+            /** @description INVALID_REQUEST */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "INVALID_REQUEST";
+                        message: string;
+                    };
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    loadOperationDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadOperationDetail"];
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_NOT_FOUND";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    dispatchLoadOperation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Submit the next <=31-day chunk of the current phase; backpressured leaves the cursor unmoved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadDispatchOutcome"];
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_NOT_FOUND";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_CONFLICT";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    pauseLoadOperation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stop dispatching new chunks — queued children keep running */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadOperation"];
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_NOT_FOUND";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_CONFLICT";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    resumeLoadOperation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicitly resume dispatch after pause or interruption */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadOperation"];
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_NOT_FOUND";
+                        message: string;
+                    };
+                };
+            };
+            /** @description OPERATION_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "OPERATION_CONFLICT";
                         message: string;
                     };
                 };
