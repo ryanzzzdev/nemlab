@@ -3308,7 +3308,7 @@ remains a deployment input for M7 — no production readiness claimed.
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-103](#nem-103), [NEM-104](#nem-104), [NEM-105](#nem-105)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3324,7 +3324,27 @@ Verify Admin access boundaries and resilience. Deliver the corresponding accepte
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08; verified against the live local stack (API :8080, worker, PostgreSQL :55432, admin dev :5274, real mail-capture outbox).
+
+Route/capability matrix (live): anonymous → 401 on all `/api/admin/**` reads and writes, 401 `/api/auth/v1/session`, 200 on public `/api/v1/events`; bearer automation → 200 reads / 201 writes / **403 on `access.manage`** (access administration is human-session only) / 404 on unregistered admin paths; owner cookie → 200 reads, 200 access.manage, 201 mutation; viewer cookie → 200 reads, **403 on every write including with a valid CSRF token**, 403 access.manage, 404 unregistered; cookie+bearer presented together → 401 conflict; `/api/access` status without an applicant session → 401.
+
+Response redaction (live): viewer `grid-publications/attempts` returns role labels (`"Owner"`) with `diagnostic: null` — no `owner:<uuid>`/operator-name leakage; owner sees the same labelled actors with raw diagnostics.
+
+CSRF/Origin (live, via the same-origin Vite proxy): owner mutation with the real session-issued CSRF token + matching Origin → 201; missing CSRF → 403; wrong CSRF → 403; missing Origin → 403; foreign Origin → 403. The same-origin check compares `Origin` netloc to the request `Host`, so cookie mutations sent directly to the API port are denied even with a valid token — the intended posture for deployed same-origin hosting.
+
+Rate limits (live): bogus sign-in exchanges → `401` until the IP fail-budget is spent, then `429`; sign-in resend cooldown returns the generic `202` without minting tokens (verified during NEM-103 smoke).
+
+Sessions (live): logout → 204 then session → 401 (revoked server-side); seeded sessions denied after the 30-minute idle window; viewer session flipped 200 → 401 on grant revocation (NEM-104 run); cookie+bearer conflict → 401.
+
+Token replay / concurrent approval: one-use sign-in and verification tokens confirmed consumed on exchange (live `admin_token` lifecycle during the NEM-101/103 journeys); optimistic-version decision conflict → `409 ACCESS_CONFLICT` demonstrated live (NEM-104 run). Replay/expiry denial paths additionally covered by `test_auth_http.py` / `test_access_http.py`.
+
+Journeys (real API/worker/PostgreSQL/mail-capture): request → email verification → owner approval → viewer sign-in → read access → denied write → owner revocation → existing viewer session denied — exercised end-to-end in the NEM-101/103/104 browser runs. Owner: coverage → bounded load op (dispatch/pause/resume) → grid-import failure evidence in `grid_import_job` (10 SUCCEEDED / 2 FAILED / 1 CANCELLED) → explicit v2 publication with `admin-ui:` attempt key provenance → working GridReplay links.
+
+Resilience: lost publish response — the reconcile card verified live in both states ("Run recorded … landed" and "No run carries this key yet"); reload — server-persisted operations plus sessionStorage drafts (NEM-103 run); mail outage — current environment runs with mail delivery disabled and 11 outbox rows sit `pending`, visible to the owner (verified); bounded reads — `limit=5000` clamps to the page bound.
+
+Checks: `test_auth_http` + `test_access_http` + `test_capabilities_http` + `test_contract_captures` + `test_load_operations_http` + `test_grid_publication_http` → **36 passed**; contract verify 193 responses / 47 operations; frontend `npm run check` — contract 2.2.0 verified, prettier clean, both workspace builds pass, **126/126** public browser tests; admin pages show zero horizontal overflow at 320px.
+
+Unresolved gaps (honest record): live queue saturation was not exercised — `backpressured` dispatch is covered by `test_load_operations.py` service tests only; expired-token and replay denial paths rely on unit/HTTP tests plus the token lifecycle evidence rather than a dedicated live expiry run; real SMTP delivery remains untested (dev mailbox capture only — M7 carries provider/domain work); deployed same-origin hosting/TLS is M7 — dev verification used the Vite proxy.
 
 <a id="nem-107"></a>
 
