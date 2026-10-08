@@ -76,6 +76,10 @@ failures) and `status`; `GET .../events` audits it and `POST .../{id}/cancel`
 revokes a running claim. A `FAILED` job keeps `nextDay` — resubmitting the
 remaining window is safe: day saves deduplicate by content hash.
 
+The full operator pipeline — grid import, per-day price refreshes and
+catalogue publication, with monitoring, failure semantics and recovery — is
+documented in [runbook-grid-data.md](runbook-grid-data.md).
+
 Packaged startup smoke check:
 
 ```sh

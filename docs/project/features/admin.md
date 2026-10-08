@@ -56,4 +56,4 @@ Record the include/defer decision explicitly after the rehearsal. If included, s
 
 ## M5 decision — 2026-10-02
 
-**Deferred.** [Decision 021](../decisions/021-admin-ui-deferred.md) records the outcome of the NEM-063 rehearsal: the operator API was exercised end-to-end on the live stack (imports, dedupe, cancel, crash recovery, publication, link preservation) and is the documented operational path. Revisit triggers and the grid-coverage gap (NEM-082) are listed there.
+**Deferred.** [Decision 021](../decisions/021-admin-ui-deferred.md) records the outcome of the NEM-063 rehearsal: the operator API was exercised end-to-end on the live stack (imports, dedupe, cancel, crash recovery, publication, link preservation) and is the documented operational path. [runbook-grid-data.md](../runbook-grid-data.md) documents that path end to end — bounded imports, per-day price refreshes, catalogue publication, monitoring and recovery — and summarises the contract a future Admin app would orchestrate. Revisit triggers and the grid-coverage gap (NEM-082) are listed there.
