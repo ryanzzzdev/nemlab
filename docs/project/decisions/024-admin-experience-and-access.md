@@ -13,3 +13,7 @@ Alternatives: a shared password/token would lose person-specific revocation/audi
 Supersedes decision 021's UI deferral and decision 023's undecided Admin UI scope. M5 remains locally complete; M6 is planned; M7 owns deployed release validation.
 
 Implementation references checked during planning: [OWASP session guidance](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html), [single-use token guidance](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html), and [CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html). These inform controls, not a claim of certification.
+
+## Presentation superseded — 2026-10-08
+
+[Decision 025](025-admin-desktop-workspace.md) replaces the centred/public-style and multi-page presentation with desktop workspaces. Identity, permissions and operating semantics remain accepted.

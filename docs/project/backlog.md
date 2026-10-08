@@ -117,7 +117,18 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-106 — Verify Admin access boundaries and resilience](#nem-106)
 - [NEM-107 — Polish Admin UI and review M6 exit evidence](#nem-107)
 
+- [NEM-108 — Inventory Admin behaviour and redesign contracts](#nem-108)
+- [NEM-109 — Prototype the dense desktop Admin workspace](#nem-109)
+- [NEM-110 — Build independent Admin shell and table primitives](#nem-110)
+- [NEM-111 — Consolidate coverage jobs and publications](#nem-111)
+- [NEM-112 — Move owner load and publication into contextual drawers](#nem-112)
+- [NEM-113 — Redesign Access authentication and contextual help](#nem-113)
+- [NEM-114 — Migrate routes and verify Admin regressions](#nem-114)
+- [NEM-115 — Review desktop redesign and close M6 UI acceptance](#nem-115)
+
 ## Delivery notes
+
+- Current priority: M6 reopened for accepted desktop Admin redesign, [NEM-108–115](#nem-108). Original functional delivery NEM-095–107 remains Done; start NEM-108. [Design specification](features/admin-desktop-redesign.md).
 
 - Current milestone sequence: M5 GridReplay complete locally; M6 Admin scope accepted ([NEM-093](#nem-093)); deliver [NEM-095–107](#nem-095) plus NEM-082; M7 launch includes [NEM-094](#nem-094) and existing release gates. See [decision 023](decisions/023-milestone-separation.md).
 - Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). All tasks delivered and verified 2026-10-08; see [NEM-091](#nem-091) for checkpoint evidence.
@@ -3382,3 +3393,203 @@ Owner/viewer states: owner sees the full guided workflow and access management; 
 Pipeline explanation: How-it-works covers the four steps (inspect coverage → bounded load → review → explicit publication), the data/detectors/publications/Highlights distinctions and the v2 unusual-ramp baseline requirement; Welcome explains the console to visitors. Coverage/baseline wording validated against live results (honest "baseline ready" counts, incomplete-day naming before publish).
 
 M6 reconciliation: every M6 task carries Done status with evidence — NEM-082, NEM-095–099, NEM-100–106 (this file). Exit criteria met locally: owner bootstrap + full journey, visitor lifecycle, capability/redaction matrix, bounded load/recovery with preserved replay links, accurate guide, responsive/accessibility checks with recorded evidence. Carried to M7 unverified: production deployment and same-origin hosting/TLS, real SMTP provider + email domain, hosted CI, backup/retention rehearsal, deployed smoke.
+
+<a id="nem-108"></a>
+
+## NEM-108 — Inventory Admin behaviour and redesign contracts
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Ready
+- Depends on: [NEM-107](#nem-107)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Inventory Admin behaviour and redesign contracts, preserving delivered Admin capabilities.
+
+### Done when
+
+- Map every current route/action/error/security state to its new workspace location; inspect existing uncommitted edits without overwriting them.
+- Capture current owner/viewer screenshots and API field/sort/pagination capabilities; identify actual gaps and create bounded follow-up tasks only if necessary.
+- Record URL/state/cache/polling ownership and preservation matrix, including load drafts and unknown publication outcome.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-109"></a>
+
+## NEM-109 — Prototype the dense desktop Admin workspace
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-108](#nem-108)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Prototype the dense desktop Admin workspace, preserving delivered Admin capabilities.
+
+### Done when
+
+- Create reviewable static prototype/artifact for Data Operations and Access using realistic labelled fixture content, 1440×900 and 1280×720, light/dark.
+- Review main table, inspector, lower pane, density and action drawers through browser/computer use; show loading/empty/failure and viewer variants.
+- Resolve layout issues against spec before migration; document screenshots and selected dimensions without requiring another approval round.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-110"></a>
+
+## NEM-110 — Build independent Admin shell and table primitives
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-109](#nem-109)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Build independent Admin shell and table primitives, preserving delivered Admin capabilities.
+
+### Done when
+
+- Remove Admin dependency on public layout styles; add dedicated tokens, full-viewport rail/header/panes, theme preference and density controls.
+- Implement accessible tables/inspectors, column controls, keyboard-resizable panes and local layout reset; no personal data stored in preferences.
+- Validate shell at target desktops and 200% zoom; public layout/style/build remains unchanged; keep old pages usable until migrated.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-111"></a>
+
+## NEM-111 — Consolidate coverage jobs and publications
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-110](#nem-110)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Consolidate coverage jobs and publications, preserving delivered Admin capabilities.
+
+### Done when
+
+- Deliver Data Operations shared scope, summary strip, three linked views, selected-record inspector and related activity pane using real bounded APIs.
+- Preserve truthful stored/published/baseline states, safe viewer redaction and scoped counts; sort/filter labels match actual API capabilities.
+- Single polling/query ownership, empty/error states and scope/selection transitions work; inspect records without leaving workspace.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-112"></a>
+
+## NEM-112 — Move owner load and publication into contextual drawers
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-111](#nem-111)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Move owner load and publication into contextual drawers, preserving delivered Admin capabilities.
+
+### Done when
+
+- Reuse existing persisted load workflow, phase/child controls and reconciliation in drawers/activity pane; closing or reopening does not dispatch twice.
+- Retain v2 explicit publish, coverage review, partial acknowledgement, region-pointer warning, <=31-day scope and unknown-outcome reconciliation.
+- Verify dirty draft, captured scope, reload, queue full, failure/resume, session expiry and focus return on real API; viewers retain no write authority.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-113"></a>
+
+## NEM-113 — Redesign Access authentication and contextual help
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-110](#nem-110), [NEM-111](#nem-111)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Redesign Access authentication and contextual help, preserving delivered Admin capabilities.
+
+### Done when
+
+- Deliver request/visitor/audit tables and inspector with existing approval/extend/revoke/recent-auth/conflict/mail-failure behaviour; no bulk approvals.
+- Restyle welcome/request/sign-in/status/verify flows consistently without changing secure token lifecycle; preserve small-screen auth usability.
+- Move workflow/glossary/provenance guidance to contextual help, preserving educational content and visible viewer role/expiry.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-114"></a>
+
+## NEM-114 — Migrate routes and verify Admin regressions
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-112](#nem-112), [NEM-113](#nem-113)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Migrate routes and verify Admin regressions, preserving delivered Admin capabilities.
+
+### Done when
+
+- Implement canonical workspace URL/state restoration and compatibility redirects for all old Admin paths; invalid IDs and Back/Forward recover without mutations.
+- Add dedicated Admin browser tests and verify permission/cache cleanup, drawer/polling lifecycle and full access/operational journeys; public suite remains passing.
+- Run format/check plus relevant integrated tests; measure bounded read/render behaviour and fix regressions before final visual review.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-115"></a>
+
+## NEM-115 — Review desktop redesign and close M6 UI acceptance
+
+- Repository: both
+- Milestone: M6 — Admin desktop redesign
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-114](#nem-114)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
+
+### Outcome
+
+Review desktop redesign and close M6 UI acceptance, preserving delivered Admin capabilities.
+
+### Done when
+
+- Computer-use review at 1280×720,1440×900,1920×1080, light/dark/auto, density settings, keyboard and 200% zoom; record before/after evidence.
+- Demonstrate >=10 coverage rows plus context/activity at default 1440×900, in-place job inspection, load/publish and approval/revocation with real owner/viewer data.
+- Reconcile preservation matrix and all redesign criteria; update M6 only when passed, retaining unverified M7 release gates and explicit remaining issues.
+
+### Completion evidence
+
+Planned 2026-10-08; not implemented or verified.

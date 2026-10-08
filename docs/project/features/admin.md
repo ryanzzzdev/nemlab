@@ -1,6 +1,10 @@
 # Admin — M6 delivery specification
 
-Updated: 2026-10-08. Status: Accepted product direction; implementation defaults selected under the user's delegated design authority. Planned, not implemented. Tasks: [NEM-093 and NEM-095–107](../backlog.md#nem-093). Decision: [024](../decisions/024-admin-experience-and-access.md).
+Updated: 2026-10-08. Status: Accepted product direction; implementation defaults selected under the user's delegated design authority. Original functionality delivered locally under NEM-095–107; desktop UI redesign now planned. Tasks: [NEM-093 and NEM-095–107](../backlog.md#nem-093). Decision: [024](../decisions/024-admin-experience-and-access.md).
+
+## Current presentation authority
+
+The [desktop redesign](admin-desktop-redesign.md) and decision 025 supersede the centred public-style layout, separate operational pages and mobile-first presentation requirements below. Backend/account/security and workflow semantics remain in force. Prior presentation paragraphs describe the original delivered baseline, not the new design target.
 
 ## Purpose and scope
 
