@@ -3096,7 +3096,7 @@ passed.
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-096](#nem-096), [NEM-098](#nem-098), [NEM-100](#nem-100)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3112,7 +3112,23 @@ Build request-access and sign-in experience. Deliver the corresponding accepted 
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. The Admin app gains the full access journey:
+`/welcome` (sign-in vs request paths), `/request-access` (generic
+confirmation that never confirms accounts, retention copy),
+`/verify#token=` (fragment read once and stripped before render, single
+exchange, applicant session to `/request-status`), `/request-status`
+(unverified/pending/approved/rejected states plus CSRF resend), and
+`/sign-in` (generic link request plus `#token=` exchange landing on the
+console). Anonymous console routes redirect to `/welcome`; owner/viewer
+sessions on auth pages redirect into the console. A real stale-data bug
+was found and fixed during verification — a 401 kept the last session in
+the query cache so welcome/console redirects looped and spammed
+`/api/auth/v1/session`; `getSession` now maps 401 to `null` so no
+session is a state, not an error. Verified end-to-end in Chromium:
+request → verify mail token → applicant status + resend; owner sign-in
+mail → exchange → console; approved viewer → read-only badge + 403 on
+writes; invalid/replayed links → recovery panel; sign-out → welcome with
+a single session refetch.
 
 <a id="nem-102"></a>
 
