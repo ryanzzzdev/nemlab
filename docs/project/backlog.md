@@ -8,19 +8,6 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
-Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). All tasks delivered and verified 2026-10-08; see [NEM-091](#nem-091) for checkpoint evidence.
-
-- [NEM-083 — Correct event duration and time-range presentation](#nem-083)
-- [NEM-084 — Add publication-wide highlights and typed catalogue filters](#nem-084)
-- [NEM-085 — Deliver Highlights and All events in the demo-style UI](#nem-085)
-- [NEM-086 — Add bounded immutable event preview charts](#nem-086)
-- [NEM-087 — Calibrate and freeze detector v2 definitions](#nem-087)
-- [NEM-088 — Detect and explain unusually large demand ramps](#nem-088)
-- [NEM-089 — Detect and replay negative-to-high price reversals](#nem-089)
-- [NEM-090 — Group related negative-price episodes for exploration](#nem-090)
-- [NEM-091 — Verify discovery releases and detector v2 journeys](#nem-091)
-
-
 - [NEM-001 — Establish initial project planning documents](#nem-001)
 - [NEM-002 — Define the OE sample plan and check access](#nem-002)
 - [NEM-003 — Validate one recent price day](#nem-003)
@@ -103,13 +90,26 @@ Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-dis
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 - [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
 - [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
+- [NEM-083 — Correct event duration and time-range presentation](#nem-083)
+- [NEM-084 — Add publication-wide highlights and typed catalogue filters](#nem-084)
+- [NEM-085 — Deliver Highlights and All events in the demo-style UI](#nem-085)
+- [NEM-086 — Add bounded immutable event preview charts](#nem-086)
+- [NEM-087 — Calibrate and freeze detector v2 definitions](#nem-087)
+- [NEM-088 — Detect and explain unusually large demand ramps](#nem-088)
+- [NEM-089 — Detect and replay negative-to-high price reversals](#nem-089)
+- [NEM-090 — Group related negative-price episodes for exploration](#nem-090)
+- [NEM-091 — Verify discovery releases and detector v2 journeys](#nem-091)
 - [NEM-092 — Accept bounded date-range price refreshes](#nem-092)
+- [NEM-093 — Agree the M6 Admin experience and delivery tasks](#nem-093)
+- [NEM-094 — Close carried GridReplay launch-hardening evidence gaps](#nem-094)
 
-Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
+## Delivery notes
 
-The [price-threshold strategy](features/price-threshold-strategy.md) was delivered through NEM-049–NEM-051 and promoted to a default third strategy in NEM-052. Commercial-grade market realism is explicitly outside its scope.
-
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; NEM-058–NEM-062 delivered the versioned catalogue, replay contract, real-data connection and shareable links; NEM-063 rehearsal passed and deferred the Admin UI ([decision 021](decisions/021-admin-ui-deferred.md)); next — [NEM-064](#nem-064) M5 exit review, plus gap task [NEM-082](#nem-082). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
+- Current milestone sequence: M5 GridReplay complete locally; M6 Admin scope discussion next ([NEM-093](#nem-093)); M7 launch includes [NEM-094](#nem-094) and existing release gates. See [decision 023](decisions/023-milestone-separation.md).
+- Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). All tasks delivered and verified 2026-10-08; see [NEM-091](#nem-091) for checkpoint evidence.
+- Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). GridReplay M5 was built through NEM-054–NEM-063 (detectors, observation persistence, bounded worker imports, versioned catalogue, replay contract, real-data connection, shareable links, and an operations rehearsal that deferred the Admin UI — [decision 021](decisions/021-admin-ui-deferred.md)), verified by [NEM-064](#nem-064) and extended by the discovery work above; see the [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25).
+- Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
+- The [price-threshold strategy](features/price-threshold-strategy.md) was delivered through NEM-049–NEM-051 and promoted to a default third strategy in NEM-052. Commercial-grade market realism is explicitly outside its scope.
 
 
 <a id="nem-001"></a>

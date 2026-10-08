@@ -72,7 +72,7 @@ Detail the upcoming milestone and immediate dependencies. Keep later milestones 
 
 ## Task records in backlog.md
 
-Initially, keep each task as a section in `backlog.md`. Use a compact index at the top to make the next work easy to find. The index should link to task records and show ordering; task sections own status so it is not duplicated.
+Initially, keep each task as a section in `backlog.md`. Use a compact index at the top listing every task link in ascending ID order; since IDs are sequential, append each new task's index link at the end of the list. The index links to task records and shows ordering; task sections own status so it is not duplicated. Delivery-order or current-work context belongs in a short `Delivery notes` section beside the index, not in list position.
 
 Assign IDs sequentially, starting at `NEM-001`. Never reuse an ID. IDs identify tasks; they do not indicate priority. The previously discussed `NEM-014` was an illustration, not an existing task.
 
