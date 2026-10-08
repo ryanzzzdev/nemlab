@@ -3174,7 +3174,7 @@ pass; ruff/mypy clean.
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-100](#nem-100), [NEM-102](#nem-102)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3190,7 +3190,32 @@ Build guided owner import and publication workflow. Deliver the corresponding ac
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-08. A new `/admin/load` page runs the owner journey:
+scope selection (<=366 days, completed market days only) → scope review
+(days, <=31-day chunks, grid-then-price phases, per-day job counts,
+dedupe note) → `POST /load-operations` → explicit per-chunk dispatch with
+pause/resume and `backpressured` surfaced as a held state. The draft
+persists in sessionStorage across reload; operations stay authoritative
+server-side. Baseline demand history is an explicit separate import (own
+window, grid-import submissions with `baseline:{region}:{day}` keys — no
+price phase, never silently fetched). Coverage page gains "Load this
+window" and accepts `?region=&start=&end=` deep links ("Recheck
+coverage" from finished operations). Publications gains the Review &
+publish panel: <=31-day scope, coverage preview first, owner
+acknowledgement checkbox naming the incomplete days before a partial
+publication is allowed, explicit v2 default (v1 under an advanced
+disclosure), latest-pointer-replacement explanation, `admin-ui:` attempt
+keys persisted before submit so a lost response reconciles via the
+attempts history — never a silent republish or auto-retry; the submit
+button is inert while in flight and a reload never resubmits. Jobs page
+gains owner cancel on active grid imports and a "Submit again" recovery
+that seeds the remaining window (nextDay..end) into the load draft.
+Browser-verified against the live backend: create → dispatch → pause →
+resume; coverage check → v2 publish → run recorded with actor +
+attemptKey + second deliberate publication; baseline submission → 202;
+viewer sees no write forms and direct API writes return 403. Two
+lost-exchange-response guards added to auth pages (re-check session
+before declaring a consumed link dead).
 
 <a id="nem-104"></a>
 
