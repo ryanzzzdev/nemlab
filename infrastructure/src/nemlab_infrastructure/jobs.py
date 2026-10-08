@@ -23,7 +23,9 @@ from nemlab_core.prices import Region
 from nemlab_infrastructure.prices.source import Fetch
 from nemlab_infrastructure.prices.store import PriceStore
 
-MAX_PENDING_JOBS = 100
+# One row per market day; multi-region historical backfills legitimately
+# reach the hundreds, so bound the queue generously rather than by burst rate.
+MAX_PENDING_JOBS = 1000
 MAX_ATTEMPTS = 3
 LEASE_SECONDS = 300
 # Anonymous fetches stay a minority of the shared queue and retry a bounded

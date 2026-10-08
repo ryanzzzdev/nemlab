@@ -330,12 +330,17 @@ def test_validates_inputs_and_bounds_queue_size(
         jobs.submit("bad key", REGION, DAY, "operator")
     with pytest.raises(ValueError):
         jobs.submit("future", REGION, date(2200, 1, 1), "operator")
-    for index in range(100):
+    for index in range(jobs_module.MAX_PENDING_JOBS):
         jobs.submit(f"day-{index}", REGION, DAY + timedelta(days=index), "scheduler")
     with pytest.raises(jobs_module.QueueFull):
-        jobs.submit("overflow", REGION, DAY + timedelta(days=100), "scheduler")
-    assert count(scratch_db, "refresh_job") == 100
-    assert count(scratch_db, "price_backfill") == 100
+        jobs.submit(
+            "overflow",
+            REGION,
+            DAY + timedelta(days=jobs_module.MAX_PENDING_JOBS),
+            "scheduler",
+        )
+    assert count(scratch_db, "refresh_job") == jobs_module.MAX_PENDING_JOBS
+    assert count(scratch_db, "price_backfill") == jobs_module.MAX_PENDING_JOBS
 
 
 def test_visitor_requests_deduplicate_onto_any_active_job_for_the_day(

@@ -103,6 +103,7 @@ Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-dis
 - [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
 - [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
 - [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
+- [NEM-092 — Accept bounded date-range price refreshes](#nem-092)
 
 Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
 
@@ -1957,6 +1958,65 @@ publication.
 ### Completion evidence
 
 Gap identified in the NEM-063 rehearsal; not yet implemented.
+
+<a id="nem-092"></a>
+
+## NEM-092 — Accept bounded date-range price refreshes
+
+- Repository: backend
+- Milestone: Post-M5 operator tooling
+- Priority: Normal
+- Status: Ready
+- Depends on: None (existing refresh queue)
+- References: [runbook-grid-data.md](runbook-grid-data.md), [features/admin.md](features/admin.md)
+
+### Outcome
+
+Replace the per-day fan-out callers must run today with one bounded-window
+submission, so backfilling e.g. Sept-2023 × 5 regions is 5 requests instead of
+150, without growing a second queue or changing worker claim semantics.
+
+### Plan
+
+- Extend `POST /api/admin/v1/price-refreshes` to accept either `{region, day}`
+  (current shape) or `{region, startDay, endExclusive}` — an OpenAPI `oneOf`,
+  so existing callers keep working. Window bound mirrors grid imports:
+  1–31 completed market days (the `price_backfill` primitive already accepts a
+  start/end window).
+- `RefreshJobService.submit_window` fans out to one `refresh_job` per market
+  day **inside a single transaction**, deriving per-day idempotency keys as
+  `{key}:{day}`. This composes with existing dedup for free: same key + same
+  window → every day resolves to its existing job → identical response; same
+  key + different window → the overlapping day's `RequestKeyConflict` surfaces
+  as `IDEMPOTENCY_CONFLICT` (decide: reject the whole window, not partial).
+- Pending-cap check applies per inserted row; with `MAX_PENDING_JOBS=1000` a
+  31-day submission is safe, but a partially-queued failure must roll back the
+  whole transaction (all-or-nothing is what makes the response honest).
+- Response shape: `202` + `{jobs: [JobView…]}` for windows, unchanged
+  `JobView` + `Location` for single-day. `GET .../{id}`, `events`, `cancel`
+  keep working per job — no new read surface needed.
+- Rejected alternative: a windowed *job type* with a day checkpoint (the
+  grid-import model). Unnecessary — per-day jobs are already individually
+  retryable and a day is the natural recovery unit here.
+- Update `runbook-grid-data.md` Phase 2, OpenAPI contract and captures; note
+  in `features/admin.md` that the Admin UI "refresh a range" form maps to one
+  call.
+
+### Done when
+
+- Windowed submission accepts 1–31 completed days, validates bounds, and
+  inserts one deduplicated job per day in one transaction.
+- Idempotency verified: identical resubmission returns the same job set;
+  changed window under the same key conflicts; partial-failure rollback leaves
+  no orphan jobs.
+- Contract regenerated and HTTP/service tests cover bounds, dedup, window
+  overlap and the cap; runbook Phase 2 updated; journal entry recorded.
+
+### Completion evidence
+
+Planned 2026-10-08 after the multi-region import surfaced the fan-out
+ergonomics problem; `MAX_PENDING_JOBS` raised 100 → 1000 separately as the
+cheap interim fix. Implementation not started.
 
 <a id="python-rebuild-tasks"></a>
 

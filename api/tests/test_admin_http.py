@@ -12,7 +12,11 @@ from pydantic import ValidationError
 from nemlab_api.app import create_app
 from nemlab_api.settings import ApiSettings
 from nemlab_core.prices import Region
-from nemlab_infrastructure.jobs import RefreshJobService, StaleClaimException
+from nemlab_infrastructure.jobs import (
+    MAX_PENDING_JOBS,
+    RefreshJobService,
+    StaleClaimException,
+)
 from nemlab_infrastructure.prices.store import PriceStore
 from nemlab_infrastructure.settings import DatabaseSettings
 
@@ -211,10 +215,10 @@ def test_queue_capacity_produces_backpressure(
     client: TestClient, scratch_db: sa.Engine
 ) -> None:
     jobs = _jobs(scratch_db)
-    for day in range(100):
+    for day in range(MAX_PENDING_JOBS):
         jobs.submit(
             f"fill-{day}",
-            Region.NSW1,
+            Region.QLD1,
             date(2023, 1, 1) + timedelta(days=day),
             "test",
         )

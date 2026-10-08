@@ -103,9 +103,10 @@ Semantics:
 - One market day per job; the job view carries `status`, `attempts`,
   `diagnostic`. List/status/events/cancel mirror the grid-import endpoints
   under `/api/admin/v1/price-refreshes`.
-- Up to 100 refresh jobs may be pending — a 30-day × 5-region sweep (150 jobs)
-  exceeds that, so submit in waves and retry on `QUEUE_FULL`, or wait for
-  drainage between regions.
+- Up to 1000 refresh jobs may be pending — a 30-day × 5-region sweep (150 jobs)
+  fits comfortably; beyond the cap the API returns `QUEUE_FULL` — retry after
+  the queue drains. (Windowed submission to collapse the fan-out is planned as
+  NEM-092.)
 - Same idempotency rules as grid imports.
 - Prices are also refreshed on the scheduled cadence for recent days; this
   path is for backfilling historical windows.
