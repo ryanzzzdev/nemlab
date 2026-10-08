@@ -147,3 +147,84 @@ def test_storage_failure_returns_safe_error(
     finally:
         with scratch_db.begin() as conn:
             conn.execute(sa.text("ALTER TABLE missing_current RENAME TO grid_current"))
+
+
+def _demand_days(
+    store: GridStore, start: date, count: int, *, missing: bool = False
+) -> None:
+    for offset in range(count):
+        day = start + timedelta(days=offset)
+        _save(
+            store,
+            day,
+            [
+                GridBatch(
+                    Region.NSW1,
+                    Metric.DEMAND,
+                    "",
+                    day,
+                    tuple(
+                        Slot(Kind.MISSING, None)
+                        if missing
+                        else Slot(Kind.VALUE, Decimal("5000"))
+                        for _ in range(288)
+                    ),
+                )
+            ],
+        )
+
+
+def test_baseline_readiness_route(client: TestClient, scratch_db: sa.Engine) -> None:
+    store = GridStore(scratch_db)
+    baseline_start = DAY - timedelta(days=90)
+    _demand_days(store, baseline_start, 60)
+    response = client.get(
+        f"{BASE}/NSW1/baseline?startDay=2023-09-04&endExclusive=2023-09-05",
+        headers=AUTH,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["baselineDays"] == 90
+    assert body["minCompleteDays"] == 60
+    assert body["minClassDays"] == 20
+    day = body["days"][0]
+    assert day["day"] == "2023-09-04"
+    assert day["completeDays"] == 60
+    # 60 consecutive days contain 44 same-class days — ready against the
+    # 60/20 thresholds.
+    assert day["classDays"] == 44
+    assert day["ready"] is True
+
+
+def test_baseline_readiness_window_shift(
+    client: TestClient, scratch_db: sa.Engine
+) -> None:
+    store = GridStore(scratch_db)
+    _demand_days(store, DAY - timedelta(days=90), 61)
+    body = client.get(
+        f"{BASE}/NSW1/baseline?startDay=2023-09-04&endExclusive=2023-09-06",
+        headers=AUTH,
+    ).json()
+    # Day one's window covers all 61 seeded days; day two's window drops
+    # the oldest baseline day and picks up day one (unseeded) — per-day
+    # windows, not a single window-level count.
+    assert [d["completeDays"] for d in body["days"]] == [61, 60]
+
+
+def test_baseline_rejects_bad_windows(client: TestClient) -> None:
+    invalid = (
+        f"{BASE}/NSW1/baseline?startDay=2023-09-05&endExclusive=2023-09-04",
+        f"{BASE}/NSW1/baseline?startDay=2023-09-04&endExclusive=2023-10-10",
+        # Baseline reaching before the earliest market day.
+        f"{BASE}/NSW1/baseline?startDay=2021-10-01&endExclusive=2021-10-02",
+    )
+    for route in invalid:
+        response = client.get(route, headers=AUTH)
+        assert response.status_code == 400, route
+
+
+def test_baseline_requires_auth(client: TestClient) -> None:
+    response = client.get(
+        f"{BASE}/NSW1/baseline?startDay=2023-09-04&endExclusive=2023-09-05"
+    )
+    assert response.status_code == 401

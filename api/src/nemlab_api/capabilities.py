@@ -33,8 +33,12 @@ ROUTES: dict[tuple[str, str], str] = {
     ("POST", "/api/admin/v1/grid-imports/{id}/cancel"): WRITE,
     ("POST", "/api/admin/v1/grid-publications"): WRITE,
     ("GET", "/api/admin/v1/grid-publications"): READ,
+    # Literal ``attempts`` must precede the ``{id}`` template so the
+    # detection-run history is not claimed as a publication id.
+    ("GET", "/api/admin/v1/grid-publications/attempts"): READ,
     ("GET", "/api/admin/v1/grid-publications/{id}"): READ,
     ("GET", "/api/admin/v1/grid-coverage/{region}"): READ,
+    ("GET", "/api/admin/v1/grid-coverage/{region}/baseline"): READ,
     ("GET", "/api/admin/v1/access-requests"): ACCESS_MANAGE,
     ("GET", "/api/admin/v1/access-requests/{id}"): ACCESS_MANAGE,
     ("POST", "/api/admin/v1/access-requests/{id}/decisions"): ACCESS_MANAGE,

@@ -96,3 +96,68 @@ def test_publication_not_found(client: TestClient) -> None:
     )
     assert response.status_code == 404
     assert response.json()["code"] == "PUBLICATION_NOT_FOUND"
+
+
+def test_publication_provenance_and_attempts(
+    client: TestClient, scratch_url: sa.Engine
+) -> None:
+    _seed_price(scratch_url, DAY, [Decimal("50")] * 288)
+    created = client.post(
+        "/api/admin/v1/grid-publications",
+        json={
+            "region": "NSW1",
+            "startDay": "2023-09-04",
+            "endExclusive": "2023-09-05",
+            "attemptKey": "ui-attempt-1",
+        },
+        headers=AUTH,
+    )
+    assert created.status_code == 201
+    body = created.json()
+    assert body["runId"] is not None
+    assert body["actor"] == "Operator"  # bearer identity -> role label
+    assert body["attemptKey"] == "ui-attempt-1"
+
+    attempts = client.get("/api/admin/v1/grid-publications/attempts", headers=AUTH)
+    assert attempts.status_code == 200
+    run = attempts.json()[0]
+    assert run["id"] == body["runId"]
+    assert run["status"] == "COMPLETE"
+    assert run["publicationId"] == body["id"]
+    assert run["attemptKey"] == "ui-attempt-1"
+    assert run["actor"] == "Operator"
+
+    detail = client.get(
+        f"/api/admin/v1/grid-publications/{body['id']}", headers=AUTH
+    ).json()
+    assert detail["runId"] == body["runId"]
+    assert detail["attemptKey"] == "ui-attempt-1"
+    assert detail["eventCounts"] == {}
+    assert detail["highlights"]["version"] == "highlights-v2"
+    assert detail["highlights"]["selected"] == 0
+    assert detail["highlights"]["excluded"] == 0
+
+
+def test_event_counts_in_detail(client: TestClient, scratch_url: sa.Engine) -> None:
+    prices = [Decimal("50")] * 288
+    prices[10] = prices[11] = prices[12] = Decimal("-7")
+    _seed_price(scratch_url, DAY, prices)
+    created = client.post(
+        "/api/admin/v1/grid-publications",
+        json={
+            "region": "NSW1",
+            "startDay": "2023-09-04",
+            "endExclusive": "2023-09-05",
+        },
+        headers=AUTH,
+    )
+    detail = client.get(
+        f"/api/admin/v1/grid-publications/{created.json()['id']}", headers=AUTH
+    ).json()
+    assert detail["eventCounts"] == {"negative_price_run": 1}
+    assert detail["highlights"]["eligible"] == 1
+    assert detail["highlights"]["totals"]["negative_price_run"] == 1
+
+
+def test_attempts_require_auth(client: TestClient) -> None:
+    assert client.get("/api/admin/v1/grid-publications/attempts").status_code == 401

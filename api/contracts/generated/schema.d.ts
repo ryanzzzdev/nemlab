@@ -268,6 +268,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v1/grid-publications/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bounded publication-attempt history (COMPLETE and FAILED runs) with actor labels and caller correlation for lost-response reconciliation */
+        get: operations["listDetectionAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/v1/grid-publications/{id}": {
         parameters: {
             query?: never;
@@ -625,6 +642,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/v1/grid-coverage/{region}/baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-candidate-day ramp-baseline readiness: demand-complete and same-class day counts in each day's own preceding 90-day window */
+        get: operations["gridBaselineReadiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -939,6 +973,8 @@ export interface components {
              * @enum {string}
              */
             detectorSuite: "v1" | "v2";
+            /** @description Optional caller correlation recorded on the detection run for lost-response reconciliation; never deduplicates. */
+            attemptKey?: string | null;
         };
         GridPublication: {
             /** Format: uuid */
@@ -1293,6 +1329,103 @@ export interface components {
         Queued: {
             /** @enum {string} */
             status: "queued";
+        };
+        GridPublicationDetail: {
+            /** Format: uuid */
+            id: string;
+            region: components["schemas"]["Region"];
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+            detectorVersion: string;
+            eventCount: number;
+            /** @description Per-day evaluated/missing counts plus detector outcomes (demand_ramp and, under the v2 suite, unusual_demand_ramp). */
+            coverage: Record<string, never>;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            runId: string | null;
+            /** @description Role label only (Owner/Operator/Worker) — never an identity; null for runs predating provenance. */
+            actor: string | null;
+            attemptKey: string | null;
+            /** @description Per-event-type totals pinned to this publication. */
+            eventCounts: {
+                [key: string]: number;
+            };
+            highlights: components["schemas"]["GridPublicationHighlights"];
+        };
+        GridPublicationHighlights: {
+            /** @enum {string} */
+            version: "highlights-v2";
+            matching: number;
+            selected: number;
+            eligible: number;
+            excluded: number;
+            totals: {
+                [key: string]: number;
+            };
+        };
+        GridDetectionAttempt: {
+            /** Format: uuid */
+            id: string;
+            region: components["schemas"]["Region"];
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+            detectorVersion: string;
+            /** @enum {string} */
+            status: "COMPLETE" | "FAILED";
+            /** Format: uuid */
+            publicationId: string | null;
+            /** @description Raw failure text for owner/automation; null in viewer projections. */
+            diagnostic: string | null;
+            actor: string | null;
+            attemptKey: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        GridBaselineReadiness: {
+            region: components["schemas"]["Region"];
+            /** Format: date */
+            candidateStart: string;
+            /** Format: date */
+            candidateEndExclusive: string;
+            /** @enum {integer} */
+            baselineDays: 90;
+            /** @enum {integer} */
+            minCompleteDays: 60;
+            /** @enum {integer} */
+            minClassDays: 20;
+            days: components["schemas"]["GridBaselineDay"][];
+        };
+        GridBaselineDay: {
+            /** Format: date */
+            day: string;
+            completeDays: number;
+            classDays: number;
+            ready: boolean;
+        };
+        AdminGridPublication: {
+            /** Format: uuid */
+            id: string;
+            region: components["schemas"]["Region"];
+            /** Format: date */
+            startDay: string;
+            /** Format: date */
+            endExclusive: string;
+            detectorVersion: string;
+            eventCount: number;
+            /** @description Per-day evaluated/missing counts plus detector outcomes (demand_ramp and, under the v2 suite, unusual_demand_ramp). */
+            coverage: Record<string, never>;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            runId: string | null;
+            /** @description Role label only (Owner/Operator/Worker) — never an identity; null for runs predating provenance. */
+            actor: string | null;
+            attemptKey: string | null;
         };
     };
     responses: never;
@@ -2622,7 +2755,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GridPublication"][];
+                    "application/json": components["schemas"]["AdminGridPublication"][];
                 };
             };
             /** @description Missing or invalid operator bearer token */
@@ -2686,7 +2819,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GridPublication"];
+                    "application/json": components["schemas"]["AdminGridPublication"];
                 };
             };
             /** @description INVALID_REQUEST */
@@ -2743,6 +2876,67 @@ export interface operations {
             };
         };
     };
+    listDetectionAttempts: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Detection attempts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GridDetectionAttempt"][];
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate": "Bearer";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
     gridPublication: {
         parameters: {
             query?: never;
@@ -2760,7 +2954,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GridPublication"];
+                    "application/json": components["schemas"]["GridPublicationDetail"];
                 };
             };
             /** @description INVALID_REQUEST */
@@ -4290,6 +4484,83 @@ export interface operations {
                     "application/json": {
                         /** @enum {string} */
                         code: "ACCESS_CONFLICT";
+                        message: string;
+                    };
+                };
+            };
+            /** @description STORAGE_UNAVAILABLE */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "STORAGE_UNAVAILABLE";
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
+    gridBaselineReadiness: {
+        parameters: {
+            query: {
+                startDay: string;
+                endExclusive: string;
+            };
+            header?: never;
+            path: {
+                region: components["schemas"]["Region"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Baseline readiness */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GridBaselineReadiness"];
+                };
+            };
+            /** @description INVALID_REQUEST */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "INVALID_REQUEST";
+                        message: string;
+                    };
+                };
+            };
+            /** @description Missing or invalid operator bearer token */
+            401: {
+                headers: {
+                    "WWW-Authenticate": "Bearer";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
                         message: string;
                     };
                 };

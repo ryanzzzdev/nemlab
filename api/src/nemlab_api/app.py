@@ -124,8 +124,9 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             register_grid_errors(app)
             grid = GridStore(engine)
             app.include_router(grid_imports_router(GridImportJobs(engine, grid)))
-            app.include_router(grid_coverage_router(grid))
-            app.include_router(grid_publications_router(GridCatalogue(engine)))
+            catalogue = GridCatalogue(engine)
+            app.include_router(grid_coverage_router(grid, catalogue))
+            app.include_router(grid_publications_router(catalogue))
 
     app.add_middleware(RequestLogging)
     app.add_middleware(SecurityHeaders)

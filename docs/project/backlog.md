@@ -3028,7 +3028,7 @@ Completed 2026-10-08. `infrastructure/src/nemlab_infrastructure/admin/access.py`
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-097](#nem-097), [NEM-082](#nem-082)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3044,7 +3044,7 @@ Expose bounded console reads and publication provenance. Deliver the correspondi
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08. V9 adds `actor`/`request_key` to `grid_detection_run` so every publication attempt — COMPLETE or FAILED — carries operator/owner identity and optional caller correlation (`attemptKey` on the publish request, 1–128 chars, never deduplicating); `GridCatalogue.attempts` serves bounded run history and publications join their run back for `runId`/`actor`/`attemptKey`. New `GET /api/admin/v1/grid-publications/attempts` (viewer-safe: raw failure diagnostics redacted, actors role-labelled) and `GET /api/admin/v1/grid-coverage/{region}/baseline` — per-candidate-day ramp-baseline readiness (own 90-day window, demand-complete and same-class counts vs the 60/20 detector thresholds, one bounded coverage query + prefix sums, so insufficient baseline is reported distinctly from zero qualifying events). Publication detail gains `eventCounts` by type and `highlights` selection provenance (version, matching/selected/eligible/excluded, per-type totals). Tests cover empty/partial/full and window-shift baselines, actor/key persistence, FAILED-attempt survival, 31-day bounds and viewer projection; contract captures extended (`verify.mjs` 182 responses/41 operations); full suite and ruff/mypy-strict/lint-imports clean.
 
 <a id="nem-100"></a>
 

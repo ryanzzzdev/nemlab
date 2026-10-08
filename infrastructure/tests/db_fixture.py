@@ -61,7 +61,7 @@ def apply_schema(engine: sa.Engine) -> None:
 
 
 def apply_grid_schema(engine: sa.Engine) -> None:
-    """The Java baseline plus the post-baseline migrations (V4-V7)."""
+    """The Java baseline plus the post-baseline migrations (V4-V7, V9)."""
     from nemlab_infrastructure.schema import migration_text
 
     apply_schema(engine)
@@ -70,6 +70,7 @@ def apply_grid_schema(engine: sa.Engine) -> None:
         conn.exec_driver_sql(migration_text("V5__grid_import_jobs.sql"))
         conn.exec_driver_sql(migration_text("V6__grid_events.sql"))
         conn.exec_driver_sql(migration_text("V7__detector_v2.sql"))
+        conn.exec_driver_sql(migration_text("V9__publication_provenance.sql"))
 
 
 def apply_admin_tables(engine: sa.Engine) -> None:
@@ -78,6 +79,14 @@ def apply_admin_tables(engine: sa.Engine) -> None:
 
     with engine.begin() as conn:
         conn.exec_driver_sql(migration_text("V8__admin_identity.sql"))
+
+
+def apply_provenance(engine: sa.Engine) -> None:
+    """Only the V9 publication-provenance columns — after the grid schema."""
+    from nemlab_infrastructure.schema import migration_text
+
+    with engine.begin() as conn:
+        conn.exec_driver_sql(migration_text("V9__publication_provenance.sql"))
 
 
 def apply_admin_schema(engine: sa.Engine) -> None:

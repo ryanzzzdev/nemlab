@@ -20,7 +20,7 @@ Use a centred, wide content area consistent with BatteryLab/GridReplay, compact 
 
 Region selector and inclusive NEM date range; summary of price, demand, flow and fuel-series coverage; per-day grid/table; separate current stored coverage from latest publication coverage. Show complete, partial, missing and unavailable distinctly, observation counts and revision/freshness where known. Unknown is never green. Offer a textual legend and selected-day detail.
 
-Owner primary action: **Load data** for selected scope. Secondary action: **Review & publish**. Viewer sees explanatory action descriptions, not usable write forms. Show baseline readiness separately from candidate-window coverage; September coverage alone does not establish unusual-ramp eligibility. Do not imply an inspected range is already the public catalogue range.
+Owner primary action: **Load data** for selected scope. Secondary action: **Review & publish**. Viewer sees explanatory action descriptions, not usable write forms. Show baseline readiness separately from candidate-window coverage; September coverage alone does not establish unusual-ramp eligibility. Do not imply an inspected range is already the public catalogue range. Implemented as `GET /api/admin/v1/grid-coverage/{region}` (stored coverage, NEM-082) plus `…/{region}/baseline` — per-day ramp-baseline demand completeness and same-class counts against the v2 60/20 thresholds (NEM-099).
 
 ### Jobs
 
@@ -28,7 +28,7 @@ Bounded, paginated/filterable price/grid job list with type, region, requested r
 
 ### Publications
 
-Region-specific current publication and history; date scope, detector suite/version, creation time, coverage warnings, event counts by type and links to real public replays. Detail explains frozen source revisions and preserved old links. Where available, show highlight selection version, ranked reasons/populations and constituent suppression, clearly separate from detection. No manual highlight editing or new detector-threshold editor in M6.
+Region-specific current publication and history; date scope, detector suite/version, creation time, coverage warnings, event counts by type and links to real public replays. Detail explains frozen source revisions and preserved old links. Where available, show highlight selection version, ranked reasons/populations and constituent suppression, clearly separate from detection. No manual highlight editing or new detector-threshold editor in M6. Implemented as publication detail `eventCounts` + `highlights` provenance (selection version, matching/selected/eligible/excluded, per-type totals), and `GET /api/admin/v1/grid-publications/attempts` — bounded detection-run history carrying `actor` role labels and caller `attemptKey` correlation for lost-response reconciliation (NEM-099).
 
 ### Access (owner only)
 
@@ -54,7 +54,7 @@ V2 education covers ordinary versus unusual ramps, negative runs, price spikes, 
 6. Owner explicitly confirms **Detect & publish**. Block accidental incomplete price/required-demand publication by default; allow an owner acknowledgement of specific gaps when partial publication is intentional. Optional flow/fuel gaps remain labelled. This is a coverage preview, not a promise of precomputed event counts. Publication remains atomic and synchronous, with no automatic retry; a lost response becomes “Outcome unknown—check history”, not “Failed, retrying”.
 7. Show resulting publication, counts, coverage and links to GridReplay/Highlights. Refreshing source data requires explicit republication. Existing saved replay links remain immutable and readable.
 
-Persist request identity, scope and actor on publication attempts/results so a response lost after commit can be reconciled safely. Preserve the existing rule that deliberate repeated publishes create new publications; correlation is for inspection, not silent publication deduplication. Authorisation is rechecked when actions execute.
+Persist request identity, scope and actor on publication attempts/results so a response lost after commit can be reconciled safely. Preserve the existing rule that deliberate repeated publishes create new publications; correlation is for inspection, not silent publication deduplication. Authorisation is rechecked when actions execute. Implemented via V9 `grid_detection_run.actor`/`request_key`: every run records the resolved credential label and optional `attemptKey`; the attempts read reconciles lost responses without auto-retry.
 
 ## Identity and permissions
 

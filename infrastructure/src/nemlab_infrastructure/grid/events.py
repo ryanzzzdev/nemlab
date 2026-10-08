@@ -28,6 +28,8 @@ from nemlab_core.detectors import (
     DETECTOR_VERSIONS,
     INTERVALS_PER_DAY,
     RAMP_BASELINE_DAYS,
+    RAMP_MIN_CLASS_DAYS,
+    RAMP_MIN_COMPLETE_DAYS,
     RAMP_MIN_RISE_MW,
     REVERSAL_LOOKAHEAD_INTERVALS,
     Detected,
@@ -216,6 +218,40 @@ class Publication:
     event_count: int
     coverage: dict[str, dict[str, object]]
     created_at: datetime
+    run_id: UUID | None = None
+    actor: str | None = None
+    attempt_key: str | None = None
+
+
+@dataclass(frozen=True)
+class DetectionAttempt:
+    """One publication attempt (detection run) — the reconciliation record
+    for a lost publish response; FAILED rows outlive their transaction."""
+
+    id: UUID
+    region: Region
+    start: date
+    end: date
+    detector_version: str
+    status: str
+    publication_id: UUID | None
+    diagnostic: str | None
+    actor: str | None
+    attempt_key: str | None
+    created_at: datetime
+
+
+@dataclass(frozen=True)
+class BaselineReadiness:
+    """Ramp-baseline readiness for one candidate publication day: complete
+    demand days in its own preceding 90-day window, same-class count and
+    the detector's thresholds — insufficient baseline is reported, never
+    merged into event counts."""
+
+    day: date
+    complete_days: int
+    class_days: int
+    ready: bool
 
 
 def _canonical(params: object) -> str:
@@ -273,17 +309,23 @@ class GridCatalogue:
         start: date,
         end: date,
         suite: str = DETECTOR_VERSION,
+        actor: str | None = None,
+        attempt_key: str | None = None,
     ) -> Publication:
         """Detect, version, snapshot and atomically publish a window.
 
         ``suite`` selects the detector suite: ``v1`` (the frozen initial
         rules) or ``v2`` (v1 plus the calibrated reversal/episode/unusual-ramp
         detectors). Publishing new types is an explicit operator choice.
+        ``actor``/``attempt_key`` annotate the detection-run audit row for
+        lost-response reconciliation; they never deduplicate publishes.
         """
         if suite not in (DETECTOR_VERSION, DETECTOR_VERSION_V2):
             raise ValueError("detector suite must be v1 or v2")
         if not start < end or start + timedelta(days=MAX_PUBLICATION_DAYS) < end:
             raise ValueError("Publication window must contain 1-31 days")
+        if attempt_key is not None and not 1 <= len(attempt_key) <= 128:
+            raise ValueError("Attempt key must be 1-128 characters")
         run_id = uuid.uuid4()
         try:
             # REPEATABLE READ pins every read in the publication to one
@@ -295,10 +337,19 @@ class GridCatalogue:
                 conn.begin(),
             ):
                 publication = self._publish_inside(
-                    conn, run_id, region, start, end, suite
+                    conn, run_id, region, start, end, suite, actor, attempt_key
                 )
         except Exception as failure:
-            self._record_run(run_id, region, start, end, str(failure)[:500], suite)
+            self._record_run(
+                run_id,
+                region,
+                start,
+                end,
+                str(failure)[:500],
+                suite,
+                actor,
+                attempt_key,
+            )
             raise
         return publication
 
@@ -310,14 +361,17 @@ class GridCatalogue:
         end: date,
         diagnostic: str,
         suite: str = DETECTOR_VERSION,
+        actor: str | None = None,
+        attempt_key: str | None = None,
     ) -> None:
         with self.engine.begin() as conn:
             conn.execute(
                 sa.text(
                     "INSERT INTO grid_detection_run"
                     " (id,region,start_day,end_exclusive,detector_version,"
-                    "  status,diagnostic)"
-                    " VALUES (:id,:region,:start,:end,:version,'FAILED',:diag)"
+                    "  status,diagnostic,actor,request_key)"
+                    " VALUES (:id,:region,:start,:end,:version,'FAILED',:diag,"
+                    " :actor,:key)"
                 ),
                 {
                     "id": run_id,
@@ -326,6 +380,8 @@ class GridCatalogue:
                     "end": end,
                     "version": suite,
                     "diag": diagnostic,
+                    "actor": actor,
+                    "key": attempt_key,
                 },
             )
 
@@ -672,6 +728,8 @@ class GridCatalogue:
         start: date,
         end: date,
         suite: str,
+        actor: str | None = None,
+        attempt_key: str | None = None,
     ) -> Publication:
         # Pin a snapshot wide enough to cover 7-day replay windows that
         # reach past the publication window's last day. The v2 suite also
@@ -750,8 +808,9 @@ class GridCatalogue:
             sa.text(
                 "INSERT INTO grid_detection_run"
                 " (id,region,start_day,end_exclusive,detector_version,status,"
-                "  publication_id)"
-                " VALUES (:id,:region,:start,:end,:version,'COMPLETE',:publication)"
+                "  publication_id,actor,request_key)"
+                " VALUES (:id,:region,:start,:end,:version,'COMPLETE',"
+                " :publication,:actor,:key)"
             ),
             {
                 "id": run_id,
@@ -760,6 +819,8 @@ class GridCatalogue:
                 "end": end,
                 "version": suite,
                 "publication": publication_id,
+                "actor": actor,
+                "key": attempt_key,
             },
         )
         return Publication(
@@ -771,6 +832,9 @@ class GridCatalogue:
             len(event_ids),
             summary,
             datetime.now(UTC),
+            run_id,
+            actor,
+            attempt_key,
         )
 
     def _upsert_event(
@@ -1026,46 +1090,151 @@ class GridCatalogue:
             _instant_utc(row.created_at),
         )
 
-    def publications(self, limit: int = 50) -> list[Publication]:
-        with self.engine.connect() as conn:
-            rows = conn.execute(
-                sa.text(
-                    "SELECT * FROM grid_publication"
-                    " ORDER BY created_at DESC, id LIMIT :limit"
-                ),
-                {"limit": limit},
-            ).all()
-        return [
-            Publication(
-                row.id,
-                Region[row.region],
-                row.start_day,
-                row.end_exclusive,
-                row.detector_version,
-                self._event_count(row.id),
-                row.coverage,
-                _instant_utc(row.created_at),
-            )
-            for row in rows
-        ]
-
-    def publication(self, id: UUID) -> Publication | None:
-        with self.engine.connect() as conn:
-            row = conn.execute(
-                sa.text("SELECT * FROM grid_publication WHERE id=:id"), {"id": id}
-            ).first()
-        if row is None:
-            return None
+    @staticmethod
+    def _publication(row: sa.Row[Any], event_count: int) -> Publication:
         return Publication(
             row.id,
             Region[row.region],
             row.start_day,
             row.end_exclusive,
             row.detector_version,
-            self._event_count(row.id),
+            event_count,
             row.coverage,
             _instant_utc(row.created_at),
+            row.run_id,
+            row.actor,
+            row.request_key,
         )
+
+    def publications(self, limit: int = 50) -> list[Publication]:
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT p.*, r.id AS run_id, r.actor, r.request_key"
+                    " FROM grid_publication p"
+                    " LEFT JOIN grid_detection_run r"
+                    " ON r.publication_id = p.id"
+                    " ORDER BY p.created_at DESC, p.id LIMIT :limit"
+                ),
+                {"limit": limit},
+            ).all()
+        return [self._publication(row, self._event_count(row.id)) for row in rows]
+
+    def publication(self, id: UUID) -> Publication | None:
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                sa.text(
+                    "SELECT p.*, r.id AS run_id, r.actor, r.request_key"
+                    " FROM grid_publication p"
+                    " LEFT JOIN grid_detection_run r"
+                    " ON r.publication_id = p.id"
+                    " WHERE p.id=:id"
+                ),
+                {"id": id},
+            ).first()
+        if row is None:
+            return None
+        return self._publication(row, self._event_count(row.id))
+
+    def attempts(self, limit: int = 50) -> list[DetectionAttempt]:
+        """Bounded publication-attempt history — COMPLETE and FAILED runs —
+        for reconciling lost publish responses and inspecting correlation."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT id, region, start_day, end_exclusive,"
+                    " detector_version, status, publication_id, diagnostic,"
+                    " actor, request_key, created_at FROM grid_detection_run"
+                    " ORDER BY created_at DESC, id LIMIT :limit"
+                ),
+                {"limit": limit},
+            ).all()
+        return [
+            DetectionAttempt(
+                row.id,
+                Region[row.region],
+                row.start_day,
+                row.end_exclusive,
+                row.detector_version,
+                row.status,
+                row.publication_id,
+                row.diagnostic,
+                row.actor,
+                row.request_key,
+                _instant_utc(row.created_at),
+            )
+            for row in rows
+        ]
+
+    def event_counts(self, publication: UUID) -> dict[str, int]:
+        """Per-type event totals pinned to one publication."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT e.type, count(*) AS n FROM grid_publication_event p"
+                    " JOIN grid_event e ON e.id = p.event_id"
+                    " WHERE p.publication_id = :id GROUP BY e.type"
+                ),
+                {"id": publication},
+            ).all()
+        return {row.type: row.n for row in rows}
+
+    def baseline_readiness(
+        self, region: Region, start: date, end: date
+    ) -> list[BaselineReadiness]:
+        """Per-candidate-day ramp-baseline readiness: each day's own 90-day
+        preceding window counts demand-complete days and same-class days
+        against the detector's thresholds. Computed from coverage counts
+        with prefix sums — one bounded query regardless of window size."""
+        if not start < end or start + timedelta(days=MAX_PUBLICATION_DAYS) < end:
+            raise ValueError("Candidate window must contain 1-31 days")
+        first_baseline = start - timedelta(days=RAMP_BASELINE_DAYS)
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                sa.text(
+                    "SELECT c.market_day, r.valid_count FROM grid_current c"
+                    " JOIN grid_revision r ON r.id = c.revision_id"
+                    " WHERE c.region = :region AND c.metric = 'demand'"
+                    " AND c.market_day >= :start AND c.market_day < :end"
+                ),
+                {
+                    "region": region.name,
+                    "start": first_baseline,
+                    "end": end,
+                },
+            ).all()
+        complete = {row.market_day for row in rows if row.valid_count == 288}
+        # Prefix-sum weekday/weekend completeness separately — each
+        # candidate day's same-class count picks the matching series, and
+        # every 90-day window lookup is O(1).
+        span = (end - first_baseline).days
+        totals = [0] * (span + 1)
+        classes = {"weekday": [0] * (span + 1), "weekend": [0] * (span + 1)}
+        for offset in range(span):
+            day = first_baseline + timedelta(days=offset)
+            weekday = day.weekday() < 5
+            done = day in complete
+            totals[offset + 1] = totals[offset] + done
+            for name, series in classes.items():
+                series[offset + 1] = series[offset] + (
+                    done and weekday == (name == "weekday")
+                )
+        readiness: list[BaselineReadiness] = []
+        for day in _days(start, end):
+            offset = (day - first_baseline).days
+            complete_days = totals[offset] - totals[offset - RAMP_BASELINE_DAYS]
+            series = classes["weekday" if day.weekday() < 5 else "weekend"]
+            class_days = series[offset] - series[offset - RAMP_BASELINE_DAYS]
+            readiness.append(
+                BaselineReadiness(
+                    day,
+                    complete_days,
+                    class_days,
+                    complete_days >= RAMP_MIN_COMPLETE_DAYS
+                    and class_days >= RAMP_MIN_CLASS_DAYS,
+                )
+            )
+        return readiness
 
     def _event_count(self, publication: UUID) -> int:
         with self.engine.connect() as conn:

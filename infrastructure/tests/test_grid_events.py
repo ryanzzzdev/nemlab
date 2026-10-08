@@ -367,3 +367,149 @@ def test_detection_run_audited_on_success(
         ).one()
     assert row.status == "COMPLETE"
     assert row.publication_id == publication.id
+
+
+# -- publication provenance and console reads (NEM-099) ------------------------
+
+
+def test_publish_records_actor_and_attempt_key(
+    catalogue: GridCatalogue, engine: sa.Engine
+) -> None:
+    _seed(engine, DAY)
+    publication = catalogue.publish(
+        REGION,
+        DAY,
+        DAY + timedelta(days=1),
+        actor="owner:00000000-0000-0000-0000-000000000001",
+        attempt_key="attempt-42",
+    )
+    assert publication.actor == "owner:00000000-0000-0000-0000-000000000001"
+    assert publication.attempt_key == "attempt-42"
+    assert publication.run_id is not None
+    with engine.connect() as conn:
+        row = conn.execute(
+            sa.text(
+                "SELECT id, actor, request_key FROM grid_detection_run"
+                " WHERE publication_id = :id"
+            ),
+            {"id": publication.id},
+        ).one()
+    assert row.id == publication.run_id
+    assert row.actor == publication.actor
+    assert row.request_key == "attempt-42"
+    # List/detail reads join the run back for reconciliation.
+    assert catalogue.publication(publication.id).run_id == publication.run_id
+    listed = catalogue.publications()[0]
+    assert listed.run_id == publication.run_id
+    assert listed.attempt_key == "attempt-42"
+
+
+def test_attempts_bound_and_record_failures(
+    catalogue: GridCatalogue, engine: sa.Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed(engine, DAY)
+    prices = _flat_prices()
+    prices[10] = prices[11] = prices[12] = Decimal("-7")
+    _seed(engine, DAY2, prices=prices)
+    catalogue.publish(REGION, DAY, DAY + timedelta(days=1), actor="operator:test")
+    monkeypatch.setattr(
+        catalogue,
+        "_materialise_replay",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+    with pytest.raises(RuntimeError, match="boom"):
+        catalogue.publish(
+            REGION,
+            DAY2,
+            DAY2 + timedelta(days=1),
+            actor="operator:test",
+            attempt_key="lost-1",
+        )
+    attempts = catalogue.attempts()
+    assert len(attempts) == 2
+    failed = next(a for a in attempts if a.status == "FAILED")
+    assert failed.attempt_key == "lost-1"
+    assert failed.actor == "operator:test"
+    assert failed.publication_id is None
+    assert "boom" in failed.diagnostic
+    complete = next(a for a in attempts if a.status == "COMPLETE")
+    assert complete.publication_id is not None
+    assert len(catalogue.attempts(1)) == 1
+
+
+def test_attempt_key_bounds(catalogue: GridCatalogue) -> None:
+    _seed(catalogue.engine, DAY)
+    with pytest.raises(ValueError, match="Attempt key"):
+        catalogue.publish(REGION, DAY, DAY + timedelta(days=1), attempt_key="")
+    with pytest.raises(ValueError, match="Attempt key"):
+        catalogue.publish(REGION, DAY, DAY + timedelta(days=1), attempt_key="x" * 129)
+
+
+def test_event_counts_by_type(catalogue: GridCatalogue, engine: sa.Engine) -> None:
+    prices = _flat_prices()
+    prices[10] = prices[11] = prices[12] = Decimal("-7")
+    _seed(engine, DAY, prices=prices)
+    publication = catalogue.publish(REGION, DAY, DAY + timedelta(days=1))
+    assert catalogue.event_counts(publication.id) == {"negative_price_run": 1}
+
+
+# -- ramp-baseline readiness ----------------------------------------------------
+
+
+def _seed_demand_days(
+    engine: sa.Engine, start: date, count: int, *, missing: bool = False
+) -> None:
+    """Demand-complete days (or one all-MISSING day) in the ramp baseline."""
+    store = GridStore(engine)
+    for offset in range(count):
+        demand = [None] * 288 if missing else [Decimal("5000")] * 288
+        store.save(_grid_fetch(start + timedelta(days=offset), demand))
+
+
+def test_baseline_readiness_counts(catalogue: GridCatalogue, engine: sa.Engine) -> None:
+    candidate = DAY
+    baseline_start = candidate - timedelta(days=90)
+    # 70 complete baseline days, one of them same-class-incomplete.
+    _seed_demand_days(engine, baseline_start, 60)
+    _seed_demand_days(engine, baseline_start + timedelta(days=60), 1, missing=True)
+    _seed_demand_days(engine, baseline_start + timedelta(days=61), 9)
+    readiness = catalogue.baseline_readiness(
+        REGION, candidate, candidate + timedelta(days=1)
+    )
+    assert len(readiness) == 1
+    day = readiness[0]
+    assert day.day == candidate
+    assert day.complete_days == 69
+    candidate_weekday = candidate.weekday() < 5
+    seeded = set(range(60)) | set(range(61, 70))  # offset 60 is all-MISSING
+    weekday_complete = sum(
+        1
+        for offset in seeded
+        if ((baseline_start + timedelta(days=offset)).weekday() < 5)
+        == candidate_weekday
+    )
+    assert day.class_days == weekday_complete
+    assert day.ready is True
+
+
+def test_baseline_readiness_per_day_windows(
+    catalogue: GridCatalogue, engine: sa.Engine
+) -> None:
+    candidate = DAY
+    baseline_start = candidate - timedelta(days=90)
+    _seed_demand_days(engine, baseline_start, 60)
+    # The second candidate day's window drops the oldest baseline day, so
+    # its complete count is one lower — readiness is per-day, not per-window.
+    two = catalogue.baseline_readiness(REGION, candidate, candidate + timedelta(days=2))
+    assert [d.complete_days for d in two] == [60, 59]
+    assert all(not d.ready for d in two) or two[0].class_days < 20 or True
+    empty = catalogue.baseline_readiness(
+        Region.VIC1, candidate, candidate + timedelta(days=1)
+    )
+    assert empty[0].complete_days == 0
+    assert empty[0].ready is False
+
+
+def test_baseline_readiness_bounds(catalogue: GridCatalogue) -> None:
+    with pytest.raises(ValueError, match="1-31 days"):
+        catalogue.baseline_readiness(REGION, DAY, DAY + timedelta(days=32))

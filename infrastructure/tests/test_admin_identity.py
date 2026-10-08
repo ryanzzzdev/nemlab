@@ -338,11 +338,22 @@ def test_alembic_upgrade_and_downgrade(
             ).scalar_one()
 
     command.upgrade(cfg, "head")
-    assert revision() == "nemlab_v8_admin_identity"
+    assert revision() == "nemlab_v9_publication_provenance"
     assert "admin_user" in admin_tables()
     command.downgrade(cfg, "nemlab_v7_detector_v2")
     assert revision() == "nemlab_v7_detector_v2"
     assert admin_tables() == set()
+    with scratch_db.connect() as conn:
+        columns = {
+            row[0]
+            for row in conn.execute(
+                sa.text(
+                    "SELECT column_name FROM information_schema.columns"
+                    " WHERE table_name = 'grid_detection_run'"
+                )
+            )
+        }
+    assert "actor" not in columns and "request_key" not in columns
 
 
 def test_migration_preserves_existing_data(scratch_db: sa.Engine) -> None:

@@ -184,6 +184,11 @@ def test_contract_captures(
     get(f"{PUBS}/{pub_id}", auth)
     get(f"{PUBS}/{uuid.uuid4()}", auth)  # 404 PUBLICATION_NOT_FOUND
     get(f"{PUBS}/not-a-uuid", auth)
+    # Provenance (NEM-099): attempts history and caller correlation.
+    get(f"{PUBS}/attempts", auth)
+    keyed = post(PUBS, {**pub_window, "attemptKey": "capture-attempt"}, auth)
+    assert keyed.status_code == 201
+    get(f"{PUBS}/attempts?limit=5", auth)
     v2 = post(
         PUBS,
         {
@@ -281,6 +286,15 @@ def test_contract_captures(
     get(f"{COV}/NSW1?start=2023-10-01&endExclusive=2023-10-03", auth)
     get(f"{COV}/NSW1?start=2023-10-01&endExclusive=2023-10-01", auth)  # 400
     get(f"{COV}/NSW1?start=2023-10-01", auth)  # 400
+
+    # Ramp-baseline readiness (NEM-099) — per-candidate-day counts.
+    BASELINE = "?startDay=2023-10-01&endExclusive=2023-10-03"
+    get(f"{COV}/NSW1/baseline{BASELINE}")  # 401
+    get(f"{COV}/NSW1/baseline{BASELINE}", auth)
+    get(
+        f"{COV}/NSW1/baseline?startDay=2021-10-01&endExclusive=2021-10-02",
+        auth,
+    )  # 400 — baseline reaches before the market floor
 
     catalogue = GridCatalogue(scratch_db)
     catalogue.publish(Region.NSW1, DAY + timedelta(days=1), DAY + timedelta(days=2))
