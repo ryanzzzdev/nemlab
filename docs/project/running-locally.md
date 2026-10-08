@@ -66,14 +66,25 @@ fragment token for an HttpOnly cookie, and `POST /api/auth/v1/logout`
 revokes (CSRF + same-origin required). Sessions last 72 hours absolute with
 a 24-hour idle window that slides on each request.
 
-Two ways to get an owner session locally. First bootstrap the owner once:
+Three ways to get an owner session locally. First bootstrap the owner once:
 
 ```sh
 uv run python -m nemlab_infrastructure.admin bootstrap-owner \
     --name "Owner" --email "owner@example.test" --confirm
 ```
 
-**1. Seed a session cookie directly** (no mail needed — dev only):
+**1. One-off sign-in link** (handiest — dev only):
+
+```sh
+NEMLAB_ENVIRONMENT=development \
+    uv run python -m nemlab_infrastructure.admin sign-in-link \
+    --email "owner@example.test"
+```
+
+Prints a ready-to-open `…/admin/sign-in#token=…` URL — the real single-use
+15-minute token path, minus the mail hop. Each invocation mints a fresh link.
+
+**2. Seed a session cookie directly** (no mail needed — dev only):
 
 ```sh
 NEMLAB_ENVIRONMENT=development \
@@ -86,7 +97,7 @@ The command prints a `token:` — store it as the `nemlab_session` cookie on
 new cookie named `nemlab_session`, value = the token), then reload
 `http://127.0.0.1:5274/admin/`.
 
-**2. Real sign-in flow** — exercises the actual auth path:
+**3. Real sign-in flow** — exercises the actual auth path end to end:
 
 1. Open `http://127.0.0.1:5274/admin/sign-in`, enter `owner@example.test`,
    submit. The response is a generic `202` either way.

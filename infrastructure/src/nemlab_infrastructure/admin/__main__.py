@@ -11,6 +11,9 @@ Server-side only — there is no public bootstrap route by design (NEM-095).
 - ``seed-session --email E`` prints a raw session/CSRF pair for local
   development; it refuses unless ``NEMLAB_ENVIRONMENT=development`` and
   never creates a backdoor — it is a plain session over the same checks.
+- ``sign-in-link --email E`` prints a one-off sign-in URL for local
+  development (the real token path, minus the mail); same development-only
+  gate. ``NEMLAB_ADMIN_BASE_URL`` sets the link origin.
 """
 
 import argparse
@@ -39,18 +42,21 @@ def main(argv: list[str] | None = None) -> int:
             action="store_true",
             help="confirm the supplied owner identity is intended",
         )
-    seed = commands.add_parser(
-        "seed-session",
-        help="print a raw session token for a local account;"
-        " requires NEMLAB_ENVIRONMENT=development",
-    )
-    seed.add_argument("--email", required=True)
+    for dev_cmd in ("seed-session", "sign-in-link"):
+        cmd = commands.add_parser(
+            dev_cmd,
+            help=(
+                "print a raw session token" if dev_cmd == "seed-session" else
+                "print a one-off sign-in link"
+            ) + " for a local account; requires NEMLAB_ENVIRONMENT=development",
+        )
+        cmd.add_argument("--email", required=True)
     args = parser.parse_args(argv)
 
-    if args.command == "seed-session":
+    if args.command in ("seed-session", "sign-in-link"):
         if os.environ.get("NEMLAB_ENVIRONMENT") != "development":
             print(
-                "nemlab-admin: seed-session requires"
+                f"nemlab-admin: {args.command} requires"
                 " NEMLAB_ENVIRONMENT=development — it cannot run against a"
                 " production deployment",
                 file=sys.stderr,
@@ -58,11 +64,18 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         engine = create_engine(DatabaseSettings().sqlalchemy_url())
         try:
-            raw, principal = AdminAuth(engine, base_url="").seed_session(args.email)
-            print(f"session for {principal.name} ({principal.role}):")
-            print(f"  token: {raw}")
-            print(f"  csrf: {csrf_for(raw)}")
-            print(f"  expires: {principal.expires_at.isoformat()}")
+            if args.command == "seed-session":
+                raw, principal = AdminAuth(engine, base_url="").seed_session(args.email)
+                print(f"session for {principal.name} ({principal.role}):")
+                print(f"  token: {raw}")
+                print(f"  csrf: {csrf_for(raw)}")
+                print(f"  expires: {principal.expires_at.isoformat()}")
+            else:
+                base = os.environ.get(
+                    "NEMLAB_ADMIN_BASE_URL", "http://127.0.0.1:5274/admin"
+                )
+                link = AdminAuth(engine, base_url=base).mint_sign_in_link(args.email)
+                print(link)
             return 0
         except ValueError as ex:
             print(f"nemlab-admin: {ex}", file=sys.stderr)

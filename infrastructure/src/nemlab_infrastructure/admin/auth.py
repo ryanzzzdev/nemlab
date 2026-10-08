@@ -348,6 +348,39 @@ class AdminAuth:
                 now,
             )
 
+    def mint_sign_in_link(self, email: str) -> str:
+        """Development-only sign-in link — mints the usual single-use
+        15-minute token but returns the URL instead of queueing mail. The
+        CLI gates this behind ``NEMLAB_ENVIRONMENT=development``; never
+        reachable over HTTP."""
+        now = self._now()
+        with self.engine.begin() as conn:
+            row = conn.execute(
+                sa.text(
+                    "SELECT id, role FROM admin_user"
+                    " WHERE lower(email) = lower(:email)"
+                    " AND disabled_at IS NULL"
+                ),
+                {"email": email},
+            ).first()
+            if row is None or not self._grant_active(conn, row.id, row.role, now):
+                raise ValueError("no enabled account for that email")
+            raw = mint()
+            conn.execute(
+                sa.text(
+                    "INSERT INTO admin_token"
+                    " (id, purpose, user_id, token_hash, expires_at)"
+                    " VALUES (:id, 'sign_in', :user, :hash, :expires)"
+                ),
+                {
+                    "id": uuid.uuid4(),
+                    "user": row.id,
+                    "hash": _hash(raw),
+                    "expires": now + TOKEN_TTL,
+                },
+            )
+            return f"{self.base_url}/sign-in#token={raw}"
+
     def prune_expired(self, before: timedelta = timedelta(days=1)) -> int:
         """Retention housekeeping: drop tokens/sessions long past expiry."""
         cutoff = self._now() - before
