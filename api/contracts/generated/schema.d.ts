@@ -1183,12 +1183,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description STORAGE_UNAVAILABLE */
             503: {
@@ -1256,12 +1262,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description IDEMPOTENCY_CONFLICT */
             409: {
@@ -1351,12 +1363,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description JOB_NOT_FOUND */
             404: {
@@ -1435,12 +1453,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description JOB_NOT_FOUND */
             404: {
@@ -1516,12 +1540,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description JOB_NOT_FOUND */
             404: {
@@ -1812,12 +1842,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description STORAGE_UNAVAILABLE */
             503: {
@@ -1886,12 +1922,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description IDEMPOTENCY_CONFLICT */
             409: {
@@ -1981,12 +2023,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description JOB_NOT_FOUND */
             404: {
@@ -2065,12 +2113,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description JOB_NOT_FOUND */
             404: {
@@ -2146,12 +2200,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description JOB_NOT_FOUND */
             404: {
@@ -2233,12 +2293,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Authenticated operator lacks permission; empty body */
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
             };
             /** @description STORAGE_UNAVAILABLE */
             503: {
@@ -2285,6 +2351,19 @@ export interface operations {
                     "application/json": {
                         /** @enum {string} */
                         code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
                     };
                 };
             };
@@ -2352,6 +2431,19 @@ export interface operations {
                     };
                 };
             };
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
+                    };
+                };
+            };
             /** @description STORAGE_UNAVAILABLE */
             503: {
                 headers: {
@@ -2410,6 +2502,19 @@ export interface operations {
                     "application/json": {
                         /** @enum {string} */
                         code: "UNAUTHORISED";
+                    };
+                };
+            };
+            /** @description Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "FORBIDDEN";
+                        message: string;
                     };
                 };
             };

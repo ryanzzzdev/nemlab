@@ -13,6 +13,7 @@ from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict
 
+from nemlab_api import capabilities
 from nemlab_api.errors import ApiError, instant
 from nemlab_api.validation import IsoDate
 from nemlab_core.prices import Region
@@ -51,11 +52,13 @@ def _view(job: RefreshJob) -> dict[str, Any]:
     }
 
 
-def _event(event: JobEvent) -> dict[str, Any]:
+def _event(event: JobEvent, viewer: bool) -> dict[str, Any]:
     return {
         "id": event.id,
         "occurredAt": instant(event.occurred_at),
-        "actor": event.actor,
+        # Diagnostics are enforced label-safe codes at write time; the only
+        # viewer-sensitive field is the actor identity -> role label.
+        "actor": capabilities.actor_label(event.actor) if viewer else event.actor,
         "action": event.action,
         "diagnostic": event.diagnostic,
     }
@@ -107,9 +110,14 @@ def admin_router(jobs: RefreshJobService) -> APIRouter:
         return _view(_required(jobs, id))
 
     @router.get(BASE + "/{id}/events")
-    def events(id: UUID, after: int = 0, limit: int = 50) -> list[dict[str, Any]]:
+    def events(
+        request: Request, id: UUID, after: int = 0, limit: int = 50
+    ) -> list[dict[str, Any]]:
         _required(jobs, id)
-        return [_event(event) for event in jobs.events(id, after, limit)]
+        return [
+            _event(event, request.state.viewer)
+            for event in jobs.events(id, after, limit)
+        ]
 
     @router.post(BASE + "/{id}/cancel")
     def cancel(request: Request, id: UUID) -> dict[str, Any]:

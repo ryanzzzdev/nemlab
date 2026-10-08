@@ -80,16 +80,25 @@ def require_session(request: Request, auth: AdminAuth) -> tuple[str, Principal]:
     return found
 
 
-def check_mutation(request: Request, raw_session: str) -> None:
-    """CSRF + origin guard for cookie-authenticated state changes."""
+def mutation_denied(request: Request, raw_session: str) -> str | None:
+    """CSRF + origin guard for cookie-authenticated state changes; returns
+    the denial reason or ``None``. Shared with the admin-access middleware
+    (NEM-097), which returns its own responses instead of raising."""
     presented = request.headers.get(CSRF_HEADER)
     if presented is None or not csrf_matches(raw_session, presented):
-        raise ApiError(403, "FORBIDDEN", "CSRF token missing or invalid")
+        return "CSRF token missing or invalid"
     source = request.headers.get("origin") or request.headers.get("referer")
     if source is None:
-        raise ApiError(403, "FORBIDDEN", "Origin header required")
+        return "Origin header required"
     if urlsplit(source).netloc != request.headers.get("host", ""):
-        raise ApiError(403, "FORBIDDEN", "Origin does not match this server")
+        return "Origin does not match this server"
+    return None
+
+
+def check_mutation(request: Request, raw_session: str) -> None:
+    denied = mutation_denied(request, raw_session)
+    if denied is not None:
+        raise ApiError(403, "FORBIDDEN", denied)
 
 
 def _session_body(principal: Principal, raw_session: str) -> dict[str, Any]:

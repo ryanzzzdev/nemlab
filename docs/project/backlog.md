@@ -2978,7 +2978,7 @@ Verified: targeted suites pass; `verify.mjs` — 149 responses, 28 operations (o
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-095](#nem-095), [NEM-096](#nem-096)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -2994,7 +2994,7 @@ Enforce Admin capabilities and safe viewer responses. Deliver the corresponding 
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08. `api/src/nemlab_api/capabilities.py` registers every `/api/admin/**` method/path template against explicit `ops.read`/`ops.write`/`access.manage` capabilities with role grants for owner/viewer/automation/applicant; the new `AdminAccess` middleware replaces `OperatorBearer`, resolves exactly one credential (session cookie or bearer — both present is a deterministic 401), denies unregistered routes with the bare denyAll 404, denies missing grants with a `403 FORBIDDEN` envelope, and applies the CSRF/Origin guard to cookie-authenticated mutations. Viewer reads run through explicit safe projections (event `actor` mapped to role labels; diagnostics were already label-safe codes). `test_capabilities_http.py` covers anonymous, applicant, expired/revoked/active viewer, owner and bearer automation across the matrix, grant revocation on the next request, conflicting credentials and unregistered routes. OpenAPI 403 responses now declare the FORBIDDEN envelope; `verify.mjs` passes 150 responses/28 operations; full API suite 94 passed; ruff/mypy-strict/lint-imports clean.
 
 <a id="nem-098"></a>
 

@@ -22,7 +22,7 @@ from nemlab_api.grid_coverage import grid_coverage_router
 from nemlab_api.grid_imports import grid_imports_router, register_grid_errors
 from nemlab_api.grid_publications import grid_publications_router
 from nemlab_api.middleware import (
-    OperatorBearer,
+    AdminAccess,
     RequestLogging,
     SecurityHeaders,
 )
@@ -102,14 +102,16 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
                 )
             )
         if settings.admin_enabled:
+            admin_auth = AdminAuth(engine, base_url=settings.admin_base_url)
             app.add_middleware(
-                OperatorBearer,
+                AdminAccess,
                 operator=settings.admin_operator,
                 token=settings.admin_token,
+                auth=admin_auth,
             )
             app.include_router(
                 auth_router(
-                    AdminAuth(engine, base_url=settings.admin_base_url),
+                    admin_auth,
                     RateLimiter(engine),
                     settings,
                 )

@@ -430,7 +430,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     },
     "requestBody": {
@@ -565,7 +588,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -713,7 +759,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -886,7 +955,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -1034,7 +1126,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -1646,7 +1761,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     },
     "requestBody": {
@@ -1781,7 +1919,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -1929,7 +2090,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -2102,7 +2286,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -2250,7 +2457,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    }
@@ -2374,7 +2604,30 @@
       }
      },
      "403": {
-      "description": "Authenticated operator lacks permission; empty body"
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      },
      "503": {
       "description": "STORAGE_UNAVAILABLE",
@@ -2528,6 +2781,32 @@
         }
        }
       }
+     },
+     "403": {
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
      }
     }
    },
@@ -2614,6 +2893,32 @@
            "type": "string",
            "enum": [
             "STORAGE_UNAVAILABLE"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
            ]
           },
           "message": {
@@ -2759,6 +3064,32 @@
            "type": "string",
            "enum": [
             "INVALID_REQUEST"
+           ]
+          },
+          "message": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Authenticated identity lacks the required capability, or a cookie-authenticated mutation failed CSRF/Origin checks",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "code",
+          "message"
+         ],
+         "properties": {
+          "code": {
+           "type": "string",
+           "enum": [
+            "FORBIDDEN"
            ]
           },
           "message": {

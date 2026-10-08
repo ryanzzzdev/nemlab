@@ -493,6 +493,9 @@ def test_contract_captures(
     origin = {"Origin": "http://testserver"}
     post(f"{AUTH_BASE}/logout")  # 403 — no CSRF
     post(f"{AUTH_BASE}/logout", headers={**origin, "x-csrf-token": "wrong"})
+    # Valid owner session but no CSRF/Origin headers on an operator write
+    # (NEM-097): the middleware denies before the route runs.
+    post(GRID, grid_window)
     post(f"{AUTH_BASE}/logout", headers={**origin, "x-csrf-token": csrf})
     get(f"{AUTH_BASE}/session")  # 401 — session revoked
     for i in range(20):

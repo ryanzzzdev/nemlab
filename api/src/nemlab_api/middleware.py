@@ -4,8 +4,10 @@
 response (its cache-defeating trio only when the endpoint did not set
 ``Cache-Control`` itself, matching the observed captures). ``RequestLogging``
 is the one-line ``method target -> status (Nms)`` filter — never headers or
-bodies. ``OperatorBearer`` is the opaque-token check for ``/api/admin/**``:
-SHA-256 digests compared in constant time, actor derived server-side.
+bodies. ``AdminAccess`` is the identity + capability check for
+``/api/admin/**``: a browser session cookie or the operator bearer (SHA-256
+digests compared in constant time, actor derived server-side) mapped onto
+the deny-by-default capability table.
 """
 
 import hashlib
@@ -18,7 +20,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
-from nemlab_api.errors import unauthorised_response
+from nemlab_api import capabilities
+from nemlab_api.auth import COOKIE, mutation_denied
+from nemlab_api.errors import envelope, unauthorised_response
+from nemlab_infrastructure.admin.auth import AdminAuth
 
 LOG = logging.getLogger("nemlab_api.requests")
 
@@ -71,29 +76,73 @@ class RequestLogging(BaseHTTPMiddleware):
             )
 
 
-class OperatorBearer(BaseHTTPMiddleware):
-    """``/api/admin/**`` requires the configured operator bearer token."""
+class AdminAccess(BaseHTTPMiddleware):
+    """Identity + capability check for ``/api/admin/**`` (NEM-097).
 
-    def __init__(self, app: ASGIApp, operator: str, token: str) -> None:
+    Resolves exactly one credential — browser session cookie or operator
+    bearer, never both — then enforces the deny-by-default capability
+    table: unregistered routes answer a bare 404 like the denyAll chain,
+    registered routes without a grant answer ``403 FORBIDDEN``. Cookie
+    sessions on mutating methods additionally pass the same CSRF + Origin
+    guard as the auth router. The resolved ``request.state`` carries
+    ``actor`` (label-safe ``role:id`` for sessions, ``operator:<name>``
+    for automation) and ``viewer`` so routes can pick safe projections.
+    """
+
+    _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        *,
+        operator: str,
+        token: str,
+        auth: AdminAuth,
+    ) -> None:
         super().__init__(app)
         self._expected = hashlib.sha256(token.encode()).digest()
         self._actor = f"operator:{operator}"
+        self._auth = auth
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         path = request.url.path
-        if path == "/api/admin" or path.startswith("/api/admin/"):
-            supplied = _bearer_token(request)
-            if (
-                supplied is None
-                or len(supplied) > 128
-                or not hmac.compare_digest(
-                    self._expected, hashlib.sha256(supplied.encode()).digest()
-                )
+        if not (path == "/api/admin" or path.startswith("/api/admin/")):
+            return await call_next(request)
+
+        cookie = request.cookies.get(COOKIE)
+        bearer = _bearer_token(request)
+        if cookie is not None and bearer is not None:
+            return unauthorised_response()
+
+        if cookie is not None:
+            principal = self._auth.resolve(cookie)
+            if principal is None:
+                return unauthorised_response()
+            actor = f"{principal.role}:{principal.user_id}"
+            role = principal.role
+        elif bearer is not None:
+            if len(bearer) > 128 or not hmac.compare_digest(
+                self._expected, hashlib.sha256(bearer.encode()).digest()
             ):
                 return unauthorised_response()
-            request.state.actor = self._actor
+            actor, role = self._actor, "automation"
+        else:
+            return unauthorised_response()
+
+        required = capabilities.capability_for(request.method, path)
+        if required is None:
+            return Response(status_code=404)
+        if not capabilities.granted(role, required):
+            return envelope("FORBIDDEN", "Insufficient capability", 403)
+        if cookie is not None and request.method not in self._SAFE_METHODS:
+            denied = mutation_denied(request, cookie)
+            if denied is not None:
+                return envelope("FORBIDDEN", denied, 403)
+
+        request.state.actor = actor
+        request.state.viewer = role == "viewer"
         return await call_next(request)
 
 
