@@ -126,6 +126,8 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - [NEM-114 — Migrate routes and verify Admin regressions](#nem-114)
 - [NEM-115 — Review desktop redesign and close M6 UI acceptance](#nem-115)
 
+- [NEM-116 — Owner access-audit read endpoint](#nem-116)
+
 ## Delivery notes
 
 - Current priority: M6 reopened for accepted desktop Admin redesign, [NEM-108–115](#nem-108). Original functional delivery NEM-095–107 remains Done; start NEM-108. [Design specification](features/admin-desktop-redesign.md).
@@ -3401,7 +3403,7 @@ M6 reconciliation: every M6 task carries Done status with evidence — NEM-082, 
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-107](#nem-107)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3417,7 +3419,7 @@ Inventory Admin behaviour and redesign contracts, preserving delivered Admin cap
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08 — [inventory matrix](evidence/admin-redesign/inventory.md) maps every route/action/security state to its workspace location and records API field coverage against the envisioned tables. Key findings: coverage matrix columns resolve to `demand`/`flow_imports`/`flow_exports`/optional `power` series (no per-day price column exists); jobs expose `availableAt`, not `updatedAt`; publication "current" derives as latest-per-region; the Access "Audit" tab has no read endpoint — bounded gap task [NEM-116](#nem-116) created. Uncommitted work preserved: `PUBLIC_BASE` dev-origin links. Baseline owner/welcome screenshots captured under `docs/project/evidence/admin-redesign/before-*.png`.
 
 <a id="nem-109"></a>
 
@@ -3442,7 +3444,7 @@ Prototype the dense desktop Admin workspace, preserving delivered Admin capabili
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Completed 2026-10-08 — static prototype at `nemlab-ui/apps/admin/prototype/index.html` (self-contained, labelled fixture data, no API calls, excluded from builds) implements the full visual language: 48px app bar, collapsible rail, scope toolbar, summary strip, three consolidated Data Ops views, dense tables (28/32/40px), 360px inspector, 220px activity pane, owner Load/Publish drawers, viewer and empty/failure variants, light/dark/auto. User reviewed live at 1440×900 and 1280×720 and accepted ("Very good") — the prototype is the implementation reference.
 
 <a id="nem-110"></a>
 
@@ -3593,3 +3595,27 @@ Review desktop redesign and close M6 UI acceptance, preserving delivered Admin c
 ### Completion evidence
 
 Planned 2026-10-08; not implemented or verified.
+
+<a id="nem-116"></a>
+
+## NEM-116 — Owner access-audit read endpoint
+
+- Repository: backend
+- Milestone: M6 — Admin desktop redesign
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-108](#nem-108)
+- References: [Redesign specification](features/admin-desktop-redesign.md), [inventory](evidence/admin-redesign/inventory.md)
+
+### Outcome
+
+Expose the persisted `admin_access_audit` trail to the owner so the Access workspace's Audit tab shows actor/action/time/result, per the redesign specification.
+
+### Done when
+
+- Bounded owner-only `GET /api/admin/v1/access-audit` returns recent audit rows (actor label, action, subject, result, occurred time) behind `access.manage`; viewers/anonymous denied.
+- Contract declares the operation and capture evidence exists; focused tests pass without touching unrelated surfaces.
+
+### Completion evidence
+
+Identified 2026-10-08 by the NEM-108 inventory — the data exists server-side with no route.
