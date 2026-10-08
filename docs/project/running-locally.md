@@ -66,7 +66,15 @@ fragment token for an HttpOnly cookie, and `POST /api/auth/v1/logout`
 revokes (CSRF + same-origin required). Sessions last 72 hours absolute with
 a 24-hour idle window that slides on each request.
 
-Three ways to get an owner session locally. First bootstrap the owner once:
+Three ways to get an owner session locally. All `nemlab_infrastructure.admin`
+commands need the `.env` values (`NEMLAB_DB_URL`/`NEMLAB_DB_PASSWORD`) in the
+environment — load them once per shell:
+
+```sh
+set -a && . ./.env && set +a
+```
+
+Then bootstrap the owner once:
 
 ```sh
 uv run python -m nemlab_infrastructure.admin bootstrap-owner \
