@@ -8,7 +8,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
-Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). Next: [NEM-083](#nem-083), then NEM-084–086 (Release A); NEM-087–090 cover calibrated detector v2 (Release B).
+Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). All tasks delivered and verified 2026-10-08; see [NEM-091](#nem-091) for checkpoint evidence.
 
 - [NEM-083 — Correct event duration and time-range presentation](#nem-083)
 - [NEM-084 — Add publication-wide highlights and typed catalogue filters](#nem-084)
@@ -2528,7 +2528,7 @@ Accepted by the user on 2026-10-08 following live catalogue review. Existing det
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: High
-- Status: Ready
+- Status: Done
 - Depends on: None (existing GridReplay implementation)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2544,7 +2544,7 @@ Fix the 37-observation/185-minute demand-ramp projection without changing stored
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08. `durationMinutes` returns interval-count minutes for price run/spike/reversal/episode events and elapsed endpoint duration for demand/unusual ramps; replay bounds and `startAt`/`endAt` interval-end semantics unchanged, so stored event identity is preserved. UI shows "N observations · Xh Ym" for ramps and "N intervals · Xh Ym" otherwise, and derives the inclusive publication end (`endExclusive − 1 day`). Backend commit `5e01125`; UI duration/inclusive-date rendering in nemlab-ui `40ff212`. Verified by `test_events_http`/`test_events_discovery` duration cases plus live check: Sept-16/17 run reads "9h 5m" on card and "109 intervals · 9h 5m".
 
 <a id="nem-084"></a>
 
@@ -2553,7 +2553,7 @@ Planned only; implementation and verification have not started.
 - Repository: backend
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-083](#nem-083)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2570,7 +2570,7 @@ Rank/filter all matching published events before pagination, preserving v1 detec
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (backend commit `5e01125`). `core/highlights.py` implements the round-robin selector: per-reason exact-value ordering (no mixed-unit score), deterministic id-descending ties, ≤8 cards, ≤2/day, per-type caps, scan-down on cap-blocked candidates, duplicate suppression by logical identity, and `selectedBy`/`reasons` carrying truthful rank+population. `GET /api/v1/events/highlights` returns selectionVersion (`highlights-v1`/`highlights-v2` by publication suite), scope echo, eligible/excluded counts, typeTotals; incomplete or edge-incomplete events are excluded. All events gained `sort` (newest/oldest + per-type longest/deepest/highest/largest_rise), `minDurationMinutes`, `valueGte`, `valueLte`, `publication` pin; unsupported combinations return INVALID_REQUEST. v2 cursors (`v2.` prefix) bind publication + normalised-query fingerprint + sort tuple; legacy cursors still parse for the unfiltered shape. Ranking is SQL over stored columns — no replay fetch. Tests: `core/tests/test_highlights.py`, `api/tests/test_events_discovery.py`, infra `test_grid_events_v2.py`; OpenAPI evidence captured for all operations. Live: Sept-2023 NSW1 v2 publication selects spike + reversal first, day cap exercised (4th same-day event dropped).
 
 <a id="nem-085"></a>
 
@@ -2579,7 +2579,7 @@ Planned only; implementation and verification have not started.
 - Repository: frontend
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-084](#nem-084)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2596,7 +2596,7 @@ Make the initial catalogue a small set of explainable investigations while keepi
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (nemlab-ui `67c1cd6`, `40ff212`, `9ecabd1`). `/gridreplay` defaults to a Highlights seg control ("Highlights"/"All events" via `view` param); the flat card grid, replay composition and theme are unchanged. Cards show value, readable duration, `#rank reason of N eligible` labels and scoped counts ("8 highlights selected from 114 eligible of 114 matching"); detector version/coverage stay as compact footer/provenance text. Sort select offers only the per-type supported sorts; More filters exposes min-duration/value bounds only for compatible types; invalid URL values are dropped on parse; `?event=` replay links work from either view. Verified by 12 GridReplay browser tests (desktop + mobile, incl. 320px) and live check against the real v2 NSW1 publication — Sept-4 $16,599.89 spike is card 1 and the Sept-16/17 9h5m run tops `type=run&sort=longest`.
 
 <a id="nem-086"></a>
 
@@ -2605,7 +2605,7 @@ Planned only; implementation and verification have not started.
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-085](#nem-085)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2622,7 +2622,7 @@ Give cards a meaningful preview of event shape without downloading every full re
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `GET /api/v1/events/{id}/preview` derives `preview-v1` min/max slot bands from the event's immutable replay snapshot: ≤48 slots, ±12 intervals context, gap flags, event ranges, `peakSlot` marker for reversals, `localScale: true`. Missing slots stay null/gap — no fabricated curve; preview failure renders an empty spark and never affects selection. Cards render an inline SVG band (one bounded request per visible card, ~3 KB typical payload, no replay fetch); aria-label describes the series. Backend preview tests cover bounds/ranges/markers; browser tests assert sparklines render on both desktop and mobile.
 
 <a id="nem-087"></a>
 
@@ -2631,9 +2631,9 @@ Planned only; implementation and verification have not started.
 - Repository: backend
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: None (existing GridReplay implementation)
-- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
 ### Outcome
 
@@ -2648,7 +2648,7 @@ Turn the accepted unusual-ramp, price-reversal and grouped-episode directions in
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (backend `5e01125`, decision `decisions/022-detector-v2-definitions.md`). Frozen constants live in `nemlab_core/detectors.py`: reversal look-ahead 72 intervals, peak/rise ≥ 300 AUD/MWh; episode gap ≤3 intervals at price <50, total gap ≤6 intervals, ≥2 members; ramp baseline 90 days, ≥60 complete days, ≥20 same-class samples, nearest-rank P90, 1,000 MW floor. Fixture calibration covered boundary/tie/gap cases in `core/tests/test_detectors_v2.py`. Live NSW1 Sept-2023 v2 publication: 5 reversals, 10 episodes, 0 unusual ramps with per-day `insufficient_baseline` recorded in coverage — the documented outcome given no Jun–Aug history is imported. highlights-v2 reason set/caps and constituent suppression fixed in `nemlab_core/highlights.py`. Residual: the $300 reversal threshold produced only 5 NSW1 events in September, so the permissive-threshold concern did not materialise for this publication; revisit if other regions/months show high counts.
 
 <a id="nem-088"></a>
 
@@ -2657,9 +2657,9 @@ Planned only; implementation and verification have not started.
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
-- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
 ### Outcome
 
@@ -2674,7 +2674,7 @@ Surface ramps exceeding a documented comparable historical baseline while retain
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `unusual_demand_ramp` classifies each v1 ramp's rise against the same-weekday/weekend-class distribution of daily maximum ramps over the preceding 90 days (nearest-rank P90, ≥60 complete days, ≥20 class samples, 1,000 MW floor). Publication loads the extended baseline window; per-day classification is recorded in coverage (`unusual`, `ordinary`, or `insufficient_baseline` — never "normal"), and event `detail` persists baseline window, class, sample counts, quantile value, minimum rise and baseline revision pins; baseline changes re-version the event. Tested in `test_detectors_v2.py`/`test_grid_events_v2.py` incl. insufficient-history and re-versioning cases. Live: every Sept-2023 NSW1 day reports `insufficient_baseline` — importing ~90 days of prior demand history remains a separate bounded operator task.
 
 <a id="nem-089"></a>
 
@@ -2683,9 +2683,9 @@ Planned only; implementation and verification have not started.
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
-- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
 ### Outcome
 
@@ -2700,7 +2700,7 @@ Show a bounded transition from a negative-price run to a later high-price episod
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `price_reversal` pairs a negative-price run with the highest price inside the next 72 intervals where peak ≥ 300 AUD/MWh (rise bound redundant given trough < 0 — retained as documentation); dedupe keeps the first-run/earliest candidate on shared peaks. `detail` persists trough, peak, rise, riseMinutes, run/peak instants, peakPosition and memberRuns (linked run ranges + ids). Highlights-v2 selects `largest_price_reversal`; replay shows a "Detected:" evidence line and the preview carries a `peakSlot` marker; the negative-run shading already shows both phases. Tests cover boundary, gap, equal-peak and cross-midnight cases. Live Sept-2023 NSW1: 5 reversals, led by the Sept-4 −11.40 → 16,599.89 rise.
 
 <a id="nem-090"></a>
 
@@ -2709,9 +2709,9 @@ Planned only; implementation and verification have not started.
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
-- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
 ### Outcome
 
@@ -2726,7 +2726,7 @@ Summarize related runs in a compound event without redefining consecutive negati
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `negative_price_episode` joins complete v1 runs when the intervening gap is ≤3 intervals and all gap prices stay < 50 AUD/MWh, with total gap ≤6 intervals and ≥2 members; runs separated by missing prices or touching the source edge never join. `detail` persists memberCount, negativeMinutes, gapMinutes, spanMinutes and member ranges, and the member run events are linked. Individual runs stay in All events; highlights-v2 suppresses constituents only in the selected view. Episode replays show all member runs via the existing negative-price shading plus a member-count evidence line. Tests cover boundary/gap/missing/member cases. Live Sept-2023 NSW1: 10 episodes, widest 2023-09-15 00:50–04:20 at −59.79.
 
 <a id="nem-091"></a>
 
@@ -2735,7 +2735,7 @@ Planned only; implementation and verification have not started.
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-083](#nem-083), [NEM-084](#nem-084), [NEM-085](#nem-085), [NEM-086](#nem-086), [NEM-087](#nem-087), [NEM-088](#nem-088), [NEM-089](#nem-089), [NEM-090](#nem-090)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2752,4 +2752,9 @@ Record separate Release A and Release B acceptance evidence and preserve the exi
 
 ### Completion evidence
 
-Planned only; implementation and verification have not started.
+Done 2026-10-08. Both checkpoints recorded in `journal/2026-10.md` ("GridReplay discovery releases A+B delivered").
+
+- Backend: 462 pytest passed; ruff/format/mypy-strict (57 files)/import-linter clean; OpenAPI 2.0.0 verified — 114 HTTP responses across 23 operations.
+- Frontend: `npm run check` — contract verified, prettier/tsc clean, vite build, 126 browser tests pass (desktop + mobile).
+- Live: alembic `nemlab_v7_detector_v2` applied; NSW1 republished via admin API with `detectorSuite=v2` → publication `232be228`, 114 events (68 runs, 30 ramps, 1 spike, 5 reversals, 10 episodes, 0 unusual ramps — every day `insufficient_baseline`, honest since no Jun–Aug history is imported). UI live check on the built bundle: Highlights default shows the Sept-4 $16,599.89 spike first with `#1 highest price of 1`, previews render per card, replay opens and charts render; All events + `sort=longest` surfaces the 9h5m run top. Old event ids and replays (incl. superseded versions) still return 200; `?event=` links unchanged.
+- Follow-ups recorded: (a) unusual ramps need ~90 days of prior demand history imported per region before any can qualify; (b) run the v2 publication for QLD1/SA1/TAS1/VIC1 if cross-region v2 catalogues are wanted; (c) revisit the 300 AUD/MWh reversal floor if other regions/months show high counts.
