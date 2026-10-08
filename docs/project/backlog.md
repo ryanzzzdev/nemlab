@@ -3478,7 +3478,7 @@ Completed 2026-10-08. `apps/admin` is style-independent: `main.tsx` no longer im
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-110](#nem-110)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3494,7 +3494,28 @@ Consolidate coverage jobs and publications, preserving delivered Admin capabilit
 
 ### Completion evidence
 
-Planned 2026-10-08; not implemented or verified.
+Done 2026-10-09. New `apps/admin/src/workspace/` (scope, CoverageView, JobsView,
+PublicationsView, DataOpsPage) renders the canonical workspace at `/admin?view=
+coverage|jobs|publications&region=…&from=…&to=…` with optional `sel` selection.
+Shared applied scope is URL state separate from draft toolbar values; 31-day cap
+matches the bounded coverage API; legacy `start`/`end` link params translate.
+Summary strip derives per-view counts; coverage inspector lists exact per-series
+valid/missing counts, revisions, retrieved-at and ramp-baseline readiness with
+"insufficient history" truthfulness; stored coverage never implies published.
+Jobs view unifies load operations, grid imports and price refreshes into typed
+rows with sub-filter labelled "sorts and filters within loaded results";
+inspector preserves dispatch-next / stop-dispatch owner actions. Publications
+view marks per-region current pointer, exposes detection runs, redacts actor to
+labels, and keeps replay links via `PUBLIC_BASE`. Activity pane reuses one
+bounded query set (single polling ownership) and its rows switch view+selection
+atomically via a single params update (stale-params bug fixed during
+implementation). Viewer verified end-to-end: read-only badge, zero owner
+affordances, actor label redaction, Access rail hidden. Owner verified at
+1440×900 and 1280×720 with real data — zero console errors; coverage fix for
+empty-series cells (`—` not `0`, `not stored` not `— valid`) applied post-smoke.
+`npm run check` green: contract verified, format clean, both builds, 126/126
+public browser tests. Owner load/publish buttons still route to legacy pages
+until NEM-112 drawers land; legacy pages remain reachable meanwhile.
 
 <a id="nem-112"></a>
 
