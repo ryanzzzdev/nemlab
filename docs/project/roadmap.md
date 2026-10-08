@@ -89,3 +89,8 @@ Planning work package: [NEM-020](backlog.md#nem-020). Hosting provider, budget a
 ## Deferred scope
 
 WEM, household tariffs, FCAS revenue, forecasting, annual optimisation, renewable economics, flexibility atlas, and generator observatory are outside this launch. Record future requests in the backlog instead of silently expanding these milestones.
+
+
+## GridReplay discovery refinement — accepted 2026-10-08
+
+Follow-up to the working GridReplay feature; not a replacement for original M5 acceptance or a declaration of hosted launch readiness. [NEM-083–NEM-091](backlog.md#gridreplay-discovery-tasks) deliver the [accepted discovery plan](features/gridreplay-discovery.md): Release A corrects duration and adds Highlights/All events, whole-publication sorting/filtering, clear card reasons and bounded previews; Release B calibrates and implements unusual ramps, price reversals and related negative episodes. Preserve the demo's flat grid and all existing saved events. Next NEM-083, then NEM-084. Reference-history gaps may delay unusual ramps without delaying Release A. Admin, hosting and existing coverage follow-ups retain their own task status.

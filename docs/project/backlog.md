@@ -1,6 +1,6 @@
 # NEMLab backlog
 
-Updated: 2026-10-01
+Updated: 2026-10-08
 
 Task sections own status. The index is navigation, not a second status tracker. NEM-037 has reviewed the shared foundation: local implementation evidence passes, but M3 remains in progress until NEM-038 records hosted CI results. NEM-039–NEM-041 complete NEM-016. NEM-017 was delivered as NEM-042–NEM-046: product layouts and appearance, the simulation form/lifecycle, stored comparison/charts, the saved-result journey and visitor-triggered price refresh; M4’s local exit criteria are met. The hosted CI gate remains open under NEM-038 and public launch gates under NEM-020. Earlier illustrative IDs did not create tasks.
 
@@ -8,54 +8,18 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
-- [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
-- [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
+Accepted GridReplay discovery extension: [detailed plan](features/gridreplay-discovery.md). Next: [NEM-083](#nem-083), then NEM-084–086 (Release A); NEM-087–090 cover calibrated detector v2 (Release B).
 
-- [NEM-065 — Freeze the Java parity baseline and executable reference cases](#nem-065)
-- [NEM-066 — Preserve Java as a runnable reference in the existing repository](#nem-066)
-- [NEM-067 — Bootstrap the four Python packages and independent applications](#nem-067)
-- [NEM-068 — Port request semantics and deterministic battery strategies](#nem-068)
-- [NEM-069 — Prove the Python ordered-hindsight solver and budgets](#nem-069)
-- [NEM-070 — Adopt the existing PostgreSQL schema with Alembic](#nem-070)
-- [NEM-071 — Port OE prices, immutable revisions and resumable backfill](#nem-071)
-- [NEM-072 — Port fenced refresh jobs and visitor admission](#nem-072)
-- [NEM-073 — Run isolated price fetches and schedules in the Python worker](#nem-073)
-- [NEM-074 — Restore public price reads and protected operator HTTP](#nem-074)
-- [NEM-075 — Port immutable simulation inputs, jobs and saved results](#nem-075)
-- [NEM-076 — Execute and validate simulations in bounded Python children](#nem-076)
-- [NEM-077 — Restore simulation HTTP and visitor-triggered refresh](#nem-077)
-- [NEM-078 — Make Python the active local tooling and CI path](#nem-078)
-- [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
-- [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
+- [NEM-083 — Correct event duration and time-range presentation](#nem-083)
+- [NEM-084 — Add publication-wide highlights and typed catalogue filters](#nem-084)
+- [NEM-085 — Deliver Highlights and All events in the demo-style UI](#nem-085)
+- [NEM-086 — Add bounded immutable event preview charts](#nem-086)
+- [NEM-087 — Calibrate and freeze detector v2 definitions](#nem-087)
+- [NEM-088 — Detect and explain unusually large demand ramps](#nem-088)
+- [NEM-089 — Detect and replay negative-to-high price reversals](#nem-089)
+- [NEM-090 — Group related negative-price episodes for exploration](#nem-090)
+- [NEM-091 — Verify discovery releases and detector v2 journeys](#nem-091)
 
-Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; NEM-058–NEM-062 delivered the versioned catalogue, replay contract, real-data connection and shareable links; NEM-063 rehearsal passed and deferred the Admin UI ([decision 021](decisions/021-admin-ui-deferred.md)); next — [NEM-064](#nem-064) M5 exit review, plus gap task [NEM-082](#nem-082). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
-
-- [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
-- [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
-- [NEM-056 — Run bounded grid imports through the worker](#nem-056)
-- [NEM-057 — Implement the three deterministic event detectors](#nem-057)
-- [NEM-058 — Publish versioned events and reproducible replays](#nem-058)
-- [NEM-059 — Expose the GridReplay catalogue and replay contract](#nem-059)
-- [NEM-060 — Build the demo-faithful GridReplay interface](#nem-060)
-- [NEM-061 — Connect catalogue and synchronized replay to real data](#nem-061)
-- [NEM-062 — Share replays and open the correct BatteryLab day](#nem-062)
-- [NEM-063 — Rehearse GridReplay operations and decide Admin scope](#nem-063)
-- [NEM-064 — Verify the GridReplay journey and M5 exit criteria](#nem-064)
-
-
-- [NEM-053 — Polish BatteryLab presentation against the demo](#nem-053)
-- [NEM-052 — Make price thresholds a default third strategy](#nem-052)
-
-Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
-
-The [price-threshold strategy](features/price-threshold-strategy.md) was delivered through NEM-049–NEM-051 and promoted to a default third strategy in NEM-052. Commercial-grade market realism is explicitly outside its scope.
-
-- [NEM-049 — Implement the price-threshold engine](#nem-049)
-- [NEM-050 — Persist and expose threshold experiments](#nem-050)
-- [NEM-051 — Present the threshold experiment](#nem-051)
-
-- [NEM-047 — Make comparison charts part of the default result view](#nem-047)
-- [NEM-048 — Separate price exploration from BatteryLab](#nem-048)
 
 - [NEM-001 — Establish initial project planning documents](#nem-001)
 - [NEM-002 — Define the OE sample plan and check access](#nem-002)
@@ -84,15 +48,10 @@ The [price-threshold strategy](features/price-threshold-strategy.md) was deliver
 - [NEM-025 — OE price retrieval](#nem-025)
 - [NEM-026 — Revision/coverage/snapshot storage](#nem-026)
 - [NEM-027 — Resumable price backfill](#nem-027)
-
 - [NEM-028 — Durable price-refresh queue and fenced results](#nem-028)
-
 - [NEM-029 — Worker polling and scheduled refresh execution](#nem-029)
-
 - [NEM-030 — Protected operator job controls](#nem-030)
-
 - [NEM-031 — Public stored-price coverage and day series](#nem-031)
-
 - [NEM-032 — Shared OpenAPI contract and generated client inputs](#nem-032)
 - [NEM-033 — Frontend repository and reproducible tooling](#nem-033)
 - [NEM-034 — Public navigation and UI shell](#nem-034)
@@ -108,6 +67,48 @@ The [price-threshold strategy](features/price-threshold-strategy.md) was deliver
 - [NEM-044 — Simulation comparison and linked result charts](#nem-044)
 - [NEM-045 — Saved-result journey and BatteryLab acceptance](#nem-045)
 - [NEM-046 — Visitor-triggered price refresh](#nem-046)
+- [NEM-047 — Make comparison charts part of the default result view](#nem-047)
+- [NEM-048 — Separate price exploration from BatteryLab](#nem-048)
+- [NEM-049 — Implement the price-threshold engine](#nem-049)
+- [NEM-050 — Persist and expose threshold experiments](#nem-050)
+- [NEM-051 — Present the threshold experiment](#nem-051)
+- [NEM-052 — Make price thresholds a default third strategy](#nem-052)
+- [NEM-053 — Polish BatteryLab presentation against the demo](#nem-053)
+- [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
+- [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
+- [NEM-056 — Run bounded grid imports through the worker](#nem-056)
+- [NEM-057 — Implement the three deterministic event detectors](#nem-057)
+- [NEM-058 — Publish versioned events and reproducible replays](#nem-058)
+- [NEM-059 — Expose the GridReplay catalogue and replay contract](#nem-059)
+- [NEM-060 — Build the demo-faithful GridReplay interface](#nem-060)
+- [NEM-061 — Connect catalogue and synchronized replay to real data](#nem-061)
+- [NEM-062 — Share replays and open the correct BatteryLab day](#nem-062)
+- [NEM-063 — Rehearse GridReplay operations and decide Admin scope](#nem-063)
+- [NEM-064 — Verify the GridReplay journey and M5 exit criteria](#nem-064)
+- [NEM-065 — Freeze the Java parity baseline and executable reference cases](#nem-065)
+- [NEM-066 — Preserve Java as a runnable reference in the existing repository](#nem-066)
+- [NEM-067 — Bootstrap the four Python packages and independent applications](#nem-067)
+- [NEM-068 — Port request semantics and deterministic battery strategies](#nem-068)
+- [NEM-069 — Prove the Python ordered-hindsight solver and budgets](#nem-069)
+- [NEM-070 — Adopt the existing PostgreSQL schema with Alembic](#nem-070)
+- [NEM-071 — Port OE prices, immutable revisions and resumable backfill](#nem-071)
+- [NEM-072 — Port fenced refresh jobs and visitor admission](#nem-072)
+- [NEM-073 — Run isolated price fetches and schedules in the Python worker](#nem-073)
+- [NEM-074 — Restore public price reads and protected operator HTTP](#nem-074)
+- [NEM-075 — Port immutable simulation inputs, jobs and saved results](#nem-075)
+- [NEM-076 — Execute and validate simulations in bounded Python children](#nem-076)
+- [NEM-077 — Restore simulation HTTP and visitor-triggered refresh](#nem-077)
+- [NEM-078 — Make Python the active local tooling and CI path](#nem-078)
+- [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
+- [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
+- [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
+- [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
+
+Post-M4 UX refinement delivered: [NEM-047](#nem-047) aligned BatteryLab's result view with the accepted demo direction and [NEM-048](#nem-048) moved stored-price exploration to `/prices`.
+
+The [price-threshold strategy](features/price-threshold-strategy.md) was delivered through NEM-049–NEM-051 and promoted to a default third strategy in NEM-052. Commercial-grade market realism is explicitly outside its scope.
+
+Python rebuild closed at NEM-080; see the [rebuild plan](python-backend-rebuild.md). M5 underway: NEM-054 froze scope/detectors, NEM-055 built observation persistence, NEM-056 built bounded worker imports, NEM-057 implemented detectors; NEM-058–NEM-062 delivered the versioned catalogue, replay contract, real-data connection and shareable links; NEM-063 rehearsal passed and deferred the Admin UI ([decision 021](decisions/021-admin-ui-deferred.md)); next — [NEM-064](#nem-064) M5 exit review, plus gap task [NEM-082](#nem-082). [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25); Admin remains an explicit assessment.
 
 
 <a id="nem-001"></a>
@@ -2512,3 +2513,243 @@ Ground stack selection in relevant Australian, US, EU and UK energy-role evidenc
 ### Completion evidence
 
 2026-10-01: Reviewed employer/ATS evidence from Kraken, Powerline, Scale Microgrid Solutions, Joulea, Form Energy, trawa and Wattstor, plus explicitly historical Habitat Energy evidence. Recorded direct versus indexed/removed-page limitations. Retained FastAPI/PostgreSQL and added SQLAlchemy 2 Core over Psycopg 3; retained the PostgreSQL queue and SciPy/HiGHS parity design. NEM-067/070/071/072/075/078 now specify persistence/container implications. Markdown references and git diff whitespace checked; no runtime implementation or tests were performed. Committed as `5ff5106`.
+
+
+<a id="gridreplay-discovery-tasks"></a>
+
+## GridReplay discovery tasks
+
+Accepted by the user on 2026-10-08 following live catalogue review. Existing detector v1 and immutable saved replays remain supported. Release A is useful independently of Release B; empirical v2 parameters are frozen in NEM-087. NEM-082 is an existing separate coverage task, not a reused ID.
+
+<a id="nem-083"></a>
+
+## NEM-083 — Correct event duration and time-range presentation
+
+- Repository: both
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: High
+- Status: Ready
+- Depends on: None (existing GridReplay implementation)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Fix the 37-observation/185-minute demand-ramp projection without changing stored event identity.
+
+### Done when
+
+- Return elapsed endpoint duration for demand ramps and interval-count duration for price runs/spikes; update contract descriptions and all UI consumers.
+- Cards distinguish observations from intervals, use readable hours/minutes, and show inclusive publication dates derived correctly from endExclusive.
+- Tests cover three-hour ramps, one-interval spikes, multi-interval/cross-midnight runs and unchanged saved event IDs/snapshots. Record actual verification.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-084"></a>
+
+## NEM-084 — Add publication-wide highlights and typed catalogue filters
+
+- Repository: backend
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-083](#nem-083)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Rank/filter all matching published events before pagination, preserving v1 detections and saved replays.
+
+### Done when
+
+- Implement highlights-v1 round-robin selection, eight-card maximum, type/day caps, deterministic exact-value ordering, duplicate suppression and multiple truthful reasons from the accepted discovery spec.
+- Add highlights response with scope, eligible/excluded counts, per-type totals, ranks/reasons and selectionVersion; incomplete or unknown-coverage candidates are excluded honestly.
+- Extend All events with compatible type-specific sorts/numeric filters and query-bound publication-pinned cursors; default unparameterized clients keep newest-first behavior.
+- OpenAPI/HTTP/database fixtures verify full-publication ranking beyond page one, ties, filters/equalities, unsupported combinations, gaps, empty populations and republication. Measure query plan; do not fetch full replays to rank.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-085"></a>
+
+## NEM-085 — Deliver Highlights and All events in the demo-style UI
+
+- Repository: frontend
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: High
+- Status: Backlog
+- Depends on: [NEM-084](#nem-084)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Make the initial catalogue a small set of explainable investigations while keeping every original event available.
+
+### Done when
+
+- Default fresh visits to Highlights; preserve the flat demo grid, replay composition and shared appearance. Add All events with existing bounded pagination.
+- Show clear values, duration, factual selection reasons and scoped counts; move routine version data to replay provenance while retaining material coverage warnings.
+- Provide type-specific sorting and More filters; validate URL state, reset incompatible options and preserve open saved events outside the current selection.
+- Browser/live checks cover modes, query state, Back/Forward, saved links, incomplete/empty/error states and all supported themes/widths. Computer-use review verifies September spike/longest-run discovery without scrolling through routine cards.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-086"></a>
+
+## NEM-086 — Add bounded immutable event preview charts
+
+- Repository: both
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-085](#nem-085)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Give cards a meaningful preview of event shape without downloading every full replay.
+
+### Done when
+
+- Define/cache versioned price or demand previews from immutable snapshots with bounded context, point count, payload and requests; unavailable data never becomes a fabricated curve.
+- Reduction preserves extrema, event boundaries and gaps; card scale/window labels prevent misleading comparisons. Preview failure never blocks selection or changes highlight ranking.
+- Wire lightweight preview rendering to both modes, with accessible textual equivalents and theme support. Measure page bytes/query count/mobile rendering and record budgets.
+- Test sparse/missing/edge/extreme data, cache version isolation, context boundaries and no per-card full-replay fan-out; visually verify on desktop and mobile.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-087"></a>
+
+## NEM-087 — Calibrate and freeze detector v2 definitions
+
+- Repository: backend
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: Normal
+- Status: Ready
+- Depends on: None (existing GridReplay implementation)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Turn the accepted unusual-ramp, price-reversal and grouped-episode directions into evidence-backed versioned rules.
+
+### Done when
+
+- Evaluate the starting parameters in the discovery spec against hand-labelled fixtures and available stored NSW1 evidence; record counts, representative examples and false/redundant candidates without targeting an arbitrary event quota.
+- Freeze demand baseline membership/completeness/quantile/floor, reversal look-ahead/equalities/deduplication, and episode gap/aggregate-gap/boundary semantics.
+- Document wider historical coverage needed for unusual ramps; insufficient baseline must remain explicit and cannot be solved by treating missing days as zero. Additional imports stay bounded operator work.
+- Freeze highlights-v2 type slots, overlap suppression and labels using concrete examples; define new-type compatibility, immutable evidence and calibration/version changes before production implementation.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-088"></a>
+
+## NEM-088 — Detect and explain unusually large demand ramps
+
+- Repository: both
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Surface ramps exceeding a documented comparable historical baseline while retaining daily v1 ramps.
+
+### Done when
+
+- Implement the frozen same-region preceding-history comparison with candidate-day exclusion, minimum sample counts, explicit quantile method and absolute floor.
+- Persist baseline bounds/sample count/threshold/revisions; insufficient history returns an eligibility reason, not a normal or rare label.
+- Integrate new type/version into publication, API, filters/cards/replay and highlights-v2 with underlying-ramp duplicate suppression; old links remain readable.
+- Verify exact-quantile ties, missing days, weekday/weekend membership, no future leakage, revised references, insufficient history and real examples when coverage permits.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-089"></a>
+
+## NEM-089 — Detect and replay negative-to-high price reversals
+
+- Repository: both
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Show a bounded transition from a negative-price run to a later high-price episode.
+
+### Done when
+
+- Implement the frozen threshold/look-ahead/gap and overlapping-candidate rules; include trough, peak, elapsed time and linked source events.
+- Publish immutable compound evidence and support typed API/filter/card/replay rendering, with both phases visible and truthful observation-only copy.
+- Add highlights-v2 integration and overlap suppression; preserve one-day BatteryLab handoff semantics and original event links.
+- Tests cover exact thresholds and six-hour boundary, high-before-low, gaps, incomplete look-ahead, equal peaks, shared peaks, cross-midnight events and corrected-source versions.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-090"></a>
+
+## NEM-090 — Group related negative-price episodes for exploration
+
+- Repository: both
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Summarize related runs in a compound event without redefining consecutive negative prices or restoring day-grouped cards.
+
+### Done when
+
+- Implement frozen gap length/price and total-gap limits over complete continuous context, with deterministic membership and cross-midnight handling.
+- Retain member event IDs and distinguish span, actual negative duration and intervening nonnegative duration; missing prices prevent joining.
+- Support typed API/filter/card/replay with separately shaded member runs and access to originals; highlights-v2 suppresses constituent duplicates only in its selected view.
+- Tests cover interval-boundary arithmetic, exact limits, chained gaps, missing observations, source edges, publication chunking, no eligible grouping and original-link reproducibility.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
+
+<a id="nem-091"></a>
+
+## NEM-091 — Verify discovery releases and detector v2 journeys
+
+- Repository: both
+- Milestone: Post-M5 GridReplay discovery refinement
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-083](#nem-083), [NEM-084](#nem-084), [NEM-085](#nem-085), [NEM-086](#nem-086), [NEM-087](#nem-087), [NEM-088](#nem-088), [NEM-089](#nem-089), [NEM-090](#nem-090)
+- References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
+
+### Outcome
+
+Record separate Release A and Release B acceptance evidence and preserve the existing catalogue/replay behavior.
+
+### Done when
+
+- Checkpoint A after NEM-083–086: backend/contract/frontend/live checks pass, desktop/mobile theme screenshots match the accepted demo direction, and real September examples surface with correct scoped reasons. Release A need not wait for B.
+- Checkpoint B after NEM-087–090: each new type passes labelled detector, storage/version, HTTP and UI/live checks; unavailable baseline/coverage remains honest and wider evidence is documented.
+- Record stable saved links, whole-publication filtering/ranking, duplicate suppression, query/preview payload/render measurements and operator publication behavior.
+- Only mark this task Done when both checkpoints pass. Record any remaining evidence/data gaps as explicit follow-ups; no hosted CI/public launch completion is implied.
+
+### Completion evidence
+
+Planned only; implementation and verification have not started.
