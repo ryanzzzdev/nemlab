@@ -8,133 +8,133 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Task index
 
-- [NEM-001 — Establish initial project planning documents](#nem-001)
-- [NEM-002 — Define the OE sample plan and check access](#nem-002)
-- [NEM-003 — Validate one recent price day](#nem-003)
-- [NEM-004 — Validate historical price access and publish the price gate](#nem-004)
-- [NEM-005 — Validate aligned regional grid series](#nem-005)
-- [NEM-006 — Validate facility samples and close the grid gate](#nem-006)
-- [NEM-007 — Resolve the Java and build baseline](#nem-007)
-- [NEM-008 — Specify the executable battery model contract](#nem-008)
-- [NEM-009 — Implement and verify the domain model and fixed schedule](#nem-009)
-- [NEM-010 — Evaluate hindsight optimisation and engine performance](#nem-010)
-- [NEM-011 — Establish backend repository and application modules](#nem-011)
-- [NEM-012 — Build versioned data ingestion and coverage storage](#nem-012)
-- [NEM-013 — Build durable jobs and operator controls](#nem-013)
-- [NEM-014 — Define and implement shared API contracts](#nem-014)
-- [NEM-015 — Establish frontend workspace and client integration](#nem-015)
-- [NEM-016 — Deliver BatteryLab simulation API and stored results](#nem-016)
-- [NEM-017 — Deliver the BatteryLab visitor experience](#nem-017)
-- [NEM-018 — Deliver GridReplay catalogue and replay](#nem-018)
-- [NEM-019 — Assess and optionally deliver Admin UI](#nem-019)
-- [NEM-020 — Prepare and verify the initial public release](#nem-020)
-- [NEM-021 — Backend modules and Boot entry points](#nem-021)
-- [NEM-022 — Packaged startup and local setup](#nem-022)
-- [NEM-023 — CI and module dependency checks](#nem-023)
-- [NEM-024 — PostgreSQL migrations](#nem-024)
-- [NEM-025 — OE price retrieval](#nem-025)
-- [NEM-026 — Revision/coverage/snapshot storage](#nem-026)
-- [NEM-027 — Resumable price backfill](#nem-027)
-- [NEM-028 — Durable price-refresh queue and fenced results](#nem-028)
-- [NEM-029 — Worker polling and scheduled refresh execution](#nem-029)
-- [NEM-030 — Protected operator job controls](#nem-030)
-- [NEM-031 — Public stored-price coverage and day series](#nem-031)
-- [NEM-032 — Shared OpenAPI contract and generated client inputs](#nem-032)
-- [NEM-033 — Frontend repository and reproducible tooling](#nem-033)
-- [NEM-034 — Public navigation and UI shell](#nem-034)
-- [NEM-035 — Typed stored-price API integration](#nem-035)
-- [NEM-036 — Synchronised time-series chart prototype](#nem-036)
-- [NEM-037 — Shared-foundation exit review](#nem-037)
-- [NEM-038 — Verify hosted foundation CI](#nem-038)
-- [NEM-039 — Simulation request contract and validation](#nem-039)
-- [NEM-040 — Durable simulation execution and immutable results](#nem-040)
-- [NEM-041 — Simulation HTTP lifecycle and generated contract](#nem-041)
-- [NEM-042 — Product layouts and shared appearance](#nem-042)
-- [NEM-043 — Battery scenario form and simulation lifecycle](#nem-043)
-- [NEM-044 — Simulation comparison and linked result charts](#nem-044)
-- [NEM-045 — Saved-result journey and BatteryLab acceptance](#nem-045)
-- [NEM-046 — Visitor-triggered price refresh](#nem-046)
-- [NEM-047 — Make comparison charts part of the default result view](#nem-047)
-- [NEM-048 — Separate price exploration from BatteryLab](#nem-048)
-- [NEM-049 — Implement the price-threshold engine](#nem-049)
-- [NEM-050 — Persist and expose threshold experiments](#nem-050)
-- [NEM-051 — Present the threshold experiment](#nem-051)
-- [NEM-052 — Make price thresholds a default third strategy](#nem-052)
-- [NEM-053 — Polish BatteryLab presentation against the demo](#nem-053)
-- [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
-- [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
-- [NEM-056 — Run bounded grid imports through the worker](#nem-056)
-- [NEM-057 — Implement the three deterministic event detectors](#nem-057)
-- [NEM-058 — Publish versioned events and reproducible replays](#nem-058)
-- [NEM-059 — Expose the GridReplay catalogue and replay contract](#nem-059)
-- [NEM-060 — Build the demo-faithful GridReplay interface](#nem-060)
-- [NEM-061 — Connect catalogue and synchronized replay to real data](#nem-061)
-- [NEM-062 — Share replays and open the correct BatteryLab day](#nem-062)
-- [NEM-063 — Rehearse GridReplay operations and decide Admin scope](#nem-063)
-- [NEM-064 — Verify the GridReplay journey and M5 exit criteria](#nem-064)
-- [NEM-065 — Freeze the Java parity baseline and executable reference cases](#nem-065)
-- [NEM-066 — Preserve Java as a runnable reference in the existing repository](#nem-066)
-- [NEM-067 — Bootstrap the four Python packages and independent applications](#nem-067)
-- [NEM-068 — Port request semantics and deterministic battery strategies](#nem-068)
-- [NEM-069 — Prove the Python ordered-hindsight solver and budgets](#nem-069)
-- [NEM-070 — Adopt the existing PostgreSQL schema with Alembic](#nem-070)
-- [NEM-071 — Port OE prices, immutable revisions and resumable backfill](#nem-071)
-- [NEM-072 — Port fenced refresh jobs and visitor admission](#nem-072)
-- [NEM-073 — Run isolated price fetches and schedules in the Python worker](#nem-073)
-- [NEM-074 — Restore public price reads and protected operator HTTP](#nem-074)
-- [NEM-075 — Port immutable simulation inputs, jobs and saved results](#nem-075)
-- [NEM-076 — Execute and validate simulations in bounded Python children](#nem-076)
-- [NEM-077 — Restore simulation HTTP and visitor-triggered refresh](#nem-077)
-- [NEM-078 — Make Python the active local tooling and CI path](#nem-078)
-- [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
-- [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
-- [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
-- [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
-- [NEM-083 — Correct event duration and time-range presentation](#nem-083)
-- [NEM-084 — Add publication-wide highlights and typed catalogue filters](#nem-084)
-- [NEM-085 — Deliver Highlights and All events in the demo-style UI](#nem-085)
-- [NEM-086 — Add bounded immutable event preview charts](#nem-086)
-- [NEM-087 — Calibrate and freeze detector v2 definitions](#nem-087)
-- [NEM-088 — Detect and explain unusually large demand ramps](#nem-088)
-- [NEM-089 — Detect and replay negative-to-high price reversals](#nem-089)
-- [NEM-090 — Group related negative-price episodes for exploration](#nem-090)
-- [NEM-091 — Verify discovery releases and detector v2 journeys](#nem-091)
-- [NEM-092 — Accept bounded date-range price refreshes](#nem-092)
-- [NEM-093 — Agree the M6 Admin experience and delivery tasks](#nem-093)
-- [NEM-094 — Close carried GridReplay launch-hardening evidence gaps](#nem-094)
+- ✅ [NEM-001 — Establish initial project planning documents](#nem-001)
+- ✅ [NEM-002 — Define the OE sample plan and check access](#nem-002)
+- ✅ [NEM-003 — Validate one recent price day](#nem-003)
+- ✅ [NEM-004 — Validate historical price access and publish the price gate](#nem-004)
+- ✅ [NEM-005 — Validate aligned regional grid series](#nem-005)
+- ✅ [NEM-006 — Validate facility samples and close the grid gate](#nem-006)
+- ✅ [NEM-007 — Resolve the Java and build baseline](#nem-007)
+- ✅ [NEM-008 — Specify the executable battery model contract](#nem-008)
+- ✅ [NEM-009 — Implement and verify the domain model and fixed schedule](#nem-009)
+- ✅ [NEM-010 — Evaluate hindsight optimisation and engine performance](#nem-010)
+- ✅ [NEM-011 — Establish backend repository and application modules](#nem-011)
+- ✅ [NEM-012 — Build versioned data ingestion and coverage storage](#nem-012)
+- ✅ [NEM-013 — Build durable jobs and operator controls](#nem-013)
+- ✅ [NEM-014 — Define and implement shared API contracts](#nem-014)
+- ✅ [NEM-015 — Establish frontend workspace and client integration](#nem-015)
+- ✅ [NEM-016 — Deliver BatteryLab simulation API and stored results](#nem-016)
+- ✅ [NEM-017 — Deliver the BatteryLab visitor experience](#nem-017)
+- ✅ [NEM-018 — Deliver GridReplay catalogue and replay](#nem-018)
+- ✅ [NEM-019 — Assess and optionally deliver Admin UI](#nem-019)
+- 📋 [NEM-020 — Prepare and verify the initial public release](#nem-020)
+- ✅ [NEM-021 — Backend modules and Boot entry points](#nem-021)
+- ✅ [NEM-022 — Packaged startup and local setup](#nem-022)
+- ✅ [NEM-023 — CI and module dependency checks](#nem-023)
+- ✅ [NEM-024 — PostgreSQL migrations](#nem-024)
+- ✅ [NEM-025 — OE price retrieval](#nem-025)
+- ✅ [NEM-026 — Revision/coverage/snapshot storage](#nem-026)
+- ✅ [NEM-027 — Resumable price backfill](#nem-027)
+- ✅ [NEM-028 — Durable price-refresh queue and fenced results](#nem-028)
+- ✅ [NEM-029 — Worker polling and scheduled refresh execution](#nem-029)
+- ✅ [NEM-030 — Protected operator job controls](#nem-030)
+- ✅ [NEM-031 — Public stored-price coverage and day series](#nem-031)
+- ✅ [NEM-032 — Shared OpenAPI contract and generated client inputs](#nem-032)
+- ✅ [NEM-033 — Frontend repository and reproducible tooling](#nem-033)
+- ✅ [NEM-034 — Public navigation and UI shell](#nem-034)
+- ✅ [NEM-035 — Typed stored-price API integration](#nem-035)
+- ✅ [NEM-036 — Synchronised time-series chart prototype](#nem-036)
+- ✅ [NEM-037 — Shared-foundation exit review](#nem-037)
+- ⛔ [NEM-038 — Verify hosted foundation CI](#nem-038)
+- ✅ [NEM-039 — Simulation request contract and validation](#nem-039)
+- ✅ [NEM-040 — Durable simulation execution and immutable results](#nem-040)
+- ✅ [NEM-041 — Simulation HTTP lifecycle and generated contract](#nem-041)
+- ✅ [NEM-042 — Product layouts and shared appearance](#nem-042)
+- ✅ [NEM-043 — Battery scenario form and simulation lifecycle](#nem-043)
+- ✅ [NEM-044 — Simulation comparison and linked result charts](#nem-044)
+- ✅ [NEM-045 — Saved-result journey and BatteryLab acceptance](#nem-045)
+- ✅ [NEM-046 — Visitor-triggered price refresh](#nem-046)
+- ✅ [NEM-047 — Make comparison charts part of the default result view](#nem-047)
+- ✅ [NEM-048 — Separate price exploration from BatteryLab](#nem-048)
+- ✅ [NEM-049 — Implement the price-threshold engine](#nem-049)
+- ✅ [NEM-050 — Persist and expose threshold experiments](#nem-050)
+- ✅ [NEM-051 — Present the threshold experiment](#nem-051)
+- ✅ [NEM-052 — Make price thresholds a default third strategy](#nem-052)
+- ✅ [NEM-053 — Polish BatteryLab presentation against the demo](#nem-053)
+- ✅ [NEM-054 — Freeze GridReplay data scope and detector rules](#nem-054)
+- ✅ [NEM-055 — Persist versioned GridReplay observations and coverage](#nem-055)
+- ✅ [NEM-056 — Run bounded grid imports through the worker](#nem-056)
+- ✅ [NEM-057 — Implement the three deterministic event detectors](#nem-057)
+- ✅ [NEM-058 — Publish versioned events and reproducible replays](#nem-058)
+- ✅ [NEM-059 — Expose the GridReplay catalogue and replay contract](#nem-059)
+- ✅ [NEM-060 — Build the demo-faithful GridReplay interface](#nem-060)
+- ✅ [NEM-061 — Connect catalogue and synchronized replay to real data](#nem-061)
+- ✅ [NEM-062 — Share replays and open the correct BatteryLab day](#nem-062)
+- ✅ [NEM-063 — Rehearse GridReplay operations and decide Admin scope](#nem-063)
+- ✅ [NEM-064 — Verify the GridReplay journey and M5 exit criteria](#nem-064)
+- ✅ [NEM-065 — Freeze the Java parity baseline and executable reference cases](#nem-065)
+- ✅ [NEM-066 — Preserve Java as a runnable reference in the existing repository](#nem-066)
+- ✅ [NEM-067 — Bootstrap the four Python packages and independent applications](#nem-067)
+- ✅ [NEM-068 — Port request semantics and deterministic battery strategies](#nem-068)
+- ✅ [NEM-069 — Prove the Python ordered-hindsight solver and budgets](#nem-069)
+- ✅ [NEM-070 — Adopt the existing PostgreSQL schema with Alembic](#nem-070)
+- ✅ [NEM-071 — Port OE prices, immutable revisions and resumable backfill](#nem-071)
+- ✅ [NEM-072 — Port fenced refresh jobs and visitor admission](#nem-072)
+- ✅ [NEM-073 — Run isolated price fetches and schedules in the Python worker](#nem-073)
+- ✅ [NEM-074 — Restore public price reads and protected operator HTTP](#nem-074)
+- ✅ [NEM-075 — Port immutable simulation inputs, jobs and saved results](#nem-075)
+- ✅ [NEM-076 — Execute and validate simulations in bounded Python children](#nem-076)
+- ✅ [NEM-077 — Restore simulation HTTP and visitor-triggered refresh](#nem-077)
+- ✅ [NEM-078 — Make Python the active local tooling and CI path](#nem-078)
+- ✅ [NEM-079 — Verify the existing frontend against the Python backend](#nem-079)
+- ✅ [NEM-080 — Rehearse database cutover and close the Python parity gate](#nem-080)
+- ✅ [NEM-081 — Research energy-sector roles and refine the Python stack](#nem-081)
+- ✅ [NEM-082 — Expose grid-observation coverage inspection](#nem-082)
+- ✅ [NEM-083 — Correct event duration and time-range presentation](#nem-083)
+- ✅ [NEM-084 — Add publication-wide highlights and typed catalogue filters](#nem-084)
+- ✅ [NEM-085 — Deliver Highlights and All events in the demo-style UI](#nem-085)
+- ✅ [NEM-086 — Add bounded immutable event preview charts](#nem-086)
+- ✅ [NEM-087 — Calibrate and freeze detector v2 definitions](#nem-087)
+- ✅ [NEM-088 — Detect and explain unusually large demand ramps](#nem-088)
+- ✅ [NEM-089 — Detect and replay negative-to-high price reversals](#nem-089)
+- ✅ [NEM-090 — Group related negative-price episodes for exploration](#nem-090)
+- ✅ [NEM-091 — Verify discovery releases and detector v2 journeys](#nem-091)
+- ✅ [NEM-092 — Accept bounded date-range price refreshes](#nem-092)
+- ✅ [NEM-093 — Agree the M6 Admin experience and delivery tasks](#nem-093)
+- 🟢 [NEM-094 — Close carried GridReplay launch-hardening evidence gaps](#nem-094)
 
-- [NEM-095 — Add Admin identity storage and secure owner bootstrap](#nem-095)
-- [NEM-096 — Deliver email verification and browser sessions](#nem-096)
-- [NEM-097 — Enforce Admin capabilities and safe viewer responses](#nem-097)
-- [NEM-098 — Implement access requests approvals and grant lifecycle](#nem-098)
-- [NEM-099 — Expose bounded console reads and publication provenance](#nem-099)
-- [NEM-100 — Build Admin shell and guided read-only console](#nem-100)
-- [NEM-101 — Build request-access and sign-in experience](#nem-101)
-- [NEM-102 — Track resumable bounded load operations](#nem-102)
-- [NEM-103 — Build guided owner import and publication workflow](#nem-103)
-- [NEM-104 — Build owner access management and audit screens](#nem-104)
-- [NEM-105 — Publish Admin entry link and reconcile operator guidance](#nem-105)
-- [NEM-106 — Verify Admin access boundaries and resilience](#nem-106)
-- [NEM-107 — Polish Admin UI and review M6 exit evidence](#nem-107)
+- ✅ [NEM-095 — Add Admin identity storage and secure owner bootstrap](#nem-095)
+- ✅ [NEM-096 — Deliver email verification and browser sessions](#nem-096)
+- ✅ [NEM-097 — Enforce Admin capabilities and safe viewer responses](#nem-097)
+- ✅ [NEM-098 — Implement access requests approvals and grant lifecycle](#nem-098)
+- ✅ [NEM-099 — Expose bounded console reads and publication provenance](#nem-099)
+- ✅ [NEM-100 — Build Admin shell and guided read-only console](#nem-100)
+- ✅ [NEM-101 — Build request-access and sign-in experience](#nem-101)
+- ✅ [NEM-102 — Track resumable bounded load operations](#nem-102)
+- ✅ [NEM-103 — Build guided owner import and publication workflow](#nem-103)
+- ✅ [NEM-104 — Build owner access management and audit screens](#nem-104)
+- ✅ [NEM-105 — Publish Admin entry link and reconcile operator guidance](#nem-105)
+- ✅ [NEM-106 — Verify Admin access boundaries and resilience](#nem-106)
+- ✅ [NEM-107 — Polish Admin UI and review M6 exit evidence](#nem-107)
 
-- [NEM-108 — Inventory Admin behaviour and redesign contracts](#nem-108)
-- [NEM-109 — Prototype the dense desktop Admin workspace](#nem-109)
-- [NEM-110 — Build independent Admin shell and table primitives](#nem-110)
-- [NEM-111 — Consolidate coverage jobs and publications](#nem-111)
-- [NEM-112 — Move owner load and publication into contextual drawers](#nem-112)
-- [NEM-113 — Redesign Access authentication and contextual help](#nem-113)
-- [NEM-114 — Migrate routes and verify Admin regressions](#nem-114)
-- [NEM-115 — Review desktop redesign and close M6 UI acceptance](#nem-115)
+- ✅ [NEM-108 — Inventory Admin behaviour and redesign contracts](#nem-108)
+- ✅ [NEM-109 — Prototype the dense desktop Admin workspace](#nem-109)
+- ✅ [NEM-110 — Build independent Admin shell and table primitives](#nem-110)
+- ✅ [NEM-111 — Consolidate coverage jobs and publications](#nem-111)
+- ✅ [NEM-112 — Move owner load and publication into contextual drawers](#nem-112)
+- ✅ [NEM-113 — Redesign Access authentication and contextual help](#nem-113)
+- ✅ [NEM-114 — Migrate routes and verify Admin regressions](#nem-114)
+- ✅ [NEM-115 — Review desktop redesign and close M6 UI acceptance](#nem-115)
 
-- [NEM-116 — Owner access-audit read endpoint](#nem-116)
+- ✅ [NEM-116 — Owner access-audit read endpoint](#nem-116)
 
-- [NEM-117 — Project stored simulations into bounded Admin reads](#nem-117)
-- [NEM-118 — Record simulation execution lifecycle safely](#nem-118)
-- [NEM-119 — Expose authorized simulation inspection contracts](#nem-119)
-- [NEM-120 — Build desktop simulation catalogue and inspector](#nem-120)
-- [NEM-121 — Expose shared price readiness and related simulations](#nem-121)
-- [NEM-122 — Explain BatteryLab provenance and finish workspace integration](#nem-122)
-- [NEM-123 — Verify BatteryLab Admin journeys and M6 extension](#nem-123)
+- ✅ [NEM-117 — Project stored simulations into bounded Admin reads](#nem-117)
+- ✅ [NEM-118 — Record simulation execution lifecycle safely](#nem-118)
+- ✅ [NEM-119 — Expose authorized simulation inspection contracts](#nem-119)
+- ✅ [NEM-120 — Build desktop simulation catalogue and inspector](#nem-120)
+- ✅ [NEM-121 — Expose shared price readiness and related simulations](#nem-121)
+- ✅ [NEM-122 — Explain BatteryLab provenance and finish workspace integration](#nem-122)
+- ✅ [NEM-123 — Verify BatteryLab Admin journeys and M6 extension](#nem-123)
 
 ## Delivery notes
 
@@ -156,7 +156,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - Repository: both
 - Milestone: Planning setup
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: [Specification / decision](documentation-guide.md)
 
@@ -181,7 +181,7 @@ Initial planning documents created from the session and existing summaries. Loca
 - Repository: backend
 - Milestone: M1
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -210,7 +210,7 @@ Configure the local OE key, then continue NEM-003.
 - Repository: backend
 - Milestone: M1
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-002](#nem-002)
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -239,7 +239,7 @@ Authenticated sample and numerical checks saved in [recent price findings](evide
 - Repository: backend
 - Milestone: M1
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-003](#nem-003)
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -264,7 +264,7 @@ Historical request succeeded: 289 raw points and 288 valid normalised intervals,
 - Repository: backend
 - Milestone: M1
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-003](#nem-003)
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -289,7 +289,7 @@ Twelve requests passed; 31 series/day combinations have complete 288-point sourc
 - Repository: backend
 - Milestone: M1
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-005](#nem-005)
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -318,7 +318,7 @@ Resolve or explicitly scope out battery category overlap, signed gas output, met
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: [Specification / decision](decisions/004-java-runtime.md)
 
@@ -343,7 +343,7 @@ Documented compatibility and selected pins in [decision 004](decisions/004-java-
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: [Specification / decision](features/batterylab.md)
 
@@ -368,7 +368,7 @@ Specified the [v1 engine contract](features/battery-model-contract.md): determin
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-007](#nem-007), [NEM-008](#nem-008)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -395,7 +395,7 @@ Verification: `JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./gradlew clean buil
 - Repository: backend
 - Milestone: M2
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-004](#nem-004), [NEM-009](#nem-009)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -421,7 +421,7 @@ Selected pinned MIT-licensed ojAlgo 57.3.0 on Java 25 for the exact ordered-wind
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-006](#nem-006), [NEM-010](#nem-010)
 - References: [Specification / decision](architecture.md)
 
@@ -453,7 +453,7 @@ Git setup was completed earlier. [NEM-021](#nem-021), [NEM-022](#nem-022) and [N
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-011](#nem-011)
 - References: [Specification / decision](features/data-foundation.md)
 
@@ -482,7 +482,7 @@ Price-first deliverable: NEM-024 schema, NEM-025 OE adapter, NEM-026 revisions/c
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-011](#nem-011)
 - References: [Specification / decision](architecture.md)
 
@@ -507,7 +507,7 @@ Split into [NEM-028](#nem-028), [NEM-029](#nem-029), and [NEM-030](#nem-030). Al
 - Repository: backend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-012](#nem-012), [NEM-013](#nem-013)
 - References: [Specification / decision](architecture.md)
 
@@ -532,7 +532,7 @@ Split into [NEM-031](#nem-031), stored-price read endpoints, and [NEM-032](#nem-
 - Repository: frontend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-014](#nem-014)
 - References: [Specification / decision](decisions/005-infrastructure-and-frontend.md)
 
@@ -557,7 +557,7 @@ Split into NEM-033 (repository/tooling), NEM-034 (public shell), NEM-035 (typed 
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-010](#nem-010), [NEM-014](#nem-014)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -582,7 +582,7 @@ Refined 2026-09-20 during NEM-037. NEM-039 request preparation, NEM-040 durable 
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-015](#nem-015), [NEM-016](#nem-016)
 - References: [Specification / decision](features/batterylab.md)
 
@@ -607,7 +607,7 @@ Delivered as NEM-042–NEM-046. NEM-042 established product layouts and shared a
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-006](#nem-006), [NEM-017](#nem-017)
 - References: [Specification / decision](features/gridreplay.md)
 
@@ -636,7 +636,7 @@ A static mock-data demo of the catalogue/replay concept lives at [docs/demos/gri
 - Repository: both
 - Milestone: M5
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-013](#nem-013), [NEM-063](#nem-063)
 - References: [Specification / decision](features/admin.md)
 
@@ -661,7 +661,7 @@ Assessment completed by the NEM-063 live rehearsal on 2026-10-02. Decision: Admi
 - Repository: both
 - Milestone: M7
 - Priority: High
-- Status: Backlog
+- Status: Backlog 📋
 - Depends on: [NEM-018](#nem-018), M6 Admin outcome (scope starts at [NEM-093](#nem-093)), [NEM-094](#nem-094), [NEM-038](#nem-038)
 - References: [Specification / decision](roadmap.md)
 
@@ -686,7 +686,7 @@ Not started; no implementation or verification evidence yet.
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-010](#nem-010)
 - References: [NEM-011](#nem-011), [architecture](architecture.md)
 
@@ -709,7 +709,7 @@ Created infrastructure/api/worker modules on Java 25 and Boot 4.1.1. Both execut
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-021](#nem-021)
 - References: [NEM-011](#nem-011), [architecture](architecture.md)
 
@@ -732,7 +732,7 @@ Packaged startup script verifies API health on a random loopback port and non-HT
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-022](#nem-022)
 - References: [NEM-011](#nem-011), [architecture](architecture.md)
 
@@ -755,7 +755,7 @@ Added pinned GitHub Actions workflow and Gradle project-dependency enforcement. 
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-011](#nem-011)
 - References: [NEM-012](#nem-012)
 
@@ -774,7 +774,7 @@ PostgreSQL 18.6 schema and Flyway migrations verified against a disposable real 
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-011](#nem-011)
 - References: [NEM-012](#nem-012)
 
@@ -793,7 +793,7 @@ Implemented exact price-day query/normalisation, matching source metadata and pr
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-024](#nem-024), [NEM-025](#nem-025)
 - References: [NEM-012](#nem-012)
 
@@ -812,7 +812,7 @@ Sequential/concurrent reimports reuse a revision; corrections create revisions; 
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-025](#nem-025), [NEM-026](#nem-026)
 - References: [NEM-012](#nem-012)
 
@@ -831,7 +831,7 @@ One-day data and checkpoint commits are atomic. Injected update failure rolls ba
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-012](#nem-012)
 - References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
 
@@ -854,7 +854,7 @@ Implemented in `infrastructure/.../jobs` and migration V2. Spring-proxied Postgr
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-028](#nem-028)
 - References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
 
@@ -877,7 +877,7 @@ Implemented opt-in worker configuration, lifecycle-managed polling, fixed UTC+10
 - Repository: backend
 - Milestone: M3
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-029](#nem-029)
 - References: [Architecture](architecture.md), parent [NEM-013](#nem-013)
 
@@ -900,7 +900,7 @@ Implemented opt-in bearer authentication, server-derived audit identity, refresh
 - Repository: backend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-012](#nem-012)
 - References: [Data foundation](features/data-foundation.md), parent [NEM-014](#nem-014)
 
@@ -923,7 +923,7 @@ Opt-in anonymous GET coverage/current-day endpoints implemented with bounded sin
 - Repository: backend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-031](#nem-031)
 - References: [Data foundation](features/data-foundation.md), parent [NEM-014](#nem-014)
 
@@ -946,7 +946,7 @@ Versioned OpenAPI 3.0.3 contract, pinned toolchain and deterministic TypeScript 
 - Repository: frontend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-032](#nem-032)
 - References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
 
@@ -969,7 +969,7 @@ Separate `nemlab-ui/.git` repository and React/TypeScript/Vite npm workspace cre
 - Repository: frontend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-033](#nem-033)
 - References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
 
@@ -992,7 +992,7 @@ Shared public shell, four named routes, not-found recovery and keyboard/focus be
 - Repository: frontend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-034](#nem-034), [NEM-032](#nem-032)
 - References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
 
@@ -1015,7 +1015,7 @@ Completed the interrupted task on 2026-09-20. Contract snapshot/provenance, drif
 - Repository: frontend
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-035](#nem-035)
 - References: parent [NEM-015](#nem-015), [frontend decision](decisions/005-infrastructure-and-frontend.md)
 
@@ -1038,7 +1038,7 @@ ECharts 6.1.0 linked SVG prototype verified with exact text/table alternatives, 
 - Repository: both
 - Milestone: M3
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-011](#nem-011)–[NEM-015](#nem-015)
 - References: [M3 exit criteria](roadmap.md#m3--shared-foundation)
 
@@ -1067,7 +1067,7 @@ Reviewed 2026-09-20: [exit evidence](evidence/foundation/m3-exit-review.md) maps
 - Repository: both
 - Milestone: M3
 - Priority: Normal
-- Status: Blocked
+- Status: Blocked ⛔
 - Depends on: [NEM-037](#nem-037)
 - References: [BLK-007](blockers.md#blk-007), [exit review](evidence/foundation/m3-exit-review.md)
 
@@ -1092,7 +1092,7 @@ No remotes configured and no hosted run evidence. Local checks are recorded sepa
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-037](#nem-037), [NEM-010](#nem-010)
 - References: parent [NEM-016](#nem-016), [model contract](features/battery-model-contract.md)
 
@@ -1118,7 +1118,7 @@ Implemented exact request normalisation, field errors, core model reuse, read-on
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-039](#nem-039)
 - References: parent [NEM-016](#nem-016), [BatteryLab](features/batterylab.md)
 
@@ -1145,7 +1145,7 @@ Implemented V3 immutable inputs/results, an independent bounded simulation queue
 - Repository: backend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-040](#nem-040)
 - References: parent [NEM-016](#nem-016), [API contract guide](../../api/contracts/README.md)
 
@@ -1171,7 +1171,7 @@ Implemented opt-in public submission/status/result endpoints with strict decimal
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-015](#nem-015)
 - References: parent [NEM-017](#nem-017), [decision 018](decisions/018-product-layouts-and-appearance.md)
 
@@ -1197,7 +1197,7 @@ Frontend commit `362f1f4` implements mock-inspired product layouts, persistent L
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-042](#nem-042), [NEM-041](#nem-041)
 - References: parent [NEM-017](#nem-017), [request contract](features/simulation-request-contract.md), [HTTP contract](decisions/017-simulation-http-contract.md)
 
@@ -1226,7 +1226,7 @@ Implemented the exact-decimal scenario form, complete-day checks, bounded public
 - Repository: frontend
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-043](#nem-043)
 - References: parent [NEM-017](#nem-017), [BatteryLab](features/batterylab.md)
 
@@ -1252,7 +1252,7 @@ Implemented the result section: margin stat cards, derived explanation sentences
 - Repository: both
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-044](#nem-044)
 - References: parent [NEM-017](#nem-017), [M4](roadmap.md#m4--batterylab)
 
@@ -1278,7 +1278,7 @@ Implemented `/batterylab?simulation=<uuid>` reopening: a stored result writes it
 - Repository: both
 - Milestone: M4
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: parents [NEM-016](#nem-016) and [NEM-017](#nem-017), [durable queue decision](decisions/009-durable-refresh-queue.md), [HTTP contract decision](decisions/017-simulation-http-contract.md)
 
@@ -1310,7 +1310,7 @@ Agreed with the user on 2026-09-24 and required before BatteryLab/M4 is treated 
 - Repository: frontend
 - Milestone: Post-M4 UX refinement
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-044](#nem-044), [NEM-045](#nem-045)
 - References: [UX plan](features/ui-refinement.md)
 
@@ -1340,7 +1340,7 @@ Implemented in frontend `ef4c25f`. The scenario panel reproduces the demo's comp
 - Repository: frontend
 - Milestone: Post-M4 UX refinement
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-035](#nem-035), [NEM-036](#nem-036)
 - References: [UX plan](features/ui-refinement.md)
 
@@ -1366,7 +1366,7 @@ Implemented in frontend `ef4c25f`. `/prices` is a directly navigable route ("Exp
 - Repository: backend
 - Milestone: Optional post-M4 extension
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-009](#nem-009)
 - References: [Threshold strategy proposal](features/price-threshold-strategy.md)
 
@@ -1391,7 +1391,7 @@ Implemented in backend `98015d0` as `PriceThreshold` (`price-threshold-v1`) with
 - Repository: both
 - Milestone: Optional post-M4 extension
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-049](#nem-049), [NEM-041](#nem-041)
 - References: [Threshold strategy proposal](features/price-threshold-strategy.md)
 
@@ -1416,7 +1416,7 @@ Implemented in backend `98015d0`; frontend types synced via `contract:sync`. `Si
 - Repository: frontend
 - Milestone: Optional post-M4 extension
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-050](#nem-050), [NEM-047](#nem-047)
 - References: [Threshold strategy proposal](features/price-threshold-strategy.md)
 
@@ -1441,7 +1441,7 @@ Implemented in frontend `d4540c7`. An optional "Price thresholds" fieldset enabl
 - Repository: frontend
 - Milestone: Post-M4 UX refinement
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-051](#nem-051)
 - References: [Threshold UX revision](features/price-threshold-strategy.md#accepted-ux-revision--2026-09-25-implemented-as-nem-052), [UI refinement plan](features/ui-refinement.md)
 
@@ -1476,7 +1476,7 @@ Implemented in frontend `5d4a82c` (NEM-051 shipped thresholds as opt-in; this ta
 - Repository: frontend
 - Milestone: Post-M4 UX refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-052](#nem-052)
 - References: [UI refinement plan](features/ui-refinement.md)
 
@@ -1517,7 +1517,7 @@ Planned on 2026-09-25. Only NEM-054 is ready to start; downstream records remain
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-006](#nem-006), [NEM-053](#nem-053)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1567,7 +1567,7 @@ Committed as `fb58da1` (plus `c5fdd0a` recording the SHA/UTC title).
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1613,7 +1613,7 @@ Store the required grid context alongside the existing price foundation, preserv
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-055](#nem-055)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1662,7 +1662,7 @@ Committed as `b7cf536`.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1703,7 +1703,7 @@ No synthetic renewable ratio or causal titles introduced.
 - Repository: backend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-055](#nem-055), [NEM-056](#nem-056), [NEM-057](#nem-057)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1747,7 +1747,7 @@ Committed as `81bde29`.
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-058](#nem-058)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1787,7 +1787,7 @@ The original type-sync/browser dependency was satisfied by NEM-060–062 and sub
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-054](#nem-054)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1829,7 +1829,7 @@ pagination; all synthetic data stays in test fixtures.
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-059](#nem-059), [NEM-060](#nem-060)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1870,7 +1870,7 @@ measurement outstanding.
 - Repository: frontend
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-061](#nem-061)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1907,7 +1907,7 @@ prefill — 124/124 pass.
 - Repository: both
 - Milestone: M5
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-056](#nem-056), [NEM-058](#nem-058), [NEM-059](#nem-059)
 - References: [Delivery specification](features/admin.md)
 
@@ -1950,7 +1950,7 @@ runbook is the deliverable.
 - Repository: both
 - Milestone: M5
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-061](#nem-061), [NEM-062](#nem-062), [NEM-063](#nem-063)
 - References: [Delivery specification](features/gridreplay.md)
 
@@ -1977,7 +1977,7 @@ Reconciled 2026-10-08 from the 2026-10-02 journal exit review (393 backend tests
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-055](#nem-055)
 - References: [Rehearsal gap](evidence/m5-ops-rehearsal.md)
 
@@ -2018,7 +2018,7 @@ ruff/format/mypy-strict clean.
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: None (existing refresh queue)
 - References: [runbook-grid-data.md](runbook-grid-data.md), [features/admin.md](features/admin.md)
 
@@ -2092,7 +2092,7 @@ Added 2026-10-01. Scope and stack are accepted; implementation has not started. 
 - Repository: both
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2118,7 +2118,7 @@ Capture the exact delivered behavior before moving or replacing implementation.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-065](#nem-065)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2143,7 +2143,7 @@ Move only Java-specific tracked assets to reference/java while preserving reposi
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-066](#nem-066)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2170,7 +2170,7 @@ Create a locked uv workspace matching core/infrastructure/api/worker boundaries.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-067](#nem-067)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2200,7 +2200,7 @@ Implement exact market-day/request boundaries, fixed schedule, threshold strateg
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-068](#nem-068)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2231,7 +2231,7 @@ Replace ojAlgo with a verified HiGHS LP adapter without changing the comparison 
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-067](#nem-067)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2265,7 +2265,7 @@ Support both empty databases and validated populated Java database clones withou
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-068](#nem-068), [NEM-070](#nem-070)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2298,7 +2298,7 @@ Restore bounded source retrieval and revision/coverage/snapshot persistence.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-070](#nem-070), [NEM-071](#nem-071)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2328,7 +2328,7 @@ Recreate durable refresh transitions, audit and bounded public refresh submissio
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-072](#nem-072)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2359,7 +2359,7 @@ Restore opt-in polling, fixed-market-time schedules and supervised fetch process
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-071](#nem-071), [NEM-072](#nem-072), [NEM-067](#nem-067)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2415,7 +2415,7 @@ Committed as the NEM-074 checkpoint; SHA recorded in the journal.
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-068](#nem-068), [NEM-069](#nem-069), [NEM-070](#nem-070)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2444,7 +2444,7 @@ Done 2026-10-01. `infrastructure/src/nemlab_infrastructure/simulations.py` ports
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-075](#nem-075)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2474,7 +2474,7 @@ Measured child footprint on a real run: ~110 MiB RSS, ~1.9 GiB peak VmSize, ~0.6
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-073](#nem-073), [NEM-074](#nem-074), [NEM-076](#nem-076)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2502,7 +2502,7 @@ Verified: `api/tests/test_simulation_http.py` (12 tests) ports `SimulationHttpTe
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-073](#nem-073), [NEM-077](#nem-077)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2531,7 +2531,7 @@ Verified: all three images build; container API serves `/actuator/health` and co
 - Repository: both
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-078](#nem-078)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md); capability-specific Java/spec references in the plan.
 
@@ -2557,7 +2557,7 @@ Done — `nemlab-ui/scripts/test-live.py` now launches the Python backend (`uv s
 - Repository: both
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-065](#nem-065), [NEM-069](#nem-069), [NEM-070](#nem-070), [NEM-078](#nem-078), [NEM-079](#nem-079)
 - References: [Rebuild plan](python-backend-rebuild.md), [decision 019](decisions/019-python-backend-rebuild.md), [parity gate](evidence/python-rebuild/parity.md), [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md); capability-specific Java/spec references in the plan.
 
@@ -2617,7 +2617,7 @@ roadmap, backlog, journal, plus two lint/typing repairs (`pyproject.toml`
 - Repository: backend
 - Milestone: Python backend rebuild
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None
 - References: [Research findings](evidence/python-rebuild/energy-python-stack-research.md), [decision 019](decisions/019-python-backend-rebuild.md), [rebuild plan](python-backend-rebuild.md).
 
@@ -2649,7 +2649,7 @@ Accepted by the user on 2026-10-08 following live catalogue review. Existing det
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: None (existing GridReplay implementation)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2674,7 +2674,7 @@ Done 2026-10-08. `durationMinutes` returns interval-count minutes for price run/
 - Repository: backend
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-083](#nem-083)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2700,7 +2700,7 @@ Done 2026-10-08 (backend commit `5e01125`). `core/highlights.py` implements the 
 - Repository: frontend
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-084](#nem-084)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2726,7 +2726,7 @@ Done 2026-10-08 (nemlab-ui `67c1cd6`, `40ff212`, `9ecabd1`). `/gridreplay` defau
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-085](#nem-085)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2752,7 +2752,7 @@ Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `GET /api/v1/events/{id
 - Repository: backend
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: None (existing GridReplay implementation)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
@@ -2778,7 +2778,7 @@ Done 2026-10-08 (backend `5e01125`, decision `decisions/022-detector-v2-definiti
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
@@ -2804,7 +2804,7 @@ Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `unusual_demand_ramp` c
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
@@ -2830,7 +2830,7 @@ Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `price_reversal` pairs 
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-087](#nem-087), [NEM-085](#nem-085)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md), [decision 022](decisions/022-detector-v2-definitions.md)
 
@@ -2856,7 +2856,7 @@ Done 2026-10-08 (backend `5e01125`, frontend `67c1cd6`). `negative_price_episode
 - Repository: both
 - Milestone: Post-M5 GridReplay discovery refinement
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-083](#nem-083), [NEM-084](#nem-084), [NEM-085](#nem-085), [NEM-086](#nem-086), [NEM-087](#nem-087), [NEM-088](#nem-088), [NEM-089](#nem-089), [NEM-090](#nem-090)
 - References: [Discovery and detector v2 plan](features/gridreplay-discovery.md)
 
@@ -2888,7 +2888,7 @@ Done 2026-10-08. Both checkpoints recorded in `journal/2026-10.md` ("GridReplay 
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-018](#nem-018), [NEM-063](#nem-063)
 - References: [Admin specification](features/admin.md), [milestone separation](decisions/023-milestone-separation.md)
 
@@ -2913,7 +2913,7 @@ Completed 2026-10-08: user accepted coverage-led Admin, guided explanations, own
 - Repository: both
 - Milestone: M7 — Launch
 - Priority: Normal
-- Status: Ready
+- Status: Ready 🟢
 - Depends on: [NEM-064](#nem-064), [NEM-091](#nem-091)
 - References: [M5 state review](evidence/m5-state-review-2026-10-08.md)
 
@@ -2939,7 +2939,7 @@ Pending. These limits were recorded in the 2026-10-02 journal and retained at th
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-093](#nem-093)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -2970,7 +2970,7 @@ Verified: `uv run pytest infrastructure/tests/test_admin_identity.py infrastruct
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-095](#nem-095)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3001,7 +3001,7 @@ Verified: targeted suites pass; `verify.mjs` — 149 responses, 28 operations (o
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-095](#nem-095), [NEM-096](#nem-096)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3026,7 +3026,7 @@ Completed 2026-10-08. `api/src/nemlab_api/capabilities.py` registers every `/api
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-096](#nem-096), [NEM-097](#nem-097)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3051,7 +3051,7 @@ Completed 2026-10-08. `infrastructure/src/nemlab_infrastructure/admin/access.py`
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-097](#nem-097), [NEM-082](#nem-082)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3076,7 +3076,7 @@ Completed 2026-10-08. V9 adds `actor`/`request_key` to `grid_detection_run` so e
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-097](#nem-097), [NEM-099](#nem-099)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3119,7 +3119,7 @@ passed.
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-096](#nem-096), [NEM-098](#nem-098), [NEM-100](#nem-100)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3160,7 +3160,7 @@ a single session refetch.
 - Repository: backend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-097](#nem-097), [NEM-099](#nem-099), [NEM-092](#nem-092)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3197,7 +3197,7 @@ pass; ruff/mypy clean.
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-100](#nem-100), [NEM-102](#nem-102)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3247,7 +3247,7 @@ before declaring a consumed link dead).
 - Repository: frontend
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-098](#nem-098), [NEM-100](#nem-100), [NEM-101](#nem-101)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3289,7 +3289,7 @@ empty lists and direct viewer navigation covered.
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-101](#nem-101), [NEM-103](#nem-103), [NEM-104](#nem-104)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3331,7 +3331,7 @@ remains a deployment input for M7 — no production readiness claimed.
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-103](#nem-103), [NEM-104](#nem-104), [NEM-105](#nem-105)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3376,7 +3376,7 @@ Unresolved gaps (honest record): live queue saturation was not exercised — `ba
 - Repository: both
 - Milestone: M6 — Admin
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-106](#nem-106)
 - References: [Admin specification](features/admin.md), [decision 024](decisions/024-admin-experience-and-access.md)
 
@@ -3413,7 +3413,7 @@ M6 reconciliation: every M6 task carries Done status with evidence — NEM-082, 
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-107](#nem-107)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3438,7 +3438,7 @@ Completed 2026-10-08 — [inventory matrix](evidence/admin-redesign/inventory.md
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Backlog
+- Status: Done ✅
 - Depends on: [NEM-108](#nem-108)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3463,7 +3463,7 @@ Completed 2026-10-08 — static prototype at `nemlab-ui/apps/admin/prototype/ind
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-109](#nem-109)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3488,7 +3488,7 @@ Completed 2026-10-08. `apps/admin` is style-independent: `main.tsx` no longer im
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-110](#nem-110)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3534,7 +3534,7 @@ until NEM-112 drawers land; legacy pages remain reachable meanwhile.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-111](#nem-111)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3578,7 +3578,7 @@ and session-expiry paths route through the same verified API layer.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-110](#nem-110), [NEM-111](#nem-111)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3619,7 +3619,7 @@ tests.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-112](#nem-112), [NEM-113](#nem-113)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3661,7 +3661,7 @@ both builds, 126 public + 19 admin browser tests.
 - Repository: both
 - Milestone: M6 — Admin desktop redesign
 - Priority: High
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-114](#nem-114)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [decision 025](decisions/025-admin-desktop-workspace.md)
 
@@ -3700,7 +3700,7 @@ explicitly unverified.
 - Repository: backend
 - Milestone: M6 — Admin desktop redesign
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-108](#nem-108)
 - References: [Redesign specification](features/admin-desktop-redesign.md), [inventory](evidence/admin-redesign/inventory.md)
 
@@ -3724,7 +3724,7 @@ Completed 2026-10-08. `AccessRequests.audit` reads the newest rows from `admin_a
 - Repository: backend
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-115](#nem-115)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3749,7 +3749,7 @@ Completed 2026-10-09. New `nemlab_infrastructure/simulation_catalogue.py` — a 
 - Repository: backend
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-115](#nem-115)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3774,7 +3774,7 @@ Completed 2026-10-09. `V11__simulation_events.sql` + Alembic `nemlab_v11_simulat
 - Repository: backend
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-117](#nem-117), [NEM-118](#nem-118)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3799,7 +3799,7 @@ Backend completed 2026-10-09. `GET /api/admin/v1/simulations` (region/startDay/e
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-119](#nem-119)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3824,7 +3824,7 @@ Completed 2026-10-10. New `view=simulations` workspace tab in DataOps sharing th
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-119](#nem-119)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3849,7 +3849,7 @@ Completed 2026-10-10. The Coverage view now reads the shared public `GET /api/v1
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-120](#nem-120), [NEM-121](#nem-121)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3874,7 +3874,7 @@ Completed 2026-10-10. HelpDrawer gains a "BatteryLab pipeline" section (prices �
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Done
+- Status: Done ✅
 - Depends on: [NEM-122](#nem-122)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md), [acceptance review](evidence/admin-redesign/batterylab-inspection.md)
 

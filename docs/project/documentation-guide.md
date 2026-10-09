@@ -72,7 +72,7 @@ Detail the upcoming milestone and immediate dependencies. Keep later milestones 
 
 ## Task records in backlog.md
 
-Initially, keep each task as a section in `backlog.md`. Use a compact index at the top listing every task link in ascending ID order; since IDs are sequential, append each new task's index link at the end of the list. The index links to task records and shows ordering; task sections own status so it is not duplicated. Delivery-order or current-work context belongs in a short `Delivery notes` section beside the index, not in list position.
+Initially, keep each task as a section in `backlog.md`. Use a compact index at the top listing every task link in ascending ID order, each prefixed with the icon for its current status; since IDs are sequential, append each new task's index link at the end of the list. The index links to task records and shows ordering; task sections own the status word — the icon only mirrors it for scannability, so update the index icon whenever a task's status changes. Delivery-order or current-work context belongs in a short `Delivery notes` section beside the index, not in list position.
 
 Assign IDs sequentially, starting at `NEM-001`. Never reuse an ID. IDs identify tasks; they do not indicate priority. The previously discussed `NEM-014` was an illustration, not an existing task.
 
@@ -84,7 +84,7 @@ Use this template:
 - Repository: backend | frontend | both
 - Milestone: milestone name
 - Priority: High | Normal | Low
-- Status: Backlog | Ready | In progress | Blocked | Done | Dropped
+- Status: Backlog 📋 | Ready 🟢 | In progress 🚧 | Blocked ⛔ | Done ✅ | Dropped 🗑️
 - Depends on: task IDs, or None
 - References: relevant feature specification and decision links
 
@@ -111,14 +111,16 @@ Prefer tasks that can be completed and reviewed in a focused working session. Sp
 
 Task states mean:
 
-| State | Meaning |
-| --- | --- |
-| Backlog | Identified work that still needs refinement or prioritisation. |
-| Ready | Scope and acceptance criteria are clear, and required dependencies are satisfied. |
-| In progress | Work is actively underway. Keep the active set small. |
-| Blocked | A specific obstacle prevents further meaningful progress. Link to its blocker record. |
-| Done | Acceptance criteria are met and completion evidence is recorded. |
-| Dropped | Deliberately removed from scope, with a reason. |
+| State | Icon | Meaning |
+| --- | --- | --- |
+| Backlog | 📋 | Identified work that still needs refinement or prioritisation. |
+| Ready | 🟢 | Scope and acceptance criteria are clear, and required dependencies are satisfied. |
+| In progress | 🚧 | Work is actively underway. Keep the active set small. |
+| Blocked | ⛔ | A specific obstacle prevents further meaningful progress. Link to its blocker record. |
+| Done | ✅ | Acceptance criteria are met and completion evidence is recorded. |
+| Dropped | 🗑️ | Deliberately removed from scope, with a reason. |
+
+Write the icon after the status word in the task section (for example `Status: Done ✅`, keeping `Status: <word>` greppable) and as the leading marker on the task's index line. The word remains the authoritative value.
 
 If implementation is finished but required verification is pending, the task is not Done. If a completed task needs more work, reopen it with a reason or create a follow-up task for newly discovered scope.
 
