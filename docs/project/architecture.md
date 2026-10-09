@@ -1,73 +1,76 @@
 # NEMLab architecture
 
-Updated: 2026-10-01
-Status: Python (FastAPI/SQLAlchemy/HiGHS, uv workspace) is the active backend runtime with local Java parity verified (NEM-080): domain core and ordered-window hindsight, separate API/worker applications, versioned PostgreSQL price storage/import, opt-in scheduled worker execution, protected operator APIs, stored-price reads, immutable simulation inputs and durable execution/results, and simulation HTTP APIs — all verified against the existing frontend and contract. GridReplay APIs and frontend product integration remain planned. The Java implementation is preserved under `reference/java/` as the runnable baseline.
-
-## Python replacement — implemented, local parity verified
-
-On 2026-10-01 the user selected a complete Python backend rebuild and delegated stack choice. [Decision 019](decisions/019-python-backend-rebuild.md) selected CPython/uv, FastAPI, PostgreSQL/SQLAlchemy Core/Psycopg, Alembic and SciPy/HiGHS with the existing core/infrastructure/API/worker boundaries — that stack is now implemented as the active runtime: `nemlab_core`, `nemlab_infrastructure`, `nemlab_api`, `nemlab_worker` under uv workspace packages `core/`, `infrastructure/`, `api/`, `worker/`. Java remains runnable under `reference/java/`; docs and `api/contracts/` stay in place.
-
-Local parity closed on 2026-10-02 under NEM-080: the [parity matrix](evidence/python-rebuild/parity.md) is complete and the [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md) verified populated-database adoption, post-switch reads/writes in both directions, empty setup and non-destructive rollback. NEM-038 hosted CI and NEM-020 deployment remain outstanding; the sections below describe the Java baseline (now under `reference/java/`) and remaining proposals, not a recommendation to start new Java features.
+Updated: 2026-10-09  
+Status: The Python backend is the active runtime — `nemlab_core`, `nemlab_infrastructure`, `nemlab_api` and `nemlab_worker` under a uv workspace, built on CPython 3.13, FastAPI/Uvicorn/Pydantic, PostgreSQL via SQLAlchemy 2 Core/Psycopg 3 with explicit SQL, Alembic migrations and SciPy/HiGHS. Local parity with the former Java implementation is verified (NEM-080). BatteryLab (M4), GridReplay including detector v2 discovery (M5) and Admin including the desktop workspace redesign (M6) are delivered as local feature milestones. Remaining gates are M7 launch work: hosted CI (NEM-038), deployment/operations verification (NEM-020) and carried GridReplay hardening (NEM-094). The Java implementation is preserved under `reference/java/` as the runnable baseline — see [Java reference implementation](#java-reference-implementation).
 
 ## Agreed boundaries
 
-One backend repository and one frontend repository. The backend uses Java and Spring Boot, with separately runnable API and worker applications. Admin may become a second application in the frontend repository. See [repository decision](decisions/002-repositories-and-applications.md).
+One backend repository and one frontend repository. The backend is Python with separately runnable API and worker applications sharing one PostgreSQL database; Admin is a second, separately built application in the frontend repository. See [repository decision](decisions/002-repositories-and-applications.md) (boundary retained; language superseded) and [Python rebuild decision](decisions/019-python-backend-rebuild.md).
 
-Java 25 LTS is accepted. The first-build baseline is OpenJDK 25.0.4+7, Gradle 9.7.1 and Spring Boot 4.1.1. M2 starts with a plain Java core and tests; Boot applications arrive in M3. The Java 25 core build/tests pass with the pinned wrapper and locked JUnit 6.1.3 dependencies. ojAlgo 57.3.0 also passes the bounded engine evaluation. Boot 4.1.1 API/worker contexts and executable-jar startup checks now pass; see [foundation evidence](evidence/foundation/findings.md). See [runtime decision](decisions/004-java-runtime.md).
+CPython `==3.13.*` is pinned at the workspace root; uv `>=0.11` manages the workspace and lockfile; packages build with hatchling. The active stack was selected under delegated authority in decision 019 and refined after [energy-stack research](evidence/python-rebuild/energy-python-stack-research.md): FastAPI rather than Django, SQLAlchemy Core rather than an ORM, and no Redis/Celery — the existing PostgreSQL durable queue is retained.
 
-## Module structure and planned frontend
+## Module structure
 
 ```text
-nemlab/                         Backend project, already created
-  core/                         Domain models and feature services
-  infrastructure/               OE price adapter, JDBC revisions/coverage, backfill checkpoints
-  api/                          Spring Boot HTTP entry point
-  worker/                       Non-web Boot worker; opt-in scheduling and bounded fetch processes
+nemlab/                         Backend repository (uv workspace root)
+  core/                         nemlab_core — domain: prices/market days, battery models,
+                                dispatch/hindsight, request normalisation, grid detectors
+  infrastructure/               nemlab_infrastructure — PostgreSQL stores, OE price/grid
+                                source adapters, refresh/simulation/grid job services,
+                                admin identity/auth/access, mail outbox, migrations runner
+  api/                          nemlab_api — FastAPI entry point, feature-flagged routers,
+                                contracts/ versioned OpenAPI snapshot + generated types
+  worker/                       nemlab_worker — non-HTTP process: opt-in pollers and
+                                supervised fetch/simulation/grid child processes
+  migrations/                   Alembic environment and revisions (baseline + V4–V10)
+  reference/java/               Frozen Java-era tree, still runnable (see below)
   docs/                         Canonical project documentation
 
 nemlab-ui/                      Separate frontend repository
   apps/public/                  Public React application
+  apps/admin/                   Admin React application (separate build/style system)
   contracts/                    Versioned OpenAPI snapshot and generated types
-  tests/                        Playwright browser checks
+  tests/, tests-admin/          Playwright browser checks (public and admin suites)
   scripts/                      Contract checks and real-backend verification
 ```
 
-Dependency direction: API and worker depend on core/infrastructure; infrastructure implements interfaces defined by core; core does not depend on either runnable app or infrastructure. Package core by `marketdata`, `batterylab`, `gridreplay`, and `jobs`. Keep battery mathematics free of Spring and database concerns. Avoid cyclic module dependencies and a catch-all shared utilities module.
+Dependency direction: API and worker depend on core/infrastructure; infrastructure may use core; core depends on neither runnable app nor infrastructure. The direction is enforced by an import-linter `layers` contract (`nemlab_api | nemlab_worker` over `nemlab_infrastructure` over `nemlab_core`) — api and worker are independent siblings. Keep battery mathematics free of HTTP and database concerns. Avoid cyclic module dependencies and a catch-all shared utilities module.
 
 ## Runtime flow
 
 ```mermaid
 flowchart LR
   Public[Public frontend] --> API[API application]
-  Admin[Optional Admin UI] --> API
-  API --> DB[(PostgreSQL: data, jobs, results)]
-  Worker[Worker: schedules and job execution] --> DB
+  Admin[Admin frontend] --> API
+  API --> DB[(PostgreSQL: data, jobs, results, identity)]
+  Worker[Worker: schedules, polls, supervised children] --> DB
   Worker --> OE[Open Electricity]
 ```
 
-The API validates requests, reads stored series/results, and persists jobs. Schedules create the same job type as manual refresh requests. Workers claim jobs, retrieve OE inputs, validate/persist data, and run computations. Public traffic never directly triggers an unbounded OE fetch. Browsers poll job status, then animate loaded data locally.
+The API validates requests, reads stored series/results/catalogue and persists jobs and identity records. Schedules create the same job type as manual refresh requests. The worker claims jobs, retrieves OE inputs inside supervised child processes, validates/persists data, runs computations and drains the mail outbox. Public traffic never directly triggers an unbounded OE fetch. Browsers poll job status, then animate loaded data locally.
 
-## Proposed technology choices
+## Technology choices
 
-PostgreSQL/Flyway/JDBC price storage is implemented under [decision 008](decisions/008-price-data-foundation.md). Spring MVC and Actuator are implemented in the API shell; the worker uses the non-web Boot starter. The React/TypeScript/Vite foundation is accepted and verified under [decision 011](decisions/011-frontend-foundation.md). Remaining libraries in [decision 005](decisions/005-infrastructure-and-frontend.md) are proposals; verify versions, licences and compatibility when implementing their slices.
+All backend rows are implemented and verified; frontend rows follow [decisions 011–014, 018 and 025](decisions/011-frontend-foundation.md).
 
-| Area | Proposed choice | Purpose |
+| Area | Choice | Purpose |
 | --- | --- | --- |
-| Build | Gradle wrapper, Java toolchain | Reproducible backend builds |
-| API | Spring MVC, Bean Validation, Spring Security | HTTP contracts, input checks, authorisation |
-| Persistence | PostgreSQL, Flyway, Spring JDBC for bulk/time-series queries | Explicit SQL, schema versioning and transactional jobs |
-| Operations | Spring Boot Actuator and structured logs | Health, metrics and job diagnostics |
-| Frontend | React, TypeScript, Vite | Interactive public app and later Admin |
+| Build | uv workspace + lockfile, hatchling, `==3.13.*` pin | Reproducible backend builds |
+| API | FastAPI, Uvicorn, Pydantic 2, pydantic-settings | HTTP contracts, input checks, typed settings |
+| Persistence | PostgreSQL, Alembic, SQLAlchemy 2 Core + Psycopg 3, explicit `text()` SQL | Explicit SQL, schema versioning and transactional jobs |
+| HTTP client | httpx | Bounded OE requests in fetch children |
+| Solver | SciPy `linprog`/HiGHS | Exact ordered-window LP parity with the Java baseline |
+| Operations | Structured logging, `/actuator/health` parity, Docker api/worker/migrate targets | Health, job diagnostics, packaging |
+| Frontend | React 19, TypeScript, Vite | Interactive public app and separate Admin app |
 | Navigation/data | React Router, TanStack Query | Shareable routes, caching and job polling |
-| Forms/UI | React Hook Form, Zod, shadcn/ui, Tailwind CSS | Validated inputs and reusable controls |
-| Charts/tables | Apache ECharts, TanStack Table | Aligned time-series views and administrative tables |
-| Verification | JUnit, database integration tests, Playwright | Domain invariants, persistence recovery, visitor journeys |
+| Charts/tables | Apache ECharts, TanStack-style tables | Aligned time-series views and administrative tables |
+| Verification | pytest, hypothesis, import-linter, Testcontainers-style PostgreSQL, Playwright | Domain invariants, module boundaries, persistence recovery, visitor journeys |
 
-ojAlgo 57.3.0 is selected for the exact ordered-window LP, with independent dispatch/accounting checks and a dual bound; see [solver decision](decisions/007-hindsight-solver.md) and [measurements](evidence/engine/findings.md). Unrestricted optimisation is deferred. Do not require a Python production service merely for optimisation. No broker, distributed cache, Kubernetes, time-series extension, or separate Admin backend is needed by the initial design.
+Unrestricted optimisation remains deferred; Pyomo is a future modelling option, not a present dependency. No broker, distributed cache, Kubernetes, time-series extension, or separate Admin backend is needed by the current design.
 
 ## Data ownership and reproducibility
 
-Conceptual records, to refine into migrations:
+The conceptual records below are now realised as Alembic revisions: `nemlab_baseline_v1_v3` adopts the Java Flyway V1–V3 schema byte-identically (price revisions/current/attempts/snapshots/backfill, refresh jobs, simulation inputs/jobs/results), then V4 grid observations, V5 grid import jobs, V6 grid events, V7 detector v2, V8 `admin_*` identity, V9 publication provenance and V10 load operations.
 
 - Series identity: source, region/entity, metric, resolution and unit.
 - Observation versions: canonical interval, value or missing status, source retrieval and revision provenance.
@@ -75,130 +78,73 @@ Conceptual records, to refine into migrations:
 - Ingestion runs and durable jobs: requested window, checkpoint, attempts and errors.
 - Simulation input snapshots: normalised parameters, exact ordered prices, checksum, strategy/model versions.
 - Results: interval dispatch and energy, accounting totals, solver status and methodology version.
-- Replay events: detector version/configuration, source revision, period, evidence and coverage.
-- Administrator actions: actor, requested scope, timestamp and resulting job.
+- Replay events: detector version/configuration, source revision, period, evidence and coverage; publication pointers with provenance.
+- Administrator/owner/viewer identity, sessions, grants, access audit and rate-limit counters.
+- Load-operation records referencing durable grid/price jobs; administrator actions: actor, scope, timestamp and resulting job.
 
-Use UTC instants in storage and explicit fixed UTC+10 NEM market-day interpretation at boundaries; preserve source timestamp semantics in provenance. API fields must state interval labels and units. Missing observations remain distinct from zero. Do not silently rewrite a historical result when an observation is refreshed; preserve its input snapshot. Data/results retention and cleanup need an explicit policy before public traffic.
+Use UTC instants in storage and explicit fixed UTC+10 NEM market-day interpretation at boundaries; preserve source timestamp semantics in provenance. API fields must state interval labels and units. Missing observations remain distinct from zero. Do not silently rewrite a historical result or replay link when an observation is refreshed; preserve its input snapshot. Data/results retention and cleanup need an explicit policy before public traffic.
 
 ## Durable jobs and scheduling
 
-Implemented for one-day price refreshes: queued, running, succeeded, failed, cancelled. The Spring-managed `RefreshJobService` uses `@Transactional` and PostgreSQL row/advisory locks. A five-minute lease and unique claim token fence price writes, checkpoint advancement and job completion in one transaction. Expired claims recover on the next claim request, with at most three attempts and 30/60-second retry backoff. The queue caps pending work at 100 and allows one current ingestion claim across worker processes. Network calls must happen outside these transactions.
+Implemented for one-day price refreshes: queued, running, succeeded, failed, cancelled. `RefreshJobService` uses SQLAlchemy transaction blocks and PostgreSQL row/advisory locks. A five-minute lease and unique claim token fence price writes, checkpoint advancement and job completion in one transaction. Expired claims recover on the next claim request, with at most three attempts and 30/60-second retry backoff. The queue caps pending work at 100 and allows one current ingestion claim across worker processes. Network calls happen outside these transactions.
 
-Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. NEM-029 wires opt-in worker polling and daily submissions after 00:15 fixed UTC+10 through this service. Fetches run in a separate 128 MiB-heap JVM with a 240-second parent deadline, child watchdog and shutdown cleanup. Non-429 HTTP 4xx, invalid source/configuration and excessive Retry-After delays fail terminally; other failures retain bounded retries. NEM-030 adds opt-in bearer-authenticated operator submission, status, recent jobs, audit events and cancellation. The configured principal supplies audit identity; no client actor is trusted. Direct CLI ingestion is retired. See [operator setup](../../reference/java/api/README.md). See [decision 009](decisions/009-durable-refresh-queue.md), [queue verification](evidence/jobs/findings.md), and [worker verification](evidence/jobs/worker-findings.md).
+Stable request keys persist across completion; concurrent requests for an active region/day share a job. Every submission and transition records an actor/action. This service is an internal persistence boundary, not an authentication boundary. Opt-in worker polling (`NEMLAB_WORKER_ENABLED`) and daily submissions after 00:15 fixed UTC+10 run through this service. Fetches run in a supervised child process (`--fetch-price` mode, no database credentials) with a 240-second parent deadline, in-child watchdog and 5-second shutdown cleanup. Non-429 HTTP 4xx, invalid source/configuration and excessive Retry-After delays fail terminally; other failures retain bounded retries. Grid imports use the same supervised-child pattern (`NEMLAB_GRID_IMPORT_ENABLED`, `GridImportJobs`, V5 jobs). See [decision 009](decisions/009-durable-refresh-queue.md), [queue verification](evidence/jobs/findings.md), and [worker verification](evidence/jobs/worker-findings.md).
 
-Deduplicate equivalent refreshes and scenario submissions using stable input keys. Save backfill checkpoints. Keep simulation and ingestion concurrency separately bounded; prevent overlap from repeated schedules. Manual triggers return job IDs immediately. Cancellation and progress detail can be refined with actual job types. NEM-046 lets public simulation submissions trigger refreshes for eligible uncovered days: `submitVisitor` uses `visitor-price-v1` request keys, deduplicates onto any active day job, allows three attempts per day via `:rN` suffixes and ten pending visitor jobs globally, all inside the same advisory-locked queue transaction. The API answers `PRICE_REFRESH_PENDING`/`PRICE_REFRESH_FAILED`/`VISITOR_REFRESH_LIMIT` instead of exposing queue internals, and the browser resubmits the unchanged scenario after each `Retry-After`.
+Deduplicate equivalent refreshes and scenario submissions using stable input keys. Save backfill checkpoints. Keep simulation and ingestion concurrency separately bounded; prevent overlap from repeated schedules. Manual triggers return job IDs immediately. NEM-046 lets public simulation submissions trigger refreshes for eligible uncovered days: `submitVisitor` uses `visitor-price-v1` request keys, deduplicates onto any active day job, allows three attempts per day via `:rN` suffixes and ten pending visitor jobs globally, all inside the same advisory-locked queue transaction. The API answers `PRICE_REFRESH_PENDING`/`PRICE_REFRESH_FAILED`/`VISITOR_REFRESH_LIMIT` instead of exposing queue internals, and the browser resubmits the unchanged scenario after each `Retry-After`.
 
-Begin with one worker instance and jointly released backend applications. Design restart recovery now; broader worker scaling can follow measured demand. Run database migrations once per deployment through a documented step, not competing uncontrolled startup migrations.
+Begin with one worker instance and jointly released backend applications. Restart recovery is designed in; broader worker scaling can follow measured demand. Database migrations run once per deployment through the `migrate` image/`nemlab_infrastructure.migrate` command, not competing uncontrolled startup migrations.
 
-## Proposed API surfaces
+## API surfaces
 
-Final schemas and endpoints are a M3 deliverable. Initial resources cover coverage, bounded regional series, simulation submission/status/results, event catalogue/replay, and protected admin job/refresh operations. Use a versioned API contract, machine-readable errors, explicit units/time semantics, paging/window limits, and generated frontend types. Keep generated contracts versioned across the two repositories; do not share Java persistence entities with the client.
+The API is implemented behind independent feature flags; disabled routers are not mounted (plain 404) and enabled features fail startup fast without database credentials or a migrated schema.
 
-Anonymous public use is a proposal; constrain request size, queue depth and compute duration. Shared results use opaque identifiers and a defined retention policy. Administrative endpoints require server-side authorisation and audit records even if the UI is deferred. OE keys remain server-side. Authentication provider/session details are an open launch decision.
+- `GET /actuator/health` — always on, `{"status": "UP"}`.
+- `NEMLAB_DATA_ENABLED` — anonymous stored-price coverage/day series under `/api/v1/prices`, plus the public GridReplay catalogue/replay/highlight/preview routes.
+- `NEMLAB_SIMULATION_API_ENABLED` — public simulation POST submission and GET status/result under `/api/v1/simulations`.
+- `NEMLAB_ADMIN_ENABLED` — bearer operator routes (`/api/admin/v1/price-refreshes*`, grid imports/coverage/publications, load operations), browser auth (`/api/auth/v1/*`), public access requests and owner access-management routes, all enforced by the `AdminAccess` capability middleware.
 
-## Deployment and verification
-
-Proposed initial deployment: static frontend, API process/container, worker process/container, and PostgreSQL. Hosting and cost limits remain open. Use environment-specific configuration, persistent database storage, safe schema rollouts, backups, restore verification, and a release smoke check.
-
-Verify physical/accounting invariants independently of optimiser implementation; exercise database rollback, duplicate ingestion, expired leases and revision handling with integration tests. Browser checks cover a saved BatteryLab result and a GridReplay-to-BatteryLab journey. Set measurable performance budgets after the engine/data spikes; do not invent latency promises now.
-
-See [blockers](blockers.md) for unresolved choices and [roadmap](roadmap.md) for implementation gates.
-
+Contracts are versioned in `api/contracts/openapi.json` (currently 2.2.0) with generated TypeScript for the frontend; `verify.mjs` checks captured responses. Public DTOs omit tokens, leases, internal keys and raw solver diagnostics. Anonymous public use constrains request size, queue depth and compute duration. OE keys remain server-side. See [decision 017](decisions/017-simulation-http-contract.md) and [API setup](../../api/README.md).
 
 ## Stored-price read API — NEM-031
 
-`NEMLAB_DATA_ENABLED` independently enables anonymous GET coverage and current-day price series
-under `/api/v1/prices`. API database wiring is shared with opt-in operator controls, whose bearer
-boundary remains intact. Coverage uses one bounded query for 1–31 completed NEM days; series
-load the captured immutable revision and return exactly 288 slots with explicit gap states.
-Prices are decimal strings in AUD/MWh; interval boundaries are UTC instants with fixed +10:00
-market-day metadata. Reads neither enqueue work nor contact OE. Responses are not cacheable
-across corrections. See the [endpoint contract](../../reference/java/api/README.md#public-stored-price-reads).
-NEM-032 implements the versioned [OpenAPI contract and generated TypeScript declarations](../../api/contracts/README.md). The checked-in contract owns the seven enabled price/operator operations; Java HTTP tests provide response captures validated against it during the Gradle build. Generation and validation are pinned Node development tooling, not application runtime dependencies. See the contract guide for compatibility, regeneration and the future frontend handoff.
+`NEMLAB_DATA_ENABLED` independently enables anonymous GET coverage and current-day price series under `/api/v1/prices`. Coverage uses one bounded query for 1–31 completed NEM days; series load the captured immutable revision and return exactly 288 slots with explicit gap states. Prices are decimal strings in AUD/MWh; interval boundaries are UTC instants with fixed +10:00 market-day metadata. Reads neither enqueue work nor contact OE. Responses are not cacheable across corrections. See the [endpoint contract](../../api/README.md).
+
+NEM-032 implements the versioned OpenAPI contract and generated TypeScript declarations; the checked-in contract owns the enabled operations and is validated against live captures. Generation and validation are pinned Node development tooling, not application runtime dependencies.
+
+## Simulation lifecycle — NEM-039–NEM-041
+
+The core `SimulationRequest` normalises exact decimal parameters, mutually exclusive efficiency forms and ordered NEM-time windows, returning field/code validation errors; admission limits do not widen solver proof tolerances. Infrastructure `ScenarioPreparation` captures one immutable stored price revision and a versioned SHA-256 scenario identity including normalised inputs, engine/strategy/solver versions and cooperative solver limits. See [request contract](features/simulation-request-contract.md) and [decision 015](decisions/015-simulation-request-boundary.md).
+
+The Alembic baseline carries immutable `simulation_input`/`simulation_result` records plus the mutable `simulation_job` lifecycle. `SimulationJobs` uses explicit 30-second transactions, a separate queue advisory lock, a unique scenario key and one globally running simulation. Pending capacity is 100; 60-second claims permit at most three attempts with 5/10-second backoff. Completed and failed scenario keys remain deduplicated.
+
+An independently enabled simulation worker (`NEMLAB_SIMULATION_ENABLED`) shares database configuration but requires no OE key. Each child gets a 4 GiB address-space limit (`RLIMIT_AS`), a cleared environment and the stored solver budget; parent and in-child watchdogs enforce 15 seconds plus 5-second termination. The parent rechecks fixed dispatch, physical/accounting invariants and optimality metadata before an atomic immutable result/terminal-status transaction; publication rechecks lease/token so expired workers cannot commit. Only OPTIMAL succeeds. See [decision 016](decisions/016-durable-simulations.md), [worker setup](../../worker/README.md) and [verification](evidence/engine/execution-findings.md).
+
+`NEMLAB_SIMULATION_API_ENABLED` mounts public POST submission and GET status/result under `/api/v1/simulations`: JSON bodies bounded at 16384 bytes with strict decimal strings, integer window minutes, known fields and unique keys. Pending submissions return 202; terminal duplicates return 200 without resetting work. Pending/failed runs return 409 on result reads. See [decision 017](decisions/017-simulation-http-contract.md) and [verification](evidence/engine/http-findings.md).
+
+## GridReplay — delivered (M5)
+
+Versioned grid observations and per-metric coverage (V4), bounded operator import jobs through the supervised worker pattern (V5), deterministic detectors in `nemlab_core` (fixed-window spike/ramp rules, then calibrated detector v2 in V7) and atomic event/replay publication (V6) are implemented. Publication pointers carry provenance (V9): replay data and pagination are pinned to an immutable publication so corrected source data cannot silently alter old replay links. Public catalogue, event detail, preview and replay endpoints are read-only and bounded under `NEMLAB_DATA_ENABLED`; they never initiate OE requests. Discovery releases added publication-wide highlights, typed filters, bounded event previews and the v2 detector suite (unusual ramps, negative-to-high reversals, related negative episodes) — see [decision 022](decisions/022-detector-v2-definitions.md) and the [M5 state review](evidence/m5-state-review-2026-10-08.md).
+
+## Admin — delivered (M6)
+
+[Decision 024](decisions/024-admin-experience-and-access.md) selects a separate same-origin Admin build backed by the existing API/PostgreSQL. Implemented: the V8 `admin_*` identity storage (users, access requests, viewer grants, hashed tokens, sessions, email outbox, access audit, rate-limit counters) and CLI owner bootstrap under `nemlab_infrastructure.admin`; single-use hashed email sign-in tokens exchanged for opaque server sessions with CSRF/origin checks and shared rate limits (`/api/auth/v1/*`), with the worker draining the outbox to a captured mailbox (`NEMLAB_MAIL_ENABLED` — no live-recipient transport yet); the deny-by-default `capabilities.py` route table enforced by `AdminAccess` middleware resolving session-cookie or bearer identities and serving viewer-safe projections; the access-request lifecycle (submission dedupe, verification, atomic approve/reject/extend/revoke, retention pruning) under `access.manage` with a 15-minute recent-auth check; bounded console reads including ramp-baseline readiness; and V10 persisted load operations referencing durable grid/price jobs — not a second queue. Existing bearer automation is retained separately and cannot manage browser accounts. Publication stays explicit and atomic. See the [specification](features/admin.md) and [M6 review](evidence/admin-redesign/m6-review.md).
+
+[Decision 025](decisions/025-admin-desktop-workspace.md) delivered the independent Admin stylesheet/token system and full-viewport Data Operations/Access workspaces in `apps/admin` (NEM-108–115), verified by the dedicated admin Playwright suite and the recorded M6 acceptance review.
 
 ## Frontend foundation
 
-NEM-033 creates the separate `nemlab-ui/.git` repository. Its npm workspace contains
-one static public app in `apps/public`, with React 19.3.0, TypeScript 5.9.3 and Vite 8.3.0.
-Pinned Node/npm tooling, Prettier, strict compilation and production-browser checks
-are described in [decision 011](decisions/011-frontend-foundation.md). A future Admin
-would use a separate application/build in this repo; none exists now.
+NEM-033 created the separate `nemlab-ui/.git` repository. Its npm workspace contains the public app in `apps/public` (React 19.3.0, TypeScript 5.9.3, Vite 8.3.0) and the Admin app in `apps/admin` (separate build and style system). Pinned Node/npm tooling, Prettier, strict compilation and production-browser checks are described in [decision 011](decisions/011-frontend-foundation.md).
 
-The current landing page needs no backend or credentials. NEM-034 implements public navigation, shared layout and methodology with React Router 8.4.0 and plain CSS; see [decision 012](decisions/012-public-navigation.md).
-NEM-035 implements the typed public price client and coverage/day table, backed by a versioned contract snapshot and verified against the real Java API. [Decision 013](decisions/013-typed-price-client.md) records client/cache choices and contract ownership. NEM-036 verifies linked charts with lazy-loaded ECharts 6.1.0, SVG rendering, shared interval/window state and native keyboard/touch controls. [Decision 014](decisions/014-linked-chart-prototype.md) records measured limits; the companion trace is explicitly synthetic, not simulation output.
-The backend remains the only owner of project-wide tracking and API contracts.
+NEM-034 implements public navigation, shared layout and methodology with React Router 8.4.0 and plain CSS; see [decision 012](decisions/012-public-navigation.md). NEM-035 implements the typed public price client and coverage/day table, backed by a versioned contract snapshot and verified against the real API ([decision 013](decisions/013-typed-price-client.md)). NEM-036 verifies linked charts with lazy-loaded ECharts 6.1.0 ([decision 014](decisions/014-linked-chart-prototype.md)). NEM-042/043 add centered product workspaces, shared appearance (Light/Dark/Auto) and a typed simulation client with bounded polling. NEM-044 renders the stored comparison (stat cards, financial breakdown, interval table, four linked chart panels). NEM-045 makes results reopenable through `?simulation=<uuid>` route state. The backend remains the only owner of project-wide tracking and API contracts.
 
-NEM-042 adds centered BatteryLab/full-width GridReplay layouts and a shared appearance provider. CSS semantic colors and native control color schemes support Light/Dark/Auto, restored before first paint with a same-origin script. ECharts responds to the resolved theme while preserving selected interval/window. Preferences persist locally, sync across tabs and fall back to in-memory state when storage is unavailable. See [decision 018](decisions/018-product-layouts-and-appearance.md).
+## Deployment and verification
 
-NEM-043 implements the accepted revision after UI review (2026-09-24): center both product workspaces, cap BatteryLab at 1160px and GridReplay at 1440px, and use the same centered 1160px header/navigation container including gutters. The full-width GridReplay description above records NEM-042 history. Appearance behavior is unchanged.
+Target deployment: static frontend builds, API container, worker container, migrate job and PostgreSQL. The multi-stage `Dockerfile` builds `api`, `worker` and `migrate` targets on `python:3.13.14-slim` with pinned uv; `compose.yaml` wires local services. Hosting, real SMTP, TLS, backups and cost limits remain open M7 items.
 
-NEM-043 adds a separate typed simulation client for POST submission and UUID-based GET status/result reads. URLs are constructed locally, never followed from response links; cookies/credentials are omitted, redirects rejected, and requests time out after 15 seconds. The form preserves decimal strings, uses fixed-scale BigInt for exact bound comparisons, and checks complete stored prices before submission. The server remains authoritative. A component-owned AbortController cancels monitoring on stop/unmount, with inputs locked while busy and prior job/result cleared on edits. Polling honors bounded Retry-After and pauses after 60 waits; resuming uses the same job ID and POST is never automatically retried. Validated stored result payloads are retained for NEM-044 presentation. Saved-route reopening remains NEM-045.
+Verify physical/accounting invariants independently of optimiser implementation; exercise database rollback, duplicate ingestion, expired leases and revision handling with integration tests. Browser checks cover a saved BatteryLab result and a GridReplay-to-BatteryLab journey in both public and admin Playwright suites. Hosted CI verification remains open under NEM-038 (no remote yet — BLK-007).
 
-NEM-044 renders the stored comparison in a `ResultView` section: stat cards, derived explanations, financial breakdown and an exact-value interval table, plus a lazily loaded `ResultCharts` bundle that draws four linked panels (price, grid-side power, stored energy, cumulative margin) with one cursor/window selection, operating-window and negative-price bands, and energy bounds. Displayed totals come from the stored accounting; client-side cumulative margin recomputes the same formula per interval for the trace only. Failed chart chunk loads leave the tables available. Saved-route reopening remains NEM-045.
+See [blockers](blockers.md) for unresolved choices and [roadmap](roadmap.md) for implementation gates.
 
-NEM-045 makes results reopenable through a `?simulation=<uuid>` search parameter on the BatteryLab route. A stored result writes its job ID into the address via `useSearchParams`; a `restore` path shares the same status→result monitoring loop as submission but never POSTs, and repopulates the form from the immutable stored inputs. The share action builds the URL locally from `window.location.origin` — response-provided links are still never followed. Malformed identifiers fail client-side, unknown IDs surface the API's 404 recovery, failed jobs show their safe failure code, and pending jobs resume polling. Editing inputs clears the parameter along with stale job/result state.
+## Java reference implementation
 
-
-## Simulation request preparation — NEM-039
-
-The core `SimulationRequest` normalises exact decimal parameters, mutually exclusive
-efficiency forms and ordered NEM-time windows, returning field/code validation errors.
-It reuses the existing engine models; admission limits do not widen solver proof tolerances.
-Infrastructure `ScenarioPreparation` captures one immutable stored price revision and a
-versioned SHA-256 scenario identity including normalised inputs, engine/strategy/solver
-versions and cooperative solver limits. Preparation is read-only and never queues ingestion.
-NEM-040 implements transactional persistence of the captured revision with jobs/results; NEM-041
-owns HTTP integration. See [request contract](features/simulation-request-contract.md) and
-[decision 015](decisions/015-simulation-request-boundary.md).
-
-
-## Durable simulations — NEM-040
-
-Flyway V3 adds immutable `simulation_input` and `simulation_result` records plus a mutable
-`simulation_job` lifecycle. `SimulationJobs` uses explicit 30-second transactions, a separate
-queue advisory lock, a unique scenario key and one globally running simulation. Pending
-capacity is 100; 60-second claims permit at most three attempts with 5/10-second backoff.
-Input revision and normalised request/version metadata are inserted atomically with the job.
-Completed and failed scenario keys remain deduplicated; resubmission does not reset them.
-
-An independently enabled `SimulationWorker` shares database configuration with ingestion
-but requires no OE key. Each child gets a 512 MiB heap, two active processors, a cleared
-environment and the stored 5-second/100,000-iteration solver budget. Parent and child
-watchdogs enforce 15 seconds; termination confirmation gets five seconds. The parent
-rechecks fixed dispatch, physical/accounting invariants and optimality metadata before
-an atomic immutable result/terminal-status transaction. Publication rechecks lease/token
-so expired workers cannot commit. Only OPTIMAL succeeds; unproven/failed solver outcomes
-remain diagnostic results on failed jobs. See [decision 016](decisions/016-durable-simulations.md),
-[worker setup](../../reference/java/worker/README.md#simulation-execution) and [verification](evidence/engine/execution-findings.md).
-
-
-## Simulation HTTP lifecycle — NEM-041
-
-`NEMLAB_SIMULATION_API_ENABLED` independently enables public POST submission and GET
-status/result resources under `/api/v1/simulations`. JSON bodies are bounded at 16384
-bytes with strict decimal strings, integer window minutes, known fields, unique keys
-and one document. NEM-039 validation and NEM-040 queue semantics are reused. Pending
-submissions return 202; terminal duplicates return 200 without resetting work.
-
-Public DTOs omit tokens, leases, internal scenario keys and raw solver diagnostics.
-Only successful OPTIMAL comparisons have a public result; pending/failed runs return
-409. Exact normalised inputs/prices, immutable revision/version metadata and unrounded
-engine dispatch/accounting are returned with units/time boundaries. OpenAPI 1.1.0 adds
-three operations and generated TypeScript inputs without changing price/operator schemas.
-See [decision 017](decisions/017-simulation-http-contract.md), [API setup](../../reference/java/api/README.md#public-simulation-lifecycle)
-and [verification](evidence/engine/http-findings.md).
-
-
-## GridReplay M5 implementation plan (not yet implemented)
-
-The [GridReplay delivery plan](features/gridreplay.md#m5-delivery-plan--2026-09-25) and [NEM-054–NEM-064](backlog.md#m5-delivery-tasks) refine the existing conceptual design. Extend the present PostgreSQL/worker/API architecture with versioned grid observations and per-metric coverage, bounded operator imports, deterministic detectors and atomic event/replay publication. Retain exact event evidence through immutable snapshots or revision manifests referencing retained observations; corrected source data must not silently alter old replay links. Catalogue pagination is pinned to a publication. Public catalogue and replay endpoints are read-only and bounded; they do not initiate OE requests.
-
-The frontend retains React/plain CSS/ECharts and shared themes. A demo-faithful catalogue/replay UI is built early against typed test/development fixtures, then connected to the generated public contract. One cursor/window state drives playback, readouts and four contextual chart panels. Timestamp equality is not a claim of equivalent physical observation windows. Admin remains a separate optional app, subject to NEM-063; no new backend service or browser credential mechanism is selected by this plan.
-
-## M6 Admin architecture — accepted plan, 2026-10-08
-
-[Decision 024](decisions/024-admin-experience-and-access.md) selects a separate same-origin Admin build backed by the existing Python API/PostgreSQL. Add owner/viewer identities, email-link verification, opaque server sessions, expiring grants, transactional outbox and access audit; enforce explicit capabilities and safe viewer projections on every operational route. Existing bearer automation is retained separately and cannot manage browser accounts. A persisted load-operation record references existing durable grid/price jobs; it is not a second worker queue. Publication stays explicit and atomic, with correlation for uncertain outcomes. See [specification](features/admin.md) for boundaries and defaults. This supersedes older optional-Admin/browser-auth-undecided planning paragraphs. Implemented so far: the V8 `admin_*` identity storage (users, access requests, viewer grants, hashed tokens, sessions, email outbox, access audit, rate-limit counters) and the CLI owner bootstrap/recovery under `nemlab_infrastructure.admin` (NEM-095); browser sign-in — single-use hashed email tokens exchanged by POST for opaque server sessions with CSRF/origin checks and shared rate limits, `/api/auth/v1/*` plus the worker outbox drain onto a captured mailbox (NEM-096); and the deny-by-default `capabilities.py` route table enforced by the `AdminAccess` middleware, which resolves session-cookie or bearer identities, rejects conflicting credentials, applies CSRF/Origin checks to cookie mutations and serves viewer-safe projections (NEM-097); and the access-request lifecycle — `AccessRequests` (submission dedupe, verification, atomic approve/reject/extend/revoke with grant+outbox+audit writes and optimistic version checks, retention pruning), the public `/api/access/v1/` routers and owner `/api/admin/v1/access-requests|viewer-grants` routes behind `access.manage` with a 15-minute recent-auth check (NEM-098); and bounded console reads — per-day ramp-baseline readiness (`grid-coverage/{region}/baseline`), detection-run attempt history with actor labels and caller `attemptKey` correlation (V9 `grid_detection_run` columns), and publication-detail `eventCounts`/`highlights` provenance (NEM-099); and resumable load operations — the V10 `load_operation`/`load_operation_child` tables behind `LoadOperations`, which fans an owner-declared region/range into <=31-day chunks across the existing grid-import and price-refresh queues (grid phase, then price) with deterministic `load:{operation}:{phase}:{start}` child keys, explicit per-call dispatch, queue-cap backpressure, pause-without-cancel and explicit resume — exposed under `/api/admin/v1/load-operations` (NEM-102). The Admin UI remains an M6 task.
-
-## Admin desktop presentation revision — planned 2026-10-08
-
-[Decision 025](decisions/025-admin-desktop-workspace.md) selects an independent Admin stylesheet/token system and full-viewport Data Operations/Access workspaces, using existing API/security/workflow services. Public page styles no longer govern Admin. Route adapters preserve old links; shared scope, inspector and activity state must avoid duplicate queries or dispatch. Implementation is NEM-108–115, not complete.
+The complete Java 25/Spring Boot 4.1.1 backend — plain-Java core, JDBC/Flyway infrastructure, API and worker applications — is preserved under `reference/java/` and remains runnable as the parity baseline. The Python rebuild (decision 019) supersedes decision 004's runtime pins and decision 007's ojAlgo selection for active execution; their product, queue, isolation and immutable-result semantics remain requirements and are met by the Python stack. Java-era evidence ([foundation](evidence/foundation/findings.md), [engine](evidence/engine/findings.md), [jobs](evidence/jobs/findings.md)) is retained as historical verification; the [parity matrix](evidence/python-rebuild/parity.md) and [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md) record equivalence and the adoption/rollback rehearsal. Do not start new Java features.
