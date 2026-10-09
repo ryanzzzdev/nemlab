@@ -1,8 +1,10 @@
 # NEMLab
 
-The backend runs on Python (uv workspace, CPython 3.13.14). The Java implementation is preserved as a runnable reference under [`reference/java/`](reference/java/README.md) for comparison and regression until the parity gate closes — see the [rebuild plan](docs/project/python-backend-rebuild.md) and [ordered backlog](docs/project/backlog.md#python-rebuild-tasks).
+NEMLab explores Australia's National Electricity Market through historical analysis and experiments. It ingests real wholesale price and grid-operation data into PostgreSQL and serves three experiences on top:
 
-NEMLab explores Australia's National Electricity Market through historical analysis and experiments. BatteryLab compares simulated battery trading strategies; GridReplay helps visitors investigate notable market periods.
+- **BatteryLab** — visitors simulate a battery trading stored energy against actual market prices, comparing configurable strategies against a certified optimal hindsight bound.
+- **GridReplay** — a curated catalogue of notable market events (price spikes, demand ramps) with interval-by-interval replay of the surrounding grid.
+- **Admin** — an owner console for coverage inspection, bounded data loading, job recovery, catalogue publication and read-only visitor access.
 
 This is the backend project and the home of shared project documentation. The backend has separate runnable API and worker applications. The [frontend](../nemlab-ui/README.md) lives in the separate sibling `nemlab-ui` Git repository.
 
@@ -18,6 +20,7 @@ This is the backend project and the home of shared project documentation. The ba
 - [GridReplay](docs/project/features/gridreplay.md)
 - [GridReplay static demo](docs/demos/gridreplay/index.html) — mocked-data preview of the event catalogue and replay
 - [Admin](docs/project/features/admin.md)
+- [Admin static prototype](../nemlab-ui/apps/admin/prototype/index.html) — mocked-data preview of the desktop workspace
 - [Decision records](docs/project/decisions/)
 - [Running locally](docs/project/running-locally.md)
 - [Documentation workflow](docs/project/documentation-guide.md)
@@ -44,25 +47,17 @@ Local OE credentials remain in ignored configuration; never commit them.
 
 ## Run the applications
 
-Source `.env` (copy `.env.example` first), start PostgreSQL, migrate the schema, then run each application:
+Copy `.env.example` to `.env`, then — see [Running locally](docs/project/running-locally.md) for the full walkthrough including the `migrate check` first step, frontend servers and Admin sign-in:
 
 ```sh
-set -a; . ./.env; set +a
+set -a; . ./.env; set +a    # required in every backend terminal
 docker compose up -d postgres
 uv run python -m nemlab_infrastructure.migrate migrate   # or: adopt (Java-managed DB)
 uv run nemlab-api      # http://127.0.0.1:8080 — /actuator/health
 uv run nemlab-worker   # non-HTTP; idles with all flags off
 ```
 
-`SERVER_ADDRESS` and `PORT` override the API bind. Feature flags stay disabled by default — `NEMLAB_DATA_ENABLED`, `NEMLAB_ADMIN_ENABLED`, `NEMLAB_SIMULATION_API_ENABLED` (API) and `NEMLAB_WORKER_ENABLED`, `NEMLAB_WORKER_SCHEDULE_ENABLED`, `NEMLAB_SIMULATION_ENABLED` (worker). Enabled database features require `NEMLAB_DB_*`; each startup probes the schema and fails fast. See [api/README.md](api/README.md) and [worker/README.md](worker/README.md).
-
-Automated packaged startup checks:
-
-```sh
-python3 scripts/smoke_apps.py
-```
-
-The script starts `nemlab-api` and `nemlab-worker` with all features off, checks actuator health and worker liveness on a random loopback port, then stops only its own children.
+Feature flags stay disabled by default; enabled database features require `NEMLAB_DB_*` and fail fast at startup. `python3 scripts/smoke_apps.py` runs a packaged startup check.
 
 ## Containers
 
@@ -80,7 +75,7 @@ The `postgres` service and its `nemlab-postgres` volume are unchanged — existi
 
 ## Java reference
 
-The Java tree under `reference/java/` remains runnable: `./gradlew clean build`, `java -jar api/build/libs/api.jar`, `python3 reference/java/scripts/smoke_apps.py`. Use it for behaviour comparison and regression evidence. The reference workflow [reference/java/ci/backend.yml](reference/java/ci/backend.yml) records the Java-era hosted checks.
+The Java implementation is preserved as a runnable reference under [`reference/java/`](reference/java/README.md) for comparison and regression until the parity gate closes — see the [rebuild plan](docs/project/python-backend-rebuild.md) and [ordered backlog](docs/project/backlog.md#python-rebuild-tasks). `./gradlew clean build`, `java -jar api/build/libs/api.jar`, `python3 reference/java/scripts/smoke_apps.py`. The reference workflow [reference/java/ci/backend.yml](reference/java/ci/backend.yml) records the Java-era hosted checks.
 
 ## CI and module boundaries
 
