@@ -338,7 +338,7 @@ def test_alembic_upgrade_and_downgrade(
             ).scalar_one()
 
     command.upgrade(cfg, "head")
-    assert revision() == "nemlab_v10_load_operations"
+    assert revision() == "nemlab_v11_simulation_events"
     assert "admin_user" in admin_tables()
     command.downgrade(cfg, "nemlab_v7_detector_v2")
     assert revision() == "nemlab_v7_detector_v2"
@@ -349,8 +349,9 @@ def test_alembic_upgrade_and_downgrade(
             for row in conn.execute(
                 sa.text(
                     "SELECT table_name FROM information_schema.tables"
-                    " WHERE table_schema = 'public' AND table_name"
-                    " LIKE 'load_operation%'"
+                    " WHERE table_schema = 'public' AND table_name IN"
+                    " ('load_operation', 'load_operation_child',"
+                    "  'simulation_event')"
                 )
             )
         }

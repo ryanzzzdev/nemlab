@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 
 import pytest
 import sqlalchemy as sa
-from db_fixture import apply_schema
+from db_fixture import apply_schema, apply_simulation_events
 from sqlalchemy import text
 from test_simulations import AT, DAY, compute, request
 
@@ -57,11 +57,12 @@ def fetch(first: str = "-30", at: datetime = AT) -> Fetch:
 @pytest.fixture
 def store(scratch_db: sa.Engine) -> PriceStore:
     apply_schema(scratch_db)
+    apply_simulation_events(scratch_db)
     with scratch_db.begin() as conn:
         conn.execute(
             text(
-                "TRUNCATE simulation_result, simulation_job, simulation_input,"
-                " refresh_job_event, refresh_request, refresh_job,"
+                "TRUNCATE simulation_result, simulation_event, simulation_job,"
+                " simulation_input, refresh_job_event, refresh_request, refresh_job,"
                 " price_snapshot, price_current, price_import_attempt,"
                 " price_revision, price_backfill"
             )
@@ -309,3 +310,71 @@ def test_strategy_threshold_matches_configured_rows(
         catalogue.page(region=Region.NSW1, start=DAY, end=DAY, strategy="fixed").total
         == 2
     )
+
+
+def test_lifecycle_projects_matched_attempt_durations(
+    jobs: SimulationJobs, catalogue: SimulationCatalogue
+) -> None:
+    id = jobs.submit(request())
+    _finish(jobs, id)
+    detail = catalogue.detail(id)
+    assert detail is not None and detail.lifecycle.recorded
+    events = detail.lifecycle.events
+    assert [e.kind for e in events] == ["QUEUED", "CLAIMED", "SUCCEEDED"]
+    assert events[0].attempt is None
+    assert events[1].attempt == 1 and events[1].attempt_ms is None
+    # CLAIMED → SUCCEEDED pair on attempt 1 yields a recorded duration.
+    assert events[2].attempt == 1 and events[2].attempt_ms is not None
+
+
+def test_historical_job_reports_history_not_recorded(
+    jobs: SimulationJobs, catalogue: SimulationCatalogue, store: PriceStore
+) -> None:
+    """A row written before V11 has no events — honesty, not fabrication."""
+    prepared_revision = store.coverage(Region.NSW1, DAY)
+    assert prepared_revision is not None
+    legacy_id = uuid4()
+    with jobs.engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO simulation_input"
+                " (id, scenario_key, revision_id, request, versions)"
+                " VALUES (:id, :key, :rev, CAST(:request AS jsonb),"
+                " CAST(:versions AS jsonb))"
+            ),
+            {
+                "id": legacy_id,
+                "key": response_hash("historical-no-events"),
+                "rev": prepared_revision.revision,
+                "request": (
+                    '{"region":"NSW1","day":"2023-09-11",'
+                    '"site":{"capacityMWh":1,"minimumMWh":0,"maximumMWh":1,'
+                    '"initialMWh":0,"chargeMW":1,"dischargeMW":1,'
+                    '"importLimitMW":1,"exportLimitMW":1},'
+                    '"efficiency":{"charge":1,"discharge":1},'
+                    '"costs":{"importFee":0,"exportFee":0,'
+                    '"degradationPerExportedMWh":0},'
+                    '"windows":{"chargeStart":0,"chargeEnd":5,'
+                    '"dischargeStart":5,"dischargeEnd":10}}'
+                ),
+                "versions": (
+                    '{"request":"simulation-request-v1","model":"battery-v1",'
+                    '"fixed":"ordered-windows-v1",'
+                    '"hindsight":"ordered-hindsight-v1",'
+                    '"solver":"ojAlgo 57.3.0",'
+                    '"executionProfile":"ordered-comparison-v1",'
+                    '"limits":{"milliseconds":5000,"iterations":100000}}'
+                ),
+            },
+        )
+        conn.execute(
+            text(
+                "INSERT INTO simulation_job(id, status, attempts)"
+                " VALUES (:id, 'SUCCEEDED', 1)"
+            ),
+            {"id": legacy_id},
+        )
+    detail = catalogue.detail(legacy_id)
+    assert detail is not None
+    assert detail.lifecycle.recorded is False
+    assert detail.lifecycle.events == ()

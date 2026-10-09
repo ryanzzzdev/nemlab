@@ -3749,7 +3749,7 @@ Completed 2026-10-09. New `nemlab_infrastructure/simulation_catalogue.py` — a 
 - Repository: backend
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-115](#nem-115)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3765,7 +3765,7 @@ Record simulation execution lifecycle safely, preserving existing public results
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Completed 2026-10-09. `V11__simulation_events.sql` + Alembic `nemlab_v11_simulation_events` add append-only `simulation_event` (kind QUEUED/CLAIMED/RETRY_SCHEDULED/LEASE_RECOVERED/SUCCEEDED/FAILED, nullable `attempt` in 1–3, `diagnostic`, `available_at` for reschedule deadlines, `created_at`; immutability trigger reuses `reject_immutable_simulation_change`). `SimulationJobs` writes each event inside the same transaction as its authoritative transition: submit (dedup early-returns first — no false QUEUED), claim (post-increment attempt), `_retry` (RETURNING captures `available_at`; expired-lease recycle records LEASE_RECOVERED, worker-reported recycle RETRY_SCHEDULED, exhausted attempts FAILED), `_finish` (SUCCEEDED/FAILED). Fencing unchanged — stale claims raise `StaleClaim` before any event. `SimulationCatalogue.detail` gains `lifecycle` — ordered events plus `attempt_ms` only on end events with a matching recorded CLAIMED; `recorded=False` on pre-V11 rows reads as "history was not recorded". 6 new tests cover the full transition sequence, dedup silence, stale completion failure, append-only enforcement, duration pairing and the unrecorded-history state; 383 api+infrastructure+worker tests pass; dev DB migrated to V11.
 
 <a id="nem-119"></a>
 

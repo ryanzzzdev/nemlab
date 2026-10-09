@@ -10,7 +10,7 @@ from uuid import UUID
 
 import pytest
 import sqlalchemy as sa
-from db_fixture import apply_schema
+from db_fixture import apply_schema, apply_simulation_events
 from sqlalchemy import text
 
 from nemlab_core import comparison, hindsight
@@ -90,11 +90,12 @@ def fetch(first: str, at: datetime) -> Fetch:
 @pytest.fixture
 def store(scratch_db: sa.Engine) -> PriceStore:
     apply_schema(scratch_db)
+    apply_simulation_events(scratch_db)
     with scratch_db.begin() as conn:
         conn.execute(
             text(
-                "TRUNCATE simulation_result, simulation_job, simulation_input,"
-                " refresh_job_event, refresh_request, refresh_job,"
+                "TRUNCATE simulation_result, simulation_event, simulation_job,"
+                " simulation_input, refresh_job_event, refresh_request, refresh_job,"
                 " price_snapshot, price_current, price_import_attempt,"
                 " price_revision, price_backfill"
             )
@@ -149,8 +150,8 @@ def test_captured_fixture_runs_through_the_engine(store: PriceStore) -> None:
     with store.engine.begin() as conn:
         conn.execute(
             text(
-                "TRUNCATE simulation_result, simulation_job, simulation_input,"
-                " refresh_job_event, refresh_request, refresh_job,"
+                "TRUNCATE simulation_result, simulation_event, simulation_job,"
+                " simulation_input, refresh_job_event, refresh_request, refresh_job,"
                 " price_snapshot, price_current, price_import_attempt,"
                 " price_revision, price_backfill"
             )
@@ -736,3 +737,133 @@ def test_java_era_rows_read_back_and_unsupported_versions_blocked(
     assert stored.threshold is None
     assert stored.hindsight.status is hindsight.Status.OPTIMAL
     assert len(stored.fixed_dispatch.intervals) == 288
+
+
+# -- lifecycle events (V11) ----------------------------------------------------
+
+
+def _events(engine: sa.Engine, id: UUID) -> list[sa.engine.Row]:
+    with engine.connect() as conn:
+        return conn.execute(
+            text(
+                "SELECT kind, attempt, diagnostic, available_at"
+                " FROM simulation_event WHERE simulation_id = :id ORDER BY id"
+            ),
+            {"id": id},
+        ).all()
+
+
+def test_events_track_fenced_transitions_and_dedup_stays_silent(
+    jobs: SimulationJobs, scratch_db: sa.Engine
+) -> None:
+    id = jobs.submit(request())
+    assert jobs.submit(request()) == id  # dedup: no second QUEUED event
+    assert [(e.kind, e.attempt) for e in _events(scratch_db, id)] == [("QUEUED", None)]
+    claim = jobs.claim()
+    assert claim is not None
+    jobs.complete(id, claim.token, compute(jobs, id))  # type: ignore[arg-type]
+    events = _events(scratch_db, id)
+    assert [(e.kind, e.attempt) for e in events] == [
+        ("QUEUED", None),
+        ("CLAIMED", 1),
+        ("SUCCEEDED", 1),
+    ]
+    assert all(e.diagnostic is None and e.available_at is None for e in events)
+
+
+def test_retry_and_lease_events_carry_codes_and_next_times(
+    jobs: SimulationJobs, scratch_db: sa.Engine
+) -> None:
+    id = jobs.submit(request())
+    claim = jobs.claim()
+    assert claim is not None
+    jobs.fail(id, claim.token, "SIMULATION_DEADLINE_EXCEEDED", True)  # type: ignore[arg-type]
+    retry = _events(scratch_db, id)[-1]
+    assert (retry.kind, retry.attempt, retry.diagnostic) == (
+        "RETRY_SCHEDULED",
+        1,
+        "SIMULATION_DEADLINE_EXCEEDED",
+    )
+    assert retry.available_at is not None  # next eligible time recorded
+    _ready(scratch_db, id)
+    second = jobs.claim()
+    assert second is not None
+    # Abandon the lease — recovery records LEASE_RECOVERED, not RETRY_SCHEDULED.
+    with scratch_db.begin() as conn:
+        conn.execute(
+            text(
+                "UPDATE simulation_job SET lease_until = clock_timestamp()"
+                " - interval '1 second' WHERE id = :id"
+            ),
+            {"id": id},
+        )
+    fresh = SimulationJobs(scratch_db)
+    fresh.claim()  # recycles the expired lease
+    recovered = _events(scratch_db, id)[-1]
+    assert (recovered.kind, recovered.diagnostic) == (
+        "LEASE_RECOVERED",
+        "LEASE_EXPIRED",
+    )
+    # Reclaim and abandon once more — attempts exhaust to FAILED(LEASE_EXPIRED).
+    _ready(scratch_db, id)
+    third = fresh.claim()
+    assert third is not None and third.attempts == 3
+    with scratch_db.begin() as conn:
+        conn.execute(
+            text(
+                "UPDATE simulation_job SET lease_until = clock_timestamp()"
+                " - interval '1 second' WHERE id = :id"
+            ),
+            {"id": id},
+        )
+    fresh.claim()
+    events = _events(scratch_db, id)
+    assert events[-1].kind == "FAILED" and events[-1].diagnostic == "LEASE_EXPIRED"
+    assert events[-1].attempt == 3
+    assert [e.kind for e in events] == [
+        "QUEUED",
+        "CLAIMED",
+        "RETRY_SCHEDULED",
+        "CLAIMED",
+        "LEASE_RECOVERED",
+        "CLAIMED",
+        "FAILED",
+    ]
+
+
+def test_stale_and_failed_outcomes_write_no_false_events(
+    jobs: SimulationJobs, scratch_db: sa.Engine
+) -> None:
+    id = jobs.submit(request())
+    claim = jobs.claim()
+    assert claim is not None
+    with scratch_db.begin() as conn:
+        conn.execute(
+            text(
+                "UPDATE simulation_job SET lease_until = clock_timestamp()"
+                " - interval '1 second' WHERE id = :id"
+            ),
+            {"id": id},
+        )
+    fresh = SimulationJobs(scratch_db)
+    fresh.claim()  # recycles; issues a replacement claim
+    with pytest.raises(StaleClaim):
+        jobs.complete(id, claim.token, compute(jobs, id))  # type: ignore[arg-type]
+    assert "SUCCEEDED" not in [e.kind for e in _events(scratch_db, id)]
+    # A stale fail also writes nothing.
+    before = len(_events(scratch_db, id))
+    with pytest.raises(StaleClaim):
+        jobs.fail(id, claim.token, "LATE", True)  # type: ignore[arg-type]
+    assert len(_events(scratch_db, id)) == before
+
+
+def test_simulation_event_table_is_append_only(
+    jobs: SimulationJobs, scratch_db: sa.Engine
+) -> None:
+    id = jobs.submit(request())
+    for sql in (
+        "UPDATE simulation_event SET kind = 'FAILED' WHERE simulation_id = :id",
+        "DELETE FROM simulation_event WHERE simulation_id = :id",
+    ):
+        with pytest.raises(sa.exc.DatabaseError), scratch_db.begin() as conn:
+            conn.execute(text(sql), {"id": id})

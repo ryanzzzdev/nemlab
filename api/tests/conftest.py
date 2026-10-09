@@ -34,7 +34,7 @@ TRUNCATE = (
     " grid_publication_event, grid_publication, grid_replay, grid_event,"
     " grid_import_job_event, grid_import_request, grid_import_job,"
     " grid_import_attempt, grid_current, grid_revision,"
-    " simulation_result, simulation_job, simulation_input,"
+    " simulation_result, simulation_event, simulation_job, simulation_input,"
     " refresh_job_event, refresh_request, refresh_job,"
     " price_snapshot, price_current, price_import_attempt,"
     " price_revision, price_backfill"

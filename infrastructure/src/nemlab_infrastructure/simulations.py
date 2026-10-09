@@ -572,6 +572,7 @@ class SimulationJobs:
                 text("INSERT INTO simulation_job(id, status) VALUES (:id, 'QUEUED')"),
                 {"id": id},
             )
+            self._event(conn, id, "QUEUED", None, None)
             return id
 
     def claim(self) -> Job | None:
@@ -609,7 +610,10 @@ class SimulationJobs:
                 ),
                 {"token": uuid.uuid4(), "id": ready.id},
             )
-            return self._find(conn, ready.id)
+            job = self._find(conn, ready.id)
+            assert job is not None
+            self._event(conn, ready.id, "CLAIMED", job.attempts, None)
+            return job
 
     def find(self, id: UUID) -> Job | None:
         with self.engine.connect() as conn:
@@ -659,7 +663,7 @@ class SimulationJobs:
     def complete(self, id: UUID, token: UUID, result: SimulationComparison) -> None:
         """Validate + publish atomically; only OPTIMAL becomes SUCCEEDED."""
         with self.engine.begin() as conn:
-            self._require_live(conn, id, token)
+            job = self._require_live(conn, id, token)
             input = self._input(conn, id)
             validate(result, input.parameters(), input.prices, input.versions.limits)
             conn.execute(
@@ -672,8 +676,7 @@ class SimulationJobs:
             optimal = result.hindsight.status is hindsight.Status.OPTIMAL
             self._finish(
                 conn,
-                id,
-                token,
+                job,
                 "SUCCEEDED" if optimal else "FAILED",
                 None if optimal else f"SOLVER_{result.hindsight.status.name}",
             )
@@ -726,7 +729,7 @@ class SimulationJobs:
         expired: bool,
     ) -> None:
         state = "QUEUED" if retryable and job.attempts < MAX_ATTEMPTS else "FAILED"
-        changed = conn.execute(
+        row = conn.execute(
             text(
                 "UPDATE simulation_job SET status = :state, diagnostic = :code,"
                 " claim_token = NULL, lease_until = NULL,"
@@ -734,6 +737,7 @@ class SimulationJobs:
                 " + make_interval(secs => :delay)"
                 " WHERE id = :id AND claim_token = :token"
                 " AND (:expired OR lease_until > clock_timestamp())"
+                " RETURNING available_at"
             ),
             {
                 "state": state,
@@ -743,15 +747,22 @@ class SimulationJobs:
                 "token": job.token,
                 "expired": expired,
             },
-        ).rowcount
-        if changed != 1:
+        ).first()
+        if row is None:
             raise StaleClaim()
+        kind = (
+            "FAILED"
+            if state == "FAILED"
+            else "LEASE_RECOVERED"
+            if expired
+            else "RETRY_SCHEDULED"
+        )
+        self._event(conn, job.id, kind, job.attempts, code, row.available_at)
 
     def _finish(
         self,
         conn: sa.Connection,
-        id: UUID,
-        token: UUID,
+        job: Job,
         state: str,
         diagnostic: str | None,
     ) -> None:
@@ -762,10 +773,35 @@ class SimulationJobs:
                 " WHERE id = :id AND status = 'RUNNING' AND claim_token = :token"
                 " AND lease_until > clock_timestamp()"
             ),
-            {"state": state, "diag": diagnostic, "id": id, "token": token},
+            {"state": state, "diag": diagnostic, "id": job.id, "token": job.token},
         ).rowcount
         if changed != 1:
             raise StaleClaim()
+        self._event(conn, job.id, state, job.attempts, diagnostic)
+
+    def _event(
+        self,
+        conn: sa.Connection,
+        id: UUID,
+        kind: str,
+        attempt: int | None,
+        diagnostic: str | None,
+        available_at: datetime | None = None,
+    ) -> None:
+        conn.execute(
+            text(
+                "INSERT INTO simulation_event"
+                " (simulation_id, kind, attempt, diagnostic, available_at)"
+                " VALUES (:id, :kind, :attempt, :diag, :at)"
+            ),
+            {
+                "id": id,
+                "kind": kind,
+                "attempt": attempt,
+                "diag": diagnostic,
+                "at": available_at,
+            },
+        )
 
     def _lock_queue(self, conn: sa.Connection) -> None:
         conn.execute(text("SELECT pg_advisory_xact_lock(:lock)"), {"lock": QUEUE_LOCK})

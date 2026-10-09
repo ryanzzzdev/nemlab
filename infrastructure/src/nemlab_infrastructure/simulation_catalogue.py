@@ -13,6 +13,7 @@ import base64
 import hashlib
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -91,6 +92,28 @@ class ExecutionFacts:
 
 
 @dataclass(frozen=True)
+class LifecycleEvent:
+    kind: str
+    attempt: int | None
+    diagnostic: str | None
+    available_at: datetime | None
+    created_at: datetime
+    # Milliseconds spent in this attempt — set on end events only when a
+    # matching CLAIMED start was recorded; historical jobs have no pairs.
+    attempt_ms: int | None
+
+
+@dataclass(frozen=True)
+class Lifecycle:
+    """Append-only transition evidence; ``recorded`` False means the job
+    predates lifecycle capture — show "history was not recorded", never
+    fabricate events."""
+
+    recorded: bool
+    events: tuple[LifecycleEvent, ...]
+
+
+@dataclass(frozen=True)
 class Provenance:
     pinned_revision: UUID
     current_revision: UUID | None
@@ -104,6 +127,7 @@ class SimulationDetail:
     scenario: ScenarioDetail
     result: ResultSummary | None
     execution: ExecutionFacts
+    lifecycle: Lifecycle
     provenance: Provenance
 
 
@@ -261,6 +285,37 @@ def _accounting_summary(
     return out or None
 
 
+_END_KINDS = ("RETRY_SCHEDULED", "LEASE_RECOVERED", "SUCCEEDED", "FAILED")
+
+
+def _lifecycle(rows: Sequence[sa.engine.Row[Any]]) -> Lifecycle:
+    """Pair each end event with the latest preceding CLAIMED of the same
+    attempt; unmatched pairs yield no duration rather than an invented one."""
+    claims: dict[int, datetime] = {}
+    events: list[LifecycleEvent] = []
+    for row in rows:
+        attempt_ms = None
+        if row.kind == "CLAIMED" and row.attempt is not None:
+            claims[row.attempt] = row.created_at
+        elif row.kind in _END_KINDS and row.attempt is not None:
+            started = claims.pop(row.attempt, None)
+            if started is not None:
+                attempt_ms = max(
+                    0, int((row.created_at - started).total_seconds() * 1000)
+                )
+        events.append(
+            LifecycleEvent(
+                kind=row.kind,
+                attempt=row.attempt,
+                diagnostic=row.diagnostic,
+                available_at=row.available_at,
+                created_at=row.created_at,
+                attempt_ms=attempt_ms,
+            )
+        )
+    return Lifecycle(bool(events), tuple(events))
+
+
 class SimulationCatalogue:
     def __init__(self, engine: sa.engine.Engine) -> None:
         self.engine = engine
@@ -367,8 +422,18 @@ class SimulationCatalogue:
                 ),
                 {"id": id},
             ).first()
-        if row is None:
-            return None
+            if row is None:
+                return None
+            lifecycle = _lifecycle(
+                conn.execute(
+                    text(
+                        "SELECT kind, attempt, diagnostic, available_at,"
+                        " created_at FROM simulation_event"
+                        " WHERE simulation_id = :id ORDER BY id"
+                    ),
+                    {"id": id},
+                ).all()
+            )
 
         request_doc = json.loads(row.request, parse_float=Decimal, parse_int=Decimal)
         versions_doc = json.loads(row.versions)
@@ -436,6 +501,7 @@ class SimulationCatalogue:
                 created_at=row.job_created,
                 finished_at=row.result_at,
             ),
+            lifecycle=lifecycle,
             provenance=Provenance(
                 pinned_revision=row.revision_id,
                 current_revision=current_revision,

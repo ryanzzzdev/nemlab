@@ -114,13 +114,9 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
                 token=settings.admin_token,
                 auth=admin_auth,
             )
-            app.include_router(
-                auth_router(admin_auth, rate_limits, settings)
-            )
+            app.include_router(auth_router(admin_auth, rate_limits, settings))
             access = AccessRequests(engine, admin_auth)
-            app.include_router(
-                access_router(access, admin_auth, rate_limits, settings)
-            )
+            app.include_router(access_router(access, admin_auth, rate_limits, settings))
             app.include_router(access_admin_router(access))
             app.include_router(admin_router(RefreshJobService(engine, prices)))
             register_grid_errors(app)

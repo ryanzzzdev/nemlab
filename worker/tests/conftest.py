@@ -14,7 +14,7 @@ sys.path.insert(
     0, str(Path(__file__).resolve().parents[2] / "infrastructure" / "tests")
 )
 
-from db_fixture import apply_schema, scratch_db
+from db_fixture import apply_schema, apply_simulation_events, scratch_db
 
 from nemlab_infrastructure.jobs import RefreshJobService
 from nemlab_infrastructure.prices.store import PriceStore
@@ -22,7 +22,8 @@ from nemlab_infrastructure.prices.store import PriceStore
 __all__ = ["apply_schema", "scratch_db"]
 
 TRUNCATE = (
-    "TRUNCATE simulation_result, simulation_job, simulation_input,"
+    "TRUNCATE simulation_result, simulation_event, simulation_job,"
+    " simulation_input,"
     " refresh_job_event, refresh_request, refresh_job,"
     " price_snapshot, price_current, price_import_attempt,"
     " price_revision, price_backfill"
@@ -32,6 +33,7 @@ TRUNCATE = (
 @pytest.fixture
 def store(scratch_db: sa.Engine) -> PriceStore:
     apply_schema(scratch_db)
+    apply_simulation_events(scratch_db)
     return PriceStore(scratch_db)
 
 

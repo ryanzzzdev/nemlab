@@ -46,9 +46,11 @@ def main(argv: list[str] | None = None) -> int:
         cmd = commands.add_parser(
             dev_cmd,
             help=(
-                "print a raw session token" if dev_cmd == "seed-session" else
-                "print a one-off sign-in link"
-            ) + " for a local account; requires NEMLAB_ENVIRONMENT=development",
+                "print a raw session token"
+                if dev_cmd == "seed-session"
+                else "print a one-off sign-in link"
+            )
+            + " for a local account; requires NEMLAB_ENVIRONMENT=development",
         )
         cmd.add_argument("--email", required=True)
     args = parser.parse_args(argv)
