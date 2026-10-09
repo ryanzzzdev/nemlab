@@ -60,71 +60,6 @@ combination refuses to start under `production`. Auth rate limits tune via
 `NEMLAB_ADMIN_EXCHANGE_FAIL_PER_IP` (10/15 min) and
 `NEMLAB_ADMIN_MAIL_BUDGET_PER_DAY` (200).
 
-Browser sign-in is email-link only: `POST /api/auth/v1/sign-in-requests`
-queues a durable outbox row, `POST /api/auth/v1/sessions` exchanges the
-fragment token for an HttpOnly cookie, and `POST /api/auth/v1/logout`
-revokes (CSRF + same-origin required). Sessions last 72 hours absolute with
-a 24-hour idle window that slides on each request.
-
-Three ways to get an owner session locally. All `nemlab_infrastructure.admin`
-commands need the `.env` values (`NEMLAB_DB_URL`/`NEMLAB_DB_PASSWORD`) in the
-environment — load them once per shell:
-
-```sh
-set -a && . ./.env && set +a
-```
-
-Then bootstrap the owner once:
-
-```sh
-uv run python -m nemlab_infrastructure.admin bootstrap-owner \
-    --name "Owner" --email "owner@example.test" --confirm
-```
-
-**1. One-off sign-in link** (handiest — dev only):
-
-```sh
-NEMLAB_ENVIRONMENT=development \
-    uv run python -m nemlab_infrastructure.admin sign-in-link \
-    --email "owner@example.test"
-```
-
-Prints a ready-to-open `…/admin/sign-in#token=…` URL — the real single-use
-15-minute token path, minus the mail hop. Each invocation mints a fresh link.
-
-**2. Seed a session cookie directly** (no mail needed — dev only):
-
-```sh
-NEMLAB_ENVIRONMENT=development \
-    uv run python -m nemlab_infrastructure.admin seed-session \
-    --email "owner@example.test"
-```
-
-The command prints a `token:` — store it as the `nemlab_session` cookie on
-`127.0.0.1` (DevTools → Application → Cookies → `http://127.0.0.1:5274`,
-new cookie named `nemlab_session`, value = the token), then reload
-`http://127.0.0.1:5274/admin/`.
-
-**3. Real sign-in flow** — exercises the actual auth path end to end:
-
-1. Open `http://127.0.0.1:5274/admin/sign-in`, enter `owner@example.test`,
-   submit. The response is a generic `202` either way.
-2. With mail delivery off, read the link from the outbox:
-
-   ```sh
-   docker exec nemlab-postgres-1 psql -U nemlab -d nemlab -tA -c \
-     "SELECT substring(body from 'https?://[^[:space:]]*sign-in#token=[A-Za-z0-9_-]+') \
-      FROM admin_email_outbox \
-      WHERE kind='sign_in' AND recipient='owner@example.test' \
-      ORDER BY created_at DESC LIMIT 1"
-   ```
-
-   (Or enable `NEMLAB_MAIL_ENABLED=true` + `NEMLAB_MAIL_DIR=/tmp/nemlab-mail`
-   on the worker and `cat` the newest `.eml`.)
-3. Open the link — it's a single-use 15-minute token. Note the resend
-   cooldown: rapid resubmits return generic `202` without minting a fresh
-   token, so reuse the newest outbox link instead of resubmitting.
-
 The worker honours `NEMLAB_WORKER_ENABLED` (refresh polling — requires
 `OPEN_ELECTRICITY_API_KEY`), `NEMLAB_WORKER_SCHEDULE_ENABLED`,
 `NEMLAB_WORKER_REGIONS`, `NEMLAB_WORKER_POLL_MS`, `NEMLAB_GRID_IMPORT_ENABLED`
@@ -238,6 +173,73 @@ ss -tlnp | grep 5274                  # only inspect who owns the port
 pkill -f nemlab-worker                # worker has no port — kill by name
 pkill -f nemlab-api                   # API alternative to the 8080 port kill
 ```
+
+## Sign in to Admin locally
+
+Browser sign-in is email-link only: `POST /api/auth/v1/sign-in-requests`
+queues a durable outbox row, `POST /api/auth/v1/sessions` exchanges the
+fragment token for an HttpOnly cookie, and `POST /api/auth/v1/logout`
+revokes (CSRF + same-origin required). Sessions last 72 hours absolute with
+a 24-hour idle window that slides on each request.
+
+Three ways to get an owner session locally. All `nemlab_infrastructure.admin`
+commands need the `.env` values (`NEMLAB_DB_URL`/`NEMLAB_DB_PASSWORD`) in the
+environment — load them once per shell:
+
+```sh
+set -a && . ./.env && set +a
+```
+
+Then bootstrap the owner once:
+
+```sh
+uv run python -m nemlab_infrastructure.admin bootstrap-owner \
+    --name "Owner" --email "owner@example.test" --confirm
+```
+
+**1. One-off sign-in link** (handiest — dev only):
+
+```sh
+NEMLAB_ENVIRONMENT=development \
+    uv run python -m nemlab_infrastructure.admin sign-in-link \
+    --email "owner@example.test"
+```
+
+Prints a ready-to-open `…/admin/sign-in#token=…` URL — the real single-use
+15-minute token path, minus the mail hop. Each invocation mints a fresh link.
+
+**2. Seed a session cookie directly** (no mail needed — dev only):
+
+```sh
+NEMLAB_ENVIRONMENT=development \
+    uv run python -m nemlab_infrastructure.admin seed-session \
+    --email "owner@example.test"
+```
+
+The command prints a `token:` — store it as the `nemlab_session` cookie on
+`127.0.0.1` (DevTools → Application → Cookies → `http://127.0.0.1:5274`,
+new cookie named `nemlab_session`, value = the token), then reload
+`http://127.0.0.1:5274/admin/`.
+
+**3. Real sign-in flow** — exercises the actual auth path end to end:
+
+1. Open `http://127.0.0.1:5274/admin/sign-in`, enter `owner@example.test`,
+   submit. The response is a generic `202` either way.
+2. With mail delivery off, read the link from the outbox:
+
+   ```sh
+   docker exec nemlab-postgres-1 psql -U nemlab -d nemlab -tA -c \
+     "SELECT substring(body from 'https?://[^[:space:]]*sign-in#token=[A-Za-z0-9_-]+') \
+      FROM admin_email_outbox \
+      WHERE kind='sign_in' AND recipient='owner@example.test' \
+      ORDER BY created_at DESC LIMIT 1"
+   ```
+
+   (Or enable `NEMLAB_MAIL_ENABLED=true` + `NEMLAB_MAIL_DIR=/tmp/nemlab-mail`
+   on the worker and `cat` the newest `.eml`.)
+3. Open the link — it's a single-use 15-minute token. Note the resend
+   cooldown: rapid resubmits return generic `202` without minting a fresh
+   token, so reuse the newest outbox link instead of resubmitting.
 
 ## Detailed references
 
