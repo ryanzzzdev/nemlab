@@ -128,7 +128,17 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 - [NEM-116 — Owner access-audit read endpoint](#nem-116)
 
+- [NEM-117 — Project stored simulations into bounded Admin reads](#nem-117)
+- [NEM-118 — Record simulation execution lifecycle safely](#nem-118)
+- [NEM-119 — Expose authorized simulation inspection contracts](#nem-119)
+- [NEM-120 — Build desktop simulation catalogue and inspector](#nem-120)
+- [NEM-121 — Expose shared price readiness and related simulations](#nem-121)
+- [NEM-122 — Explain BatteryLab provenance and finish workspace integration](#nem-122)
+- [NEM-123 — Verify BatteryLab Admin journeys and M6 extension](#nem-123)
+
 ## Delivery notes
+
+- Current priority: BatteryLab inspection in Admin, [NEM-117–123](#nem-117). Original M6 and desktop redesign are recorded complete; M6 reopens for this accepted additional product coverage. [Specification](features/admin-batterylab.md).
 
 - Current priority: M6 reopened for accepted desktop Admin redesign, [NEM-108–115](#nem-108). Original functional delivery NEM-095–107 remains Done; start NEM-108. [Design specification](features/admin-desktop-redesign.md).
 
@@ -3706,3 +3716,178 @@ Expose the persisted `admin_access_audit` trail to the owner so the Access works
 ### Completion evidence
 
 Completed 2026-10-08. `AccessRequests.audit` reads the newest rows from `admin_access_audit` (bounded `limit`, clamped to the 100-row page like `queue`/`grants`) and projects a safe shape — `occurredAt`, `actor` (role label, never identity), `action`, `subject`, `result`; the free-form `detail` JSON is deliberately not exposed. `GET /api/admin/v1/access-audit` sits behind `access.manage`: anonymous 401, automation bearer and viewer sessions 403. Contract: `listAccessAudit` + `AccessAuditView` added to `api/contracts/openapi.json` and `verify.mjs` `COOKIE_PREFIXES`; captures cover owner 200, bounded `?limit=5` and viewer 403 — `node verify.mjs` validates 196 responses / 48 operations. HTTP test covers anon 401, owner rows/field projection, bearer 403, viewer 403. 563 backend tests pass.
+
+<a id="nem-117"></a>
+
+## NEM-117 — Project stored simulations into bounded Admin reads
+
+- Repository: backend
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Ready
+- Depends on: [NEM-115](#nem-115)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Project stored simulations into bounded Admin reads, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Implement tested repository list/detail projections with full-scope region/market-day/status/strategy filtering, state counts, deterministic cursor paging and explicit limits.
+- Return exact safe scenario/result summaries and pinned/current revision comparison; no N+1 full result reads, inferred ownership or mutation during reads.
+- Cover legacy/threshold-optional/unsupported results, missing revisions, corrected prices and representative query measurements; preserve immutable inputs/results.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.
+
+<a id="nem-118"></a>
+
+## NEM-118 — Record simulation execution lifecycle safely
+
+- Repository: backend
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Ready
+- Depends on: [NEM-115](#nem-115)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Record simulation execution lifecycle safely, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Add migration-backed append-only future lifecycle events transactionally with submit/claim/retry/recovery/success/failure and existing fencing.
+- Deduplicated submissions and stale worker completions do not create false events; only matched event pairs support attempt duration.
+- Historical/in-flight migration records expose partial history honestly; migration, worker, crash/retry and fencing tests pass without changing solver/job semantics.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.
+
+<a id="nem-119"></a>
+
+## NEM-119 — Expose authorized simulation inspection contracts
+
+- Repository: backend
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-117](#nem-117), [NEM-118](#nem-118)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Expose authorized simulation inspection contracts, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Add bounded catalogue/detail/events endpoints with explicit simulations.read for owner/viewer, denying other roles by default; public endpoints remain compatible.
+- Allowlist all nested fields, safe diagnostics and provenance; sanitize without leaking claim tokens/dedupe keys/person information.
+- OpenAPI and generated client/captures cover all roles, paging, not-found/not-ready results, schema compatibility and revocation.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.
+
+<a id="nem-120"></a>
+
+## NEM-120 — Build desktop simulation catalogue and inspector
+
+- Repository: both
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-119](#nem-119)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Build desktop simulation catalogue and inspector, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Add Simulations view with shared market-date scope, full-scope filters, cursor paging and Scenario/Results/Execution/Provenance inspector tabs.
+- Reuse panes/density/tables; render exact comparison summaries, missing threshold/history states and unchanged saved-result links without auto-run.
+- Test URL restoration/out-of-scope selection, query caching/polling lifecycle, role boundaries, failures and live integration.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.
+
+<a id="nem-121"></a>
+
+## NEM-121 — Expose shared price readiness and related simulations
+
+- Repository: both
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-119](#nem-119)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Expose shared price readiness and related simulations, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Integrate real price coverage alongside grid metrics with complete/partial/missing states and pinned-versus-current distinction; reuse bounded existing APIs where possible.
+- Connect day→simulations and simulation→coverage, preserving workspace state; owner price-only refresh uses existing protected APIs, viewer cannot submit.
+- Verify missing grid/complete prices, refresh failures and corrected prices leave saved simulations unchanged; no hidden grid import or automatic simulation.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.
+
+<a id="nem-122"></a>
+
+## NEM-122 — Explain BatteryLab provenance and finish workspace integration
+
+- Repository: both
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-120](#nem-120), [NEM-121](#nem-121)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Explain BatteryLab provenance and finish workspace integration, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Context help explains prices→scenario→execution→saved result alongside GridReplay observations→detectors→publication, including hindsight and deduplication.
+- Integrate selected-simulation lifecycle activity without duplicate polling; preserve existing grid/access/deep links and no-PII URL conventions.
+- Update Admin/runbook guidance and actual field/retention limitations; no unsupported runtime statistics, user analytics or invented history.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.
+
+<a id="nem-123"></a>
+
+## NEM-123 — Verify BatteryLab Admin journeys and M6 extension
+
+- Repository: both
+- Milestone: M6 — BatteryLab Admin inspection
+- Priority: Normal
+- Status: Backlog
+- Depends on: [NEM-122](#nem-122)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+
+### Outcome
+
+Verify BatteryLab Admin journeys and M6 extension, preserving existing public results and Admin permissions.
+
+### Done when
+
+- Run relevant backend/contract/frontend suites and real API/worker/PostgreSQL stored-simulation inspection→public-result journey, plus corrected-price immutability evidence.
+- Verify all-role redaction/denial, future versus legacy lifecycle, pagination/filter/count consistency, exact money values and query bounds.
+- Computer-use desktop/theme/density/keyboard/zoom review meets existing workspace standard; record evidence and reconcile new M6 criteria without closing M7 gates.
+
+### Completion evidence
+
+Planned 2026-10-09; implementation and verification pending.

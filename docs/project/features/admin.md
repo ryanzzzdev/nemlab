@@ -117,3 +117,7 @@ A plan does not complete M6. Hosted CI, production email/domain configuration, T
 ## Historical context
 
 M5 NEM-019/NEM-063 proved protected operator APIs/runbook and deferred Admin UI in [decision 021](../decisions/021-admin-ui-deferred.md). That UI deferral is superseded by this accepted M6 scope; historical rehearsal evidence remains valid. Existing API bearer identity is not the planned browser account system.
+
+## BatteryLab operations extension — accepted 2026-10-09
+
+[BatteryLab inspection](admin-batterylab.md) adds a Simulations view to Data Operations, shared price readiness, a scenario/result/execution/provenance inspector and future lifecycle evidence. It preserves the delivered desktop shell, GridReplay workflows and identity boundaries; no new simulation write actions. NEM-117–123 are pending implementation.

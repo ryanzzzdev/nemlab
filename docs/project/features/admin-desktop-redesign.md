@@ -110,3 +110,7 @@ Acceptance evidence must demonstrate, at 1440×900: scope, coverage rows, latest
 Validate light/dark/auto, owner/viewer/applicant, keyboard, 200% zoom, long values, empty data, stale scopes, queue full, failed imports, uncertain publication response, recent-auth/conflicts, session expiry, mail failures and forbidden actions. Add dedicated Admin browser coverage: existing public 126 tests do not establish Admin behaviour. Run frontend format/check, targeted Admin tests and integrated live workflow on current backend; run relevant backend/contract tests only if backend contracts change. Public UI visual/build regression check is mandatory because shared-style extraction can affect it.
 
 Record before/after screenshots and interaction counts for inspect failure, publish loaded data and approve access. No claim of faster users or enterprise certification without evidence. Original NEM-095–107 stay Done as historical delivery; M6 is reopened for this accepted UI scope. M7 deployment/email/CI gates remain unchanged. No implementation is performed by this planning document.
+
+## BatteryLab operations extension — accepted 2026-10-09
+
+[BatteryLab inspection](admin-batterylab.md) adds a Simulations view to Data Operations, shared price readiness, a scenario/result/execution/provenance inspector and future lifecycle evidence. It preserves the delivered desktop shell, GridReplay workflows and identity boundaries; no new simulation write actions. NEM-117–123 are pending implementation.

@@ -148,3 +148,7 @@ See [blockers](blockers.md) for unresolved choices and [roadmap](roadmap.md) for
 ## Java reference implementation
 
 The complete Java 25/Spring Boot 4.1.1 backend — plain-Java core, JDBC/Flyway infrastructure, API and worker applications — is preserved under `reference/java/` and remains runnable as the parity baseline. The Python rebuild (decision 019) supersedes decision 004's runtime pins and decision 007's ojAlgo selection for active execution; their product, queue, isolation and immutable-result semantics remain requirements and are met by the Python stack. Java-era evidence ([foundation](evidence/foundation/findings.md), [engine](evidence/engine/findings.md), [jobs](evidence/jobs/findings.md)) is retained as historical verification; the [parity matrix](evidence/python-rebuild/parity.md) and [cutover rehearsal](evidence/python-rebuild/cutover-rehearsal.md) record equivalence and the adoption/rollback rehearsal. Do not start new Java features.
+
+## BatteryLab Admin read model — planned 2026-10-09
+
+[Decision 026](decisions/026-admin-batterylab-inspection.md) adds bounded authorized projections over existing immutable simulation inputs/results and mutable jobs, plus transactional future lifecycle events. No second simulation engine/queue; public contracts remain compatible. Inspector reads compare pinned and current price revisions without rewriting results. Owner/viewer receive allowlisted schemas under an explicit capability; historical execution gaps remain explicit. See [specification](features/admin-batterylab.md).
