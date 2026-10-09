@@ -1,6 +1,6 @@
 # BatteryLab inspection in Admin
 
-Date: 2026-10-09. Status: Accepted direction; implementation defaults selected under delegated authority. Planned, not implemented. [Decision 026](../decisions/026-admin-batterylab-inspection.md); [NEM-117–123](../backlog.md#nem-117).
+Date: 2026-10-09. Status: Implemented and verified (NEM-117–123, 2026-10-10; [acceptance review](../evidence/admin-redesign/batterylab-inspection.md)). [Decision 026](../decisions/026-admin-batterylab-inspection.md); [NEM-117–123](../backlog.md#nem-117).
 
 ## Outcome and boundaries
 
@@ -32,7 +32,7 @@ At 1440×900 standard density retain at least 10 rows with a useful inspector/ac
 
 ## Inspector
 
-Four tabs, all read-only for both owner and viewer:
+Four sections (implemented as stacked read-only sections rather than literal tab buttons), all read-only for both owner and viewer:
 
 1. **Scenario**: region/day; battery capacity and charge/discharge ratings; initial/final state and efficiency representation; schedule windows; threshold parameters when present; fees/degradation and other stored cost/site constraints. Render the recorded request, not current UI defaults. Units and fixed NEM time conventions are explicit. Unknown legacy fields say “Not recorded”.
 2. **Results**: strategy comparison table with charging cost, revenue, fees, degradation, net margin, imported/exported energy and losses. Successful proven results only; queued/running/failed states explain absence. Hindsight is labelled a perfect-information benchmark, not a forecast. A missing threshold result is “Not included in this saved simulation”, not zero. Show available solver outcome/quality fields with units and methodology, not raw diagnostic text. **Open in BatteryLab** opens `/batterylab?simulation=<id>` for the complete charts; no auto-run and no parameter reconstruction that could use newer prices. Keep this action disabled/unavailable where a saved result cannot be opened meaningfully.
@@ -61,7 +61,7 @@ Proposed paths (freeze in OpenAPI before frontend integration):
 
 - `GET /api/admin/v1/simulations?region=&from=&to=&status=&strategy=&sort=&limit=&cursor=` returns bounded safe summaries, next cursor, selected-scope state counts and as-of metadata. Inclusive dates match workspace conventions; validate status/strategy combinations and <=31 completed market days. Absent status/strategy means all; no unsupported combined multi-sort.
 - `GET /api/admin/v1/simulations/{id}` returns safe scenario, result summary, execution facts and provenance, without full interval arrays. Unknown ID 404; not-yet-successful simulation still has a valid inspection record.
-- `GET /api/admin/v1/simulations/{id}/events` returns bounded chronological lifecycle pages, with explicit recording-start/historical-completeness metadata.
+- ~~`GET /api/admin/v1/simulations/{id}/events`~~ — implemented as an embedded `lifecycle` block (`recorded` flag + ordered events) inside the detail response instead of a third route; a bounded catalogue row always carries its own history size, so a separate paginated events endpoint added no value in this slice.
 
 Use storage-level projection of necessary JSON scalars or a measured summary projection, not N+1 full result decoding. Default/maximum page limits and query indexes are tested. Region/day filters extract `request->>'region'` and `request->>'day'` in the WHERE clause; at observed catalogue volume (tens of rows; realistically hundreds) a sequential scan is the right plan — add an expression index only if representative EXPLAIN output shows it justified. Detail may load one stored result to produce its small summary; the listing may not. Current revision comparison is a read-only join and does not change the pinned input. Contract generation/captures and the frontend client are part of delivery; no manual edits to generated types.
 

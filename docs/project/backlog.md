@@ -138,7 +138,7 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 
 ## Delivery notes
 
-- Current priority: BatteryLab inspection in Admin, [NEM-117–123](#nem-117). Original M6 and desktop redesign are recorded complete; M6 reopens for this accepted additional product coverage. [Specification](features/admin-batterylab.md).
+- BatteryLab inspection in Admin, [NEM-117–123](#nem-117), delivered and verified 2026-10-10 — [acceptance review](evidence/admin-redesign/batterylab-inspection.md). M6 is complete locally again; M7 launch gates remain open. [Specification](features/admin-batterylab.md).
 
 - Current priority: M6 reopened for accepted desktop Admin redesign, [NEM-108–115](#nem-108). Original functional delivery NEM-095–107 remains Done; start NEM-108. [Design specification](features/admin-desktop-redesign.md).
 
@@ -3799,7 +3799,7 @@ Backend completed 2026-10-09. `GET /api/admin/v1/simulations` (region/startDay/e
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-119](#nem-119)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3815,7 +3815,7 @@ Build desktop simulation catalogue and inspector, preserving existing public res
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Completed 2026-10-10. New `view=simulations` workspace tab in DataOps sharing the region/date scope (`nemlab-ui/apps/admin/src/workspace/SimulationsView.tsx`): status chips, day, created, exact decimal MWh/MW strings verbatim, strategy list, attempts, diagnostic note, short ID. Status tabs carry server counts; strategy/sort are URL params (`status`/`strategy`/`sort`); `useInfiniteQuery` consumes `nextCursor` for Load-more keyset paging. Inspector fetches `getSimulation` by ID — deep links and out-of-page IDs resolve, with an "Outside this selection" banner when the record sits outside the applied scope. Sections: Scenario (stored request fields via a defensive shape over the opaque `request` object), Execution, Result (solver + per-strategy accounting), Lifecycle (events with attempt numbers and matched `attemptMs`; `recorded:false` renders "history was not recorded"), Provenance (pinned-vs-current revision + version strings). Polls at `POLL_MS` while QUEUED/RUNNING and the simulations view is active — no duplicate or hidden-pane polling. Links: "Open in BatteryLab" (`PUBLIC_BASE/batterylab?simulation=<id>`, new tab) and "Inspect price coverage" → `view=coverage&sel=day:<day>`; day inspector gains "View simulations for this day" → scoped `view=simulations&from=day&to=day`. `sel=simulation:<uuid>` joins the Selection union. Six new admin browser tests (`tests-admin/simulations.spec.ts`) cover listing, URL-persisted filters with real API params, inspector sections, not-recorded history, day→simulations navigation and out-of-scope direct IDs. `npm run check` green: contract 2.2.0, format, both builds, 126 public + 26 admin tests.
 
 <a id="nem-121"></a>
 
@@ -3824,7 +3824,7 @@ Planned 2026-10-09; implementation and verification pending.
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-119](#nem-119)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3840,7 +3840,7 @@ Expose shared price readiness and related simulations, preserving existing publi
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Completed 2026-10-10. The Coverage view now reads the shared public `GET /api/v1/prices/{region}/coverage` for the applied scope (`getPriceCoverage` in `apps/admin/src/api.ts`) — the identical bounded projection BatteryLab consumes. The matrix gains a Prices column (Complete/Partial/Not imported chip with valid/missing interval counts and the current revision id in the tooltip); a failed price read degrades that column to — with an honest note rather than breaking the grid view. DayInspector gains a Price readiness section (availability, valid/missing of 288 intervals, current revision, retrievedAt) plus a "Simulations for this day" table (`listSimulations` scoped to the day, limit 50) whose rows select into the simulation inspector. Owners get a "Refresh prices" action posting `DaySubmission` to the existing protected `POST /api/admin/v1/price-refreshes` — idempotent, queued as a normal job, and the UI states that pinned revisions keep saved results unchanged; viewers see readiness data but no control. Day→simulations (scope-narrowing navigation) and simulation→coverage (`sel=day:`) links from NEM-120 complete the loop. Four new browser tests assert the column, inspector sections, the POST on the recorded mutations list, and the viewer boundary. No grid import or simulation is triggered implicitly. 30/30 admin browser tests pass.
 
 <a id="nem-122"></a>
 
@@ -3849,7 +3849,7 @@ Planned 2026-10-09; implementation and verification pending.
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-120](#nem-120), [NEM-121](#nem-121)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3865,7 +3865,7 @@ Explain BatteryLab provenance and finish workspace integration, preserving exist
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Completed 2026-10-10. HelpDrawer gains a "BatteryLab pipeline" section (prices → scenario → worker execution → saved result, naming fixed/threshold/hindsight strategies and the pinned-revision guarantee) plus glossary entries for Simulation, Pinned vs current revision, Deduplication, Lifecycle history, and "Not recorded vs not applicable" — honest language for pre-capture rows. Selecting a simulation swaps the activity pane to that simulation's lifecycle (`SimulationActivity`) reading the shared `["simulation", id]` query — no second fetcher, no extra polling. `sel=simulation:<uuid>` carries only an opaque ID, matching the no-PII URL convention. Spec reconciled: status now Implemented (NEM-117–122) with verification under NEM-123; inspector "four tabs" wording corrected to stacked sections matching the build; the proposed third `/events` route struck through in favour of the embedded `lifecycle` block shipped in NEM-119 (a catalogue row's history is always bounded, so a separate paginated endpoint added nothing). Two new browser assertions cover the help content and the activity-pane swap. 31/31 admin tests pass.
 
 <a id="nem-123"></a>
 
@@ -3874,9 +3874,9 @@ Planned 2026-10-09; implementation and verification pending.
 - Repository: both
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-122](#nem-122)
-- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
+- References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md), [acceptance review](evidence/admin-redesign/batterylab-inspection.md)
 
 ### Outcome
 
@@ -3890,4 +3890,4 @@ Verify BatteryLab Admin journeys and M6 extension, preserving existing public re
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Completed 2026-10-10. Full evidence in [batterylab-inspection](evidence/admin-redesign/batterylab-inspection.md): 585 backend tests, clean ruff/mypy/lint-imports, 204 contract responses / 50 operations, 126 public + 31 admin browser tests, both builds. Real-stack owner journey exercised the catalogue, inspector (exact decimals, OPTIMAL solver summary, pinned-matches-current provenance) and legacy `recorded:false` lifecycle honestly. Viewport sweep 1280/1440/1920 + compact/comfortable + dark + ~200% zoom all overflow-free; keyboard row selection works. Two real-data defects found and fixed in `nemlab-ui` `2b10a04` (Java-era efficiency legs; dev proxy missing the shared `/api/v1/prices` read). Limitations recorded honestly: no live post-V11 lifecycle stream (all local rows predate V11), corrected-price immutability rests on the suite-tested V3 triggers plus the live `matches` comparison. M7 gates remain open.
