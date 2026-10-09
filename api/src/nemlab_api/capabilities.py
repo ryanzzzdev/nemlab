@@ -45,6 +45,8 @@ ROUTES: dict[tuple[str, str], str] = {
     ("POST", "/api/admin/v1/load-operations/{id}/dispatch"): WRITE,
     ("POST", "/api/admin/v1/load-operations/{id}/pause"): WRITE,
     ("POST", "/api/admin/v1/load-operations/{id}/resume"): WRITE,
+    ("GET", "/api/admin/v1/simulations"): READ,
+    ("GET", "/api/admin/v1/simulations/{id}"): READ,
     ("GET", "/api/admin/v1/access-requests"): ACCESS_MANAGE,
     ("GET", "/api/admin/v1/access-requests/{id}"): ACCESS_MANAGE,
     ("POST", "/api/admin/v1/access-requests/{id}/decisions"): ACCESS_MANAGE,

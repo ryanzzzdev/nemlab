@@ -640,6 +640,23 @@ def test_contract_captures(
     post(f"{LOADS}/{uuid.uuid4()}/resume", "", owner_headers)  # 404
     client.cookies.clear()
 
+    # -- admin simulation inspection (NEM-119) --------------------------------
+    # Reuses ``sim_id`` — the succeeded visitor submission above. The shared
+    # queue is saturated by this point, so no new submission is possible here.
+    SIMS = "/api/admin/v1/simulations"
+    get(SIMS)  # 401
+    get(f"{SIMS}?region=NSW1&startDay={DAY}&endDay={DAY}", auth)  # 200
+    get(f"{SIMS}?region=NSW1&startDay={DAY}", auth)  # 400 INVALID_REQUEST
+    get(
+        f"{SIMS}?region=NSW1&startDay={DAY}&endDay={DAY}&status=BOGUS", auth
+    )  # 400 INVALID_SCOPE
+    get(
+        f"{SIMS}?region=NSW1&startDay={DAY}&endDay={DAY}&cursor=junk", auth
+    )  # 400 INVALID_CURSOR
+    get(f"{SIMS}/{sim_id}", auth)  # 200 detail
+    get(f"{SIMS}/{uuid.uuid4()}", auth)  # 404 SIMULATION_NOT_FOUND
+    get(f"{SIMS}/not-a-uuid", auth)  # 400 INVALID_REQUEST
+
     # Refresh-queue saturation last: any earlier fill would starve the visitor
     # submissions above, and ``claim`` picks the oldest pending job.
     from nemlab_infrastructure.jobs import (

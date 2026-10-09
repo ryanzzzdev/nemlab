@@ -30,6 +30,7 @@ from nemlab_api.middleware import (
 )
 from nemlab_api.prices import prices_router
 from nemlab_api.settings import ApiSettings
+from nemlab_api.simulation_catalogue import simulation_catalogue_router
 from nemlab_api.simulations import register_simulation_errors, simulations_router
 from nemlab_infrastructure.admin.access import AccessRequests
 from nemlab_infrastructure.admin.auth import AdminAuth
@@ -41,6 +42,7 @@ from nemlab_infrastructure.grid.store import GridStore
 from nemlab_infrastructure.jobs import RefreshJobService
 from nemlab_infrastructure.load_operations import LoadOperations
 from nemlab_infrastructure.prices.store import PriceStore
+from nemlab_infrastructure.simulation_catalogue import SimulationCatalogue
 from nemlab_infrastructure.simulations import SimulationJobs
 
 
@@ -125,6 +127,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             catalogue = GridCatalogue(engine)
             app.include_router(grid_coverage_router(grid, catalogue))
             app.include_router(grid_publications_router(catalogue))
+            app.include_router(simulation_catalogue_router(SimulationCatalogue(engine)))
             app.include_router(
                 load_operations_router(
                     LoadOperations(

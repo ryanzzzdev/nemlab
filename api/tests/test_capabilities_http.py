@@ -90,7 +90,9 @@ def _insert_request(engine: sa.Engine, email: str, status: str) -> UUID:
     return request_id
 
 
-def _insert_viewer(engine: sa.Engine, *, grant: str = "active") -> UUID:
+def _insert_viewer(
+    engine: sa.Engine, *, grant: str = "active", email: str = VIEWER_EMAIL
+) -> UUID:
     user_id, request_id = uuid.uuid4(), uuid.uuid4()
     with engine.begin() as conn:
         conn.execute(
@@ -100,14 +102,14 @@ def _insert_viewer(engine: sa.Engine, *, grant: str = "active") -> UUID:
                 " decided_by) VALUES (:id, 'Viewer', :email, 'approved', now(),"
                 " now(), :owner)"
             ),
-            {"id": request_id, "email": VIEWER_EMAIL, "owner": _owner_id(engine)},
+            {"id": request_id, "email": email, "owner": _owner_id(engine)},
         )
         conn.execute(
             sa.text(
                 "INSERT INTO admin_user (id, role, display_name, email)"
                 " VALUES (:id, 'viewer', 'Viewer', :email)"
             ),
-            {"id": user_id, "email": VIEWER_EMAIL},
+            {"id": user_id, "email": email},
         )
         statement = {
             "active": (

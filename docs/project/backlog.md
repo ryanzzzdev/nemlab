@@ -3774,7 +3774,7 @@ Completed 2026-10-09. `V11__simulation_events.sql` + Alembic `nemlab_v11_simulat
 - Repository: backend
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Backlog
+- Status: Done
 - Depends on: [NEM-117](#nem-117), [NEM-118](#nem-118)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3790,7 +3790,7 @@ Expose authorized simulation inspection contracts, preserving existing public re
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Backend completed 2026-10-09. `GET /api/admin/v1/simulations` (region/startDay/endDay + status/strategy/sort/limit/cursor → `AdminSimulationPage`) and `GET /api/admin/v1/simulations/{id}` (`AdminSimulationDetail`: summary, verbatim stored request + versions, accounting/solver result summary, execution facts, lifecycle events with matched attemptMs, pinned-vs-current revision provenance). Both registered under `ops.read` in the deny-by-default table — owner and viewer sessions admitted, bearer automation reads too, anonymous 401, applicant 403; cookie+bearer dual credentials still rejected. Errors are recoverable envelopes: `INVALID_SCOPE`/`INVALID_CURSOR`/`INVALID_REQUEST` 400s, `SIMULATION_NOT_FOUND` 404. Contract: operations + 4 schemas hand-added to `openapi.json`; captures cover 200/400×2/401/404 per route — `verify.mjs` validates 204 responses / 50 operations, schema regenerated. Frontend client types land with `contract:sync` in NEM-120. 117 api tests + catalogue/security-matrix coverage pass; mypy/ruff clean.
 
 <a id="nem-120"></a>
 
