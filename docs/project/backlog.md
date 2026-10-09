@@ -3724,7 +3724,7 @@ Completed 2026-10-08. `AccessRequests.audit` reads the newest rows from `admin_a
 - Repository: backend
 - Milestone: M6 — BatteryLab Admin inspection
 - Priority: Normal
-- Status: Ready
+- Status: Done
 - Depends on: [NEM-115](#nem-115)
 - References: [Specification](features/admin-batterylab.md), [decision 026](decisions/026-admin-batterylab-inspection.md)
 
@@ -3740,7 +3740,7 @@ Project stored simulations into bounded Admin reads, preserving existing public 
 
 ### Completion evidence
 
-Planned 2026-10-09; implementation and verification pending.
+Completed 2026-10-09. New `nemlab_infrastructure/simulation_catalogue.py` — a read-side `SimulationCatalogue` beside `GridCatalogue`: `page()` projects SQL scalars (`request->>'region'`, `request->>'day'` cast to date, site MW/MWh, `->>'thresholds' IS NOT NULL` for strategy membership) with region/market-day/status/strategy filters, per-status scope counts, `created_at,id` keyset paging bound to a scope fingerprint plus a creation-time high-water mark so new submissions cannot disrupt a traversal (limit 1–100, default 50). `detail()` decodes one request and one result only — scenario/versions JSONB verbatim, accounting + solver summary (interval arrays stay out), execution facts, and pinned-vs-current revision provenance via `PriceStore.coverage`. No N+1 result reads; no inferred ownership. EXPLAIN ANALYZE on the live DB (15 inputs): seq scan + JSONB extraction in 0.353 ms — no expression index, per the spec's measured-volume clause. 11 new tests cover scope rejection, filters/counts, deterministic paging under identical timestamps, malformed/foreign-scope cursors, detail/provenance (missing, corrected and unavailable revisions), legacy threshold-absent requests, and threshold strategy filtering; 214 infrastructure tests pass. Immutability respected — the legacy-shape test lifts the trigger inside the fixture transaction only.
 
 <a id="nem-118"></a>
 
