@@ -6,7 +6,7 @@ NEMLab explores Australia's National Electricity Market through historical analy
 - **GridReplay** — a curated catalogue of notable market events (price spikes, demand ramps) with interval-by-interval replay of the surrounding grid.
 - **Admin** — an owner console for coverage inspection, bounded data loading, job recovery, catalogue publication and read-only visitor access.
 
-This is the backend project and the home of shared project documentation. The backend has separate runnable API and worker applications. The [frontend](../nemlab-ui/README.md) lives in the separate sibling `nemlab-ui` Git repository.
+This is the backend project and the home of shared project documentation. The backend has separate runnable API and worker applications. The [frontend](https://github.com/ryanzzzdev/nemlab-ui#readme) lives in the separate sibling `nemlab-ui` Git repository.
 
 ## Project documentation
 
@@ -20,7 +20,7 @@ This is the backend project and the home of shared project documentation. The ba
 - [GridReplay](docs/project/features/gridreplay.md)
 - [GridReplay static demo](docs/demos/gridreplay/index.html) — mocked-data preview of the event catalogue and replay
 - [Admin](docs/project/features/admin.md)
-- [Admin static prototype](../nemlab-ui/apps/admin/prototype/index.html) — mocked-data preview of the desktop workspace
+- [Admin static prototype](https://github.com/ryanzzzdev/nemlab-ui/blob/main/apps/admin/prototype/index.html) — mocked-data preview of the desktop workspace
 - [Decision records](docs/project/decisions/)
 - [Running locally](docs/project/running-locally.md)
 - [Documentation workflow](docs/project/documentation-guide.md)

@@ -59,5 +59,5 @@ and compatibility checks. This decision accepts only the baseline portion of dec
 Selected under the user's delegated frontend choice and “Proceed to next” instruction.
 A clean install, strict checks, build and both browser checks pass. See
 [foundation evidence](../evidence/frontend/foundation-findings.md) and
-[frontend setup](../../../../nemlab-ui/README.md). No commit, remote, deployment or hosted
+[frontend setup](https://github.com/ryanzzzdev/nemlab-ui#readme). No commit, remote, deployment or hosted
 CI run is claimed.

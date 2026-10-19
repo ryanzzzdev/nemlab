@@ -32,7 +32,7 @@ and wraps on mobile, avoiding an unnecessary collapsible-menu interaction.
 A static host must fall back to index.html for page routes while excluding missing
 assets and API requests. Direct unknown paths display an in-app not-found page, but
 SPA hosting generally returns HTTP 200. No deployment-level 404 or SEO claim is made.
-The [frontend README](../../../../nemlab-ui/README.md) documents the required host setup.
+The [frontend README](https://github.com/ryanzzzdev/nemlab-ui#readme) documents the required host setup.
 
 ## Evidence and scope
 

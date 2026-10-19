@@ -247,4 +247,4 @@ new cookie named `nemlab_session`, value = the token), then reload
 - API endpoints and operator setup: [api/README.md](../../api/README.md)
 - Worker settings and simulation execution: [worker/README.md](../../worker/README.md)
 - Database, migrations and ingestion: [infrastructure/README.md](../../infrastructure/README.md)
-- Frontend setup, proxying and checks: [nemlab-ui README](../../../nemlab-ui/README.md)
+- Frontend setup, proxying and checks: [nemlab-ui README](https://github.com/ryanzzzdev/nemlab-ui#readme)

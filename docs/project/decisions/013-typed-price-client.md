@@ -43,7 +43,7 @@ Handwritten API models would duplicate the backend contract; they are not introd
 ## Evidence and references
 
 See [price integration findings](../evidence/frontend/price-integration-findings.md) and
-[frontend setup](../../../../nemlab-ui/README.md). No frontend/backend commit or deployment
+[frontend setup](https://github.com/ryanzzzdev/nemlab-ui#readme). No frontend/backend commit or deployment
 is implied. Runtime client/query choices implement their portion of decision 005;
 charts, forms and richer component libraries retain their later acceptance tasks.
 
