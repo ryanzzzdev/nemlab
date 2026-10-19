@@ -136,6 +136,8 @@ NEM-011 onward are milestone-level planning packages: split them into focused ta
 - ✅ [NEM-122 — Explain BatteryLab provenance and finish workspace integration](#nem-122)
 - ✅ [NEM-123 — Verify BatteryLab Admin journeys and M6 extension](#nem-123)
 
+- [NEM-124 — Polish Admin inspection and activity usability](#nem-124)
+
 ## Delivery notes
 
 - BatteryLab inspection in Admin, [NEM-117–123](#nem-117), delivered and verified 2026-10-10 — [acceptance review](evidence/admin-redesign/batterylab-inspection.md). M6 is complete locally again; M7 launch gates remain open. [Specification](features/admin-batterylab.md).
@@ -3891,3 +3893,29 @@ Verify BatteryLab Admin journeys and M6 extension, preserving existing public re
 ### Completion evidence
 
 Completed 2026-10-10. Full evidence in [batterylab-inspection](evidence/admin-redesign/batterylab-inspection.md): 585 backend tests, clean ruff/mypy/lint-imports, 204 contract responses / 50 operations, 126 public + 31 admin browser tests, both builds. Real-stack owner journey exercised the catalogue, inspector (exact decimals, OPTIMAL solver summary, pinned-matches-current provenance) and legacy `recorded:false` lifecycle honestly. Viewport sweep 1280/1440/1920 + compact/comfortable + dark + ~200% zoom all overflow-free; keyboard row selection works. Two real-data defects found and fixed in `nemlab-ui` `2b10a04` (Java-era efficiency legs; dev proxy missing the shared `/api/v1/prices` read). Limitations recorded honestly: no live post-V11 lifecycle stream (all local rows predate V11), corrected-price immutability rests on the suite-tested V3 triggers plus the live `matches` comparison. M7 gates remain open.
+
+<a id="nem-124"></a>
+
+## NEM-124 — Polish Admin inspection and activity usability
+
+- Repository: frontend
+- Milestone: M6 — Admin polish
+- Priority: Normal
+- Status: Done
+- Depends on: [NEM-123](#nem-123)
+- References: [Desktop redesign](features/admin-desktop-redesign.md), [polish evidence](evidence/admin-redesign/ui-polish.md)
+
+### Outcome
+
+Finish the computer-use polish pass on the delivered Admin, preserving backend workflows and subsequent shared-layout fixes.
+
+### Done when
+
+- Empty inspectors leave table space available; selecting and closing records preserves usable keyboard focus in Data Operations and Access.
+- Simulation actions are immediately visible and comparisons fit the inspector with units and readable numerical alignment.
+- Summary values are readable information, collapsed navigation retains accessible names, and activity respects the displayed market-date scope.
+- Current frontend checks and live desktop light/dark inspection pass; no production mutations are needed for visual review.
+
+### Completion evidence
+
+Completed 2026-10-10. Current `npm run check` passes: contract/format/types, both builds, 126 public and 33 Admin browser tests. Live owner desktop review at 1440×900 light and 1280×720 dark verified table/inspector space, result comparison, close/focus, scoped activity and Access empty state; no console errors observed. Changes remain uncommitted where not incorporated by subsequent layout commits. See linked evidence.

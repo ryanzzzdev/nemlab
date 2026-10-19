@@ -114,3 +114,7 @@ Record before/after screenshots and interaction counts for inspect failure, publ
 ## BatteryLab operations extension — accepted 2026-10-09
 
 [BatteryLab inspection](admin-batterylab.md) adds a Simulations view to Data Operations, shared price readiness, a scenario/result/execution/provenance inspector and future lifecycle evidence. It preserves the delivered desktop shell, GridReplay workflows and identity boundaries; no new simulation write actions. NEM-117–123 are pending implementation.
+
+## Delivered inspection polish — 2026-10-10
+
+NEM-124 makes inspector presence conditional on selection in both workspaces, with a close control returning focus to the grid. Simulation actions precede details and the comparison uses metrics as rows to fit the inspector. Summary figures are informational rather than disabled controls. Activity respects the displayed region/date scope; All recent explicitly widens it. See [verification](../evidence/admin-redesign/ui-polish.md). These refine the delivered layout without changing backend workflows.
